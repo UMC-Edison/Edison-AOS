@@ -1,4 +1,4 @@
-package com.umc.edison.presentation.theme
+package com.umc.edison.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
