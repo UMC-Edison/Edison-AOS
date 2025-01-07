@@ -6,9 +6,9 @@ data class BubbleEntity(
     val id: Int,
     val title: String? = null,
     val content: String? = null,
-    val mainImage: String? = null,
-    val images: List<String>,
-    val labels: List<LabelEntity>,
+    var mainImage: String? = null,
+    var images: List<String>,
+    var labels: List<LabelEntity>,
     val date: String,
 ) : DataMapper<Bubble> {
     override fun toDomain(): Bubble = Bubble(
