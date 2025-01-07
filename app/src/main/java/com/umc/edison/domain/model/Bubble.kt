@@ -7,4 +7,5 @@ data class Bubble(
     val mainImage: String? = null,
     val images: List<String>,
     val labels: List<Label>,
+    val date: String,
 )
