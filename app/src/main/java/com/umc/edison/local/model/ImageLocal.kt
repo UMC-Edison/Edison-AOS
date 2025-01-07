@@ -6,6 +6,8 @@ import androidx.room.PrimaryKey
 @Entity
 data class ImageLocal(
     val uri: String,
+    var isDeleted: Boolean,
+    var isSynced: Boolean,
 ) {
     @PrimaryKey(autoGenerate = true)
     var id: Int = 0
