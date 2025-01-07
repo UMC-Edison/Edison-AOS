@@ -3,12 +3,15 @@ package com.umc.edison.local.model
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.umc.edison.data.model.BubbleEntity
+import java.util.Date
 
 @Entity
 data class BubbleLocal(
     val title: String?,
     val content: String?,
-    val date: String,
+    val date: Date,
+    val mainImage: String?,
+    val images: List<String>,
     var isDeleted: Boolean = false,
     var isSynced: Boolean = false,
 ) : LocalMapper<BubbleEntity> {
@@ -19,9 +22,9 @@ data class BubbleLocal(
         id = id,
         title = title,
         content = content,
-        mainImage = null,
-        images = emptyList(),
+        mainImage = mainImage,
+        images = images,
         labels = emptyList(),
-        date = date,
+        date = date.toString(),
     )
 }
