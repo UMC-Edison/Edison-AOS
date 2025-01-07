@@ -7,7 +7,7 @@ sealed class DataResource<out T> {
 
     companion object {
         fun <T> success(data: T): Success<T> = Success(data)
-        fun <T> error(throwable: Throwable): Error = Error(throwable)
+        fun error(throwable: Throwable): Error = Error(throwable)
         fun <T> loading(data: T? = null): Loading<T> = Loading(data)
     }
 }
