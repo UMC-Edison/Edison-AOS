@@ -29,6 +29,7 @@ data class BubbleResponse(
         images = images,
         mainImage = mainImage,
         labels = labels.map { it.toData() },
+        date = updatedAt,
     )
 }
 
