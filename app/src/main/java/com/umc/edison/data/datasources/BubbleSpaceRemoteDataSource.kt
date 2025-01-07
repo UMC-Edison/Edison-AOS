@@ -4,4 +4,5 @@ import com.umc.edison.data.model.BubbleEntity
 
 interface BubbleSpaceRemoteDataSource {
     suspend fun getAllBubbles(): List<BubbleEntity>
+    suspend fun syncBubbles(bubbles: List<BubbleEntity>)
 }

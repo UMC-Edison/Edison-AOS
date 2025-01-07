@@ -1,5 +1,6 @@
 package com.umc.edison.data.model
 
+import com.umc.edison.data.DataMapper
 import com.umc.edison.domain.model.Bubble
 
 data class BubbleEntity(
