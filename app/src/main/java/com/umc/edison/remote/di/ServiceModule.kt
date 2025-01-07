@@ -13,8 +13,7 @@ import javax.inject.Singleton
 internal object ServiceModule {
     @Provides
     @Singleton
-    // TODO: 추후 Retrofit을 싱글톤으로 관리하도록 수정 필요
-    fun provideBubbleSpaceService(retrofit: Retrofit): BubbleSpaceApiService {
-        return retrofit.create(BubbleSpaceApiService::class.java)
-    }
+    fun provideBubbleSpaceService(
+        @NetworkModule.MainRetrofit retrofit: Retrofit
+    ): BubbleSpaceApiService = retrofit.create(BubbleSpaceApiService::class.java)
 }
