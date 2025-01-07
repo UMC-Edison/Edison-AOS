@@ -1,4 +1,4 @@
-package com.umc.edison
+package com.umc.edison.ui.main
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
