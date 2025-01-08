@@ -3,16 +3,12 @@ package com.umc.edison.ui.my_edison
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import com.umc.edison.R
+import androidx.compose.ui.viewinterop.AndroidViewBinding
+import com.umc.edison.databinding.FragmentMyEdisonBinding
 import com.umc.edison.ui.theme.EdisonTheme
 
 @Composable
@@ -22,17 +18,17 @@ fun MyEdisonScreen() {
             .fillMaxSize()
             .background(Color.White)
     ) {
-        Text(
-            text = stringResource(id = R.string.my_edison),
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center,
-            color = Color.Black,
-            modifier = Modifier.align(Alignment.Center)
-        )
+        AndroidViewBinding(FragmentMyEdisonBinding::inflate) {
+            titleTv.text = "Composable 함수에 AndroidViewBinding 사용하기"
+
+            titleTv.setOnClickListener {
+                titleTv.text = "클릭 리스너"
+            }
+        }
     }
 }
 
-@Preview(showBackground=true)
+@Preview(showBackground = true)
 @Composable
 fun BubbleSpaceScreenPreview() {
     EdisonTheme {
