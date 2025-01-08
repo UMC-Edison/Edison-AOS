@@ -10,26 +10,31 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+private val DarkColorPalette = darkColorScheme(
+    primary = Main,
+    secondary = Aqua300,
+    background = Black000,
+    surface = Gray800,
+    error = Red300,
+    onPrimary = White000,
+    onSecondary = Black000,
+    onBackground = White000,
+    onSurface = White000,
+    onError = Black000
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
 
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+private val LightColorPalette = lightColorScheme(
+    primary = Main,
+    secondary = Aqua500,
+    background = Gray10,
+    surface = White000,
+    error = Red500,
+    onPrimary = Black000,
+    onSecondary = White000,
+    onBackground = Gray900,
+    onSurface = Gray900,
+    onError = White000
 )
 
 @Composable
@@ -45,8 +50,8 @@ fun EdisonTheme(
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
 
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        darkTheme -> DarkColorPalette
+        else -> LightColorPalette
     }
 
     MaterialTheme(

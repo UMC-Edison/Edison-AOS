@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Edison</string>
+    <string name="my_edison">마이 에디슨</string>
+    <string name="space">스페이스</string>
+    <string name="bubble">버블</string>
+    <string name="artletter">아트레터</string>
+    <string name="my">마이</string>
 </resources>
