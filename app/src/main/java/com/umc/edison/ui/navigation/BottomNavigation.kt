@@ -13,8 +13,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.umc.edison.R
@@ -22,6 +24,7 @@ import com.umc.edison.ui.theme.EdisonTheme
 import com.umc.edison.ui.theme.Gray100
 import com.umc.edison.ui.theme.Gray400
 import com.umc.edison.ui.theme.Gray800
+import com.umc.edison.ui.theme.Pretendard
 import com.umc.edison.ui.theme.White000
 
 sealed class BottomNavItem(
@@ -117,6 +120,11 @@ fun BottomNavigation(navController: NavHostController) {
                         Text(
                             text = LocalContext.current.getString(navItem.title),
                             color = if (currentRoute == navItem.route) Gray800 else Gray400,
+                            style = TextStyle(
+                                fontFamily = Pretendard,
+                                fontSize = 12.sp,
+                                lineHeight = 14.sp
+                            ) // TODO: 추후 Typography 정리되면 수정하기
                         )
                     },
                     selected = currentRoute == navItem.route,

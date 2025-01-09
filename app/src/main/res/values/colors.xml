@@ -1,10 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
-    <color name="black">#FF000000</color>
+    // Gray Scale
+    <color name="gray_10">#FFF3F5F7</color>
+    <color name="gray_100">#FFF1F4F8</color>
+    <color name="gray_300">#FFE2E5E8</color>
+    <color name="gray_400">#FFD4D8DC</color>
+    <color name="gray_500">#FFB5B9BD</color>
+    <color name="gray_600">#FF8E9398</color>
+    <color name="gray_700">#FF505458</color>
+    <color name="gray_800">#FF3A3D40</color>
+    <color name="gray_900">#FF252729</color>
+
+    // Base Colors
     <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF101112</color>
+    <color name="main">#FFFFDC3A</color>
+
+    // Additional Colors
+    <color name="pink_400">#FFFF47AD</color>
+    <color name="red_500">#FFF44236</color>
+    <color name="yellow_500">#FFFBC000</color>
+    <color name="green_500">#FF00C774</color>
+    <color name="aqua_500">#FF00A2EE</color>
+    <color name="indigo_500">#FF5C6CC0</color>
+    <color name="purple_500">#FF9632AF</color>
+
+    <color name="pink_300">#FFFF6CBF</color>
+    <color name="red_300">#FFE57373</color>
+    <color name="yellow_300">#FFFFDC3A</color>
+    <color name="green_300">#FF58DE9F</color>
+    <color name="aqua_300">#FF4CBEF3</color>
+    <color name="indigo_300">#FF7986CB</color>
+    <color name="purple_300">#FFB56CC8</color>
+
+    <color name="pink_100">#FFFBC1E5</color>
+    <color name="red_100">#FFFFCDD2</color>
+    <color name="yellow_100">#FFFFF0AB</color>
+    <color name="green_100">#FFBFF0D5</color>
+    <color name="aqua_100">#FFB2E3FA</color>
+    <color name="indigo_100">#FFC5CAE9</color>
+    <color name="purple_100">#FFDFBFE7</color>
 </resources>
