@@ -29,14 +29,6 @@ object NetworkModule {
     @Singleton
     fun provideConverterFactory(): GsonConverterFactory = GsonConverterFactory.create()
 
-    @Singleton
-    @Provides
-    fun provideHttpLoggingInterceptor(): HttpLoggingInterceptor {
-        return HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        }
-    }
-
     @Provides
     @Singleton
     fun provideAccessTokenInterceptor(tokenManager: TokenManager) = AccessTokenInterceptor(tokenManager)
