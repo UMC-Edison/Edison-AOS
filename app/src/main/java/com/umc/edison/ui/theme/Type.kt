@@ -24,88 +24,89 @@ val Typography = Typography(
     displayLarge = TextStyle(
         fontFamily = Pretendard,
         fontWeight = FontWeight.Bold,
-        fontSize = 40.sp,
+        fontSize = 24.sp,
+        lineHeight = 30.sp,
     ),
     displayMedium = TextStyle(
         fontFamily = Pretendard,
-        fontWeight = FontWeight.Medium,
-        fontSize = 40.sp,
+        fontWeight = FontWeight.Bold,
+        fontSize = 20.sp,
+        lineHeight = 24.sp,
     ),
     displaySmall = TextStyle(
         fontFamily = Pretendard,
-        fontWeight = FontWeight.Normal,
-        fontSize = 40.sp,
+        fontWeight = FontWeight.Bold,
+        fontSize = 18.sp,
+        lineHeight = 24.sp,
     ),
+
     headlineLarge = TextStyle(
         fontFamily = Pretendard,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 20.sp,
-        lineHeight = 28.sp
+        fontWeight = FontWeight.Bold,
+        fontSize = 16.sp,
+        lineHeight = 20.sp
     ),
     headlineMedium = TextStyle(
         fontFamily = Pretendard,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 18.sp,
-        lineHeight = 22.sp
+        fontWeight = FontWeight.Bold,
+        fontSize = 14.sp,
+        lineHeight = 18.sp
     ),
     headlineSmall = TextStyle(
         fontFamily = Pretendard,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 16.sp,
-        lineHeight = 19.sp
+        fontWeight = FontWeight.Medium,
+        fontSize = 20.sp,
+        lineHeight = 24.sp
     ),
+
     titleLarge = TextStyle(
         fontFamily = Pretendard,
         fontWeight = FontWeight.Medium,
-        fontSize = 16.sp,
+        fontSize = 18.sp,
         lineHeight = 24.sp
     ),
     titleMedium = TextStyle(
         fontFamily = Pretendard,
         fontWeight = FontWeight.Medium,
-        fontSize = 14.sp,
-        lineHeight = 17.sp
+        fontSize = 16.sp,
+        lineHeight = 20.sp
     ),
     titleSmall = TextStyle(
         fontFamily = Pretendard,
         fontWeight = FontWeight.Medium,
-        fontSize = 12.sp,
-        lineHeight = 14.sp
+        fontSize = 14.sp,
+        lineHeight = 18.sp
     ),
+
     bodyLarge = TextStyle(
         fontFamily = Pretendard,
         fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp
+        fontSize = 12.sp,
+        lineHeight = 16.sp
     ),
     bodyMedium = TextStyle(
         fontFamily = Pretendard,
         fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        lineHeight = 17.sp
+        fontSize = 18.sp,
+        lineHeight = 24.sp
     ),
     bodySmall = TextStyle(
         fontFamily = Pretendard,
         fontWeight = FontWeight.Normal,
-        fontSize = 12.sp,
-        lineHeight = 18.sp
+        fontSize = 16.sp,
+        lineHeight = 20.sp
     ),
+
     labelLarge = TextStyle(
         fontFamily = Pretendard,
-        fontWeight = FontWeight.Light,
-        fontSize = 16.sp,
-        lineHeight = 24.sp
-    ),
-    labelMedium = TextStyle(
-        fontFamily = Pretendard,
-        fontWeight = FontWeight.Light,
+        fontWeight = FontWeight.Normal,
         fontSize = 14.sp,
-        lineHeight = 17.sp
+        lineHeight = 18.sp
     ),
     labelSmall = TextStyle(
         fontFamily = Pretendard,
-        fontWeight = FontWeight.Light,
+        fontWeight = FontWeight.Normal,
         fontSize = 12.sp,
-        lineHeight = 14.sp
+        lineHeight = 16.sp
     )
 )
