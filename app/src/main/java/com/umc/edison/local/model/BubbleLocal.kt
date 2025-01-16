@@ -14,6 +14,7 @@ data class BubbleLocal(
     val images: List<String>,
     var isDeleted: Boolean = false,
     var isSynced: Boolean = false,
+
 ) : LocalMapper<BubbleEntity> {
     @PrimaryKey(autoGenerate = true)
     var id: Int = 0

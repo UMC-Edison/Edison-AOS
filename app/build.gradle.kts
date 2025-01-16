@@ -98,7 +98,16 @@ dependencies {
     implementation(libs.coil.network.okhttp)
 
     implementation(libs.hilt.android)
+    implementation ("androidx.hilt:hilt-navigation-compose:1.0.0")
     ksp(libs.hilt.compiler)
+
+    implementation ("androidx.compose.foundation:foundation-layout:1.5.0")
+    implementation ("androidx.compose.material:material:1.5.0")
+    implementation ("androidx.compose.ui:ui:1.5.0")
+    implementation ("androidx.compose.ui:ui-tooling-preview:1.5.0")
+    implementation ("androidx.activity:activity-compose:1.7.2")
+    implementation ("androidx.appcompat:appcompat:1.6.1")
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

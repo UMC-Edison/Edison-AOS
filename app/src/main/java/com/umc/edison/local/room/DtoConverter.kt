@@ -24,4 +24,8 @@ class DtoConverter {
         .fromJson(json, Array<String>::class.java)
         .toList()
 
+
+
+
+
 }
