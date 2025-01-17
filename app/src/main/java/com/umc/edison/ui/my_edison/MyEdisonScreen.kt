@@ -58,6 +58,7 @@ fun MyEdisonScreen(navController: NavController) {
 fun InputFieldScreen(navController: NavController) {
 
     val showPopup = ShowPopup()
+    //val imageDelete = ImageDelete()
 
     val context = LocalContext.current
 
@@ -113,7 +114,7 @@ fun InputFieldScreen(navController: NavController) {
     ){
         AndroidViewBinding(FragmentInputFieldBinding::inflate) {
 
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            /*val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
             val bubbleList = arrayListOf(
                 BubbleLocal("Title 1", "Content", dateFormat.parse("2025-01-16")!!,"https://example.com/image.jpg", listOf("https://example.com/image1_1.jpg", "https://example.com/image1_2.jpg"), false,true),
                 BubbleLocal("Title 2", "Content", dateFormat.parse("2025-01-16")!!,"https://example.com/image.jpg", listOf("https://example.com/image1_1.jpg", "https://example.com/image1_2.jpg"), false,true)
@@ -129,7 +130,7 @@ fun InputFieldScreen(navController: NavController) {
                 linkedList.add(selectedBubble)
                 linkedAdapter.updateItems(linkedList)
                 Toast.makeText(context, "${selectedBubble.title} 클릭됨", Toast.LENGTH_SHORT).show()
-                Log.d("RecyclerView", "Item clicked: ${selectedBubble.title}")
+                Log.d("RecyclerView", "Item clicked: ${selectedBubble.title}") 
 
             }
 
@@ -141,12 +142,11 @@ fun InputFieldScreen(navController: NavController) {
 
             val recyclerView1: RecyclerView = linkedRv
             recyclerView1.adapter = linkedAdapter
-            recyclerView1.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+            recyclerView1.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)*/
 
             val texts = listOf(
                 text1,text2,text3,text4,text5,text6,text7,text8,text9,text10,text11
             )
-
 
             val imageViews = listOf(
                 imageView1, imageView2, imageView3,imageView4, imageView5,
@@ -158,59 +158,18 @@ fun InputFieldScreen(navController: NavController) {
             }
 
             var isListMode = false;
-
             listIv.setOnClickListener{
-
-                isListMode = !isListMode;
-
-                if (isListMode) {
-                    listIv.setImageResource(R.drawable.ic_space_selected)
-                    texts.forEach { editText ->
-
-                        val cursorPosition = editText.selectionStart
-                        val textBeforeCursor = editText.text.substring(0, cursorPosition)
-
-                        val currentLineStart = textBeforeCursor.lastIndexOf("\n") + 1
-                        val currentLineEnd = cursorPosition
-
-                        val currentLine = textBeforeCursor.substring(currentLineStart, currentLineEnd)
-                        if (!currentLine.startsWith("□")) {
-                            val updatedLine = "□ $currentLine"
-                            editText.text.replace(
-                                currentLineStart,
-                                currentLineEnd,
-                                updatedLine
-                            )
-                        }
-
-                        editText.setSelection(editText.text.length)
-
-
-                        editText.setOnKeyListener { _, keyCode, event ->
-                            if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN) {
-                                editText.append("\n□ ")
-                                editText.setSelection(editText.text.length)
-                                true
-                            } else {
-                                false
-                            }
-                        }
-                    }
-                } else {
-
-                    listIv.setImageResource(R.drawable.ic_list_tool_off)
-                    texts.forEach { editText ->
-                        editText.setOnKeyListener(null)
-                    }
-                } // 목록화
-
-
+                val makelist = MakeList()
+                isListMode = !isListMode
+                makelist.makeList(isListMode,listIv,texts)
 
             }
 
             cameraIv.setOnClickListener {
                 showPopup.showCameraPopup(context, it,galleryPermissionLauncher, cameraPermissionLauncher , pickImageLauncher, takePictureLauncher)
             }
+
+
 
             imageItems.forEachIndexed { index, item ->
                 when (item) {

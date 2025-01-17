@@ -98,7 +98,7 @@ class ShowPopup {
         anchorView: View,
         galleryPermissionLauncher: ActivityResultLauncher<String>, cameraPermissionLauncher: ActivityResultLauncher<String>,
         pickImageLauncher: ActivityResultLauncher<String>,
-        takePictureLauncher: ManagedActivityResultLauncher<Void?, Bitmap?>
+        takePictureLauncher: ManagedActivityResultLauncher<Void?, Bitmap? >,
     ){
         val popupBinding = CameraPopupBinding.inflate(LayoutInflater.from(context))
 
