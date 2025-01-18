@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.umc.edison.R
 import com.umc.edison.local.model.BubbleLocal
@@ -27,7 +28,9 @@ class TitleRecyclerViewAdapter(
     override fun onBindViewHolder(holder: CustomViewHolder, position: Int) {
         val item = list[position]
         holder.titleTextView.text = "[[ " + item.title + " ]]"
-        holder.itemView.setOnClickListener { onItemClick(item) }// BubbleLocal의 title만 표시
+        holder.titleTextView.setOnClickListener {
+            Toast.makeText(it.context, "${item.title} 클릭됨", Toast.LENGTH_SHORT).show()
+        }// BubbleLocal의 title만 표시
     }
 
     override fun getItemCount(): Int = list.size
