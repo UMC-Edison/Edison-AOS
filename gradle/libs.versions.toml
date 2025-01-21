@@ -1,9 +1,11 @@
 [versions]
 agp = "8.6.0"
+appcompatVersion = "1.6.1"
 kotlin = "1.9.0"
 coreKtx = "1.15.0"
 appcompat = "1.7.0"
 material = "1.12.0"
+material-compose= "1.5.0"
 constraintlayout = "2.1.4"
 lifecycleViewmodelKtx = "2.8.6"
 junit = "4.13.2"
@@ -14,7 +16,7 @@ activityCompose = "1.9.3"
 composeBom = "2024.04.01"
 nav-compose = "2.8.5"
 ui-compose = "1.7.6"
-
+hilt-navigation-compose = "1.0.0"
 ksp = "1.9.0-1.0.13"
 room = "2.6.1"
 okhttp = "4.12.0"
@@ -22,8 +24,11 @@ retrofit = "2.10.0"
 gson = "2.10.1"
 coil = "3.0.1"
 hilt = "2.51.1"
+foundation-layout = "1.5.0"
+
 
 [libraries]
+androidx-appcompat-v161 = { module = "androidx.appcompat:appcompat", version.ref = "appcompatVersion" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
@@ -61,6 +66,13 @@ coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp"
 
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler =  { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hilt" }
+hilt-navigation-compose = {group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hilt-navigation-compose"}
+foundation-layout = {group ="androidx.compose.foundation", name="foundation-layout", version.ref ="foundation-layout"}
+material-compose = {group = "androidx.compose.material" ,name = "material", version.ref = "material-compose"}
+compose-ui = {group="androidx.compose.ui",name="ui",version.ref="ui-compose"}
+ui-tooling-preview= {group="androidx.compose.ui", name ="ui-tooling-preview",version.ref="ui-compose"}
+
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

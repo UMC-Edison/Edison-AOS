@@ -1,5 +1,7 @@
 package com.umc.edison.ui.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -11,6 +13,7 @@ import com.umc.edison.ui.my_edison.MyEdisonScreen
 import com.umc.edison.ui.mypage.MyPageScreen
 import com.umc.edison.ui.space.BubbleSpaceScreen
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun NavigationGraph(navHostController: NavHostController) {
     NavHost(navHostController, startDestination = BottomNavItem.MyEdison.route) {

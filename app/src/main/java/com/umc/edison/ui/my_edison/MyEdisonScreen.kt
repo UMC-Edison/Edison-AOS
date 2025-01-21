@@ -7,6 +7,8 @@ import android.text.Editable
 import android.util.Log
 import android.view.KeyEvent
 import android.view.View
+import android.widget.EditText
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -37,6 +39,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.umc.edison.R
 import com.umc.edison.databinding.FragmentInputFieldBinding
 import com.umc.edison.databinding.FragmentMyEdisonBinding
+import com.umc.edison.domain.model.Bubble
+import com.umc.edison.domain.model.Label
 import com.umc.edison.local.model.BubbleLocal
 import com.umc.edison.local.model.LabelLocal
 import java.text.SimpleDateFormat
@@ -67,9 +71,8 @@ fun MyEdisonScreen(navController: NavController) {
 @Composable
 fun InputFieldScreen(navController: NavController) {
 
-    val showPopup = ShowPopup()
     val context = LocalContext.current
-    val selectedLabel = mutableListOf<LabelLocal>()
+    val selectedLabel = mutableListOf<Label>()
     val imageItems = remember { mutableStateListOf<Any?>() }
 
 
@@ -143,24 +146,47 @@ fun InputFieldScreen(navController: NavController) {
 
         AndroidViewBinding(FragmentInputFieldBinding::inflate, modifier = Modifier.zIndex(1f)) {
 
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val bubbleList = arrayListOf(
-                BubbleLocal("Title 1", "Content", dateFormat.parse("2025-01-16")!!,"https://example.com/image.jpg", listOf("https://example.com/image1_1.jpg", "https://example.com/image1_2.jpg"), false,true),
-                BubbleLocal("Title 2", "Content", dateFormat.parse("2025-01-16")!!,"https://example.com/image.jpg", listOf("https://example.com/image1_1.jpg", "https://example.com/image1_2.jpg"), false,true)
+            val labelList = listOf(
+                Label(1,"peach","#FFE0B2"),
+                Label(2,"mint","#CCFFCC"),
+                Label(3,"lavender","#FFC0CB"),
+                Label(4,"pink","#FFC0CB"),
+                Label(5,"yellow","#FFFACD"),
+                Label(6,"purple","#E6E6FA"),
+                Label(7,"blue","#ADD8E6"),
+                Label(8,"green","#98FB98"),
+                Label(9,"lime","#DFFFBF"),
+                Label(10,"sky","#AEE4FF"),
+                Label(11,"lilac","#CBAACB"),
+            )
+
+            val bubbleList = listOf(
+                Bubble(1, "Title1","Content", "mainimage", listOf("https://example.com/image1_1.jpg", "https://example.com/image1_2.jpg"), labelList,"2025.01.19"),
+                Bubble(2, "Title2","Content", "mainimage", listOf("https://example.com/image1_1.jpg", "https://example.com/image1_2.jpg"), labelList,"2025.01.19"),
+                Bubble(3, "Title3","Content", "mainimage", listOf("https://example.com/image1_1.jpg", "https://example.com/image1_2.jpg"), labelList,"2025.01.19"),
+                Bubble(4, "Title4","Content", "mainimage", listOf("https://example.com/image1_1.jpg", "https://example.com/image1_2.jpg"), labelList,"2025.01.19"),
+                Bubble(5, "Title5","Content", "mainimage", listOf("https://example.com/image1_1.jpg", "https://example.com/image1_2.jpg"), labelList,"2025.01.19"),
+                Bubble(6, "Title6","Content", "mainimage", listOf("https://example.com/image1_1.jpg", "https://example.com/image1_2.jpg"), labelList,"2025.01.19"),
+                Bubble(7, "Title7","Content", "mainimage", listOf("https://example.com/image1_1.jpg", "https://example.com/image1_2.jpg"), labelList,"2025.01.19"),
+                Bubble(8, "Title8","Content", "mainimage", listOf("https://example.com/image1_1.jpg", "https://example.com/image1_2.jpg"), labelList,"2025.01.19"),
 
             )
 
-            val linkedList = mutableListOf<BubbleLocal>()
-            val linkedAdapter = LinkRecyclerViewAdapter(linkedList)
 
 
+            val linkedList = mutableListOf<Bubble>()
+            val linkedAdapter = LinkRecyclerViewAdapter(linkedList){
+                
+            }
 
-            val adapter = TitleRecyclerViewAdapter(bubbleList){  /*selectedBubble ->
-                linkedList.add(selectedBubble)
-                linkedAdapter.updateItems(linkedList)
-                Toast.makeText(context, "${selectedBubble.title} 클릭됨", Toast.LENGTH_SHORT).show()
-                Log.d("RecyclerView", "Item clicked: ${selectedBubble.title}") */
-
+            val adapter = TitleRecyclerViewAdapter(bubbleList){  selectedBubble ->
+                if (!linkedList.contains(selectedBubble)) {
+                    linkedList.add(selectedBubble) // 중복이 없을 때만 추가
+                    linkedAdapter.notifyItemInserted(linkedList.size - 1) // RecyclerView에 업데이트
+                    Toast.makeText(context, "${selectedBubble.title} 추가됨", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "${selectedBubble.title} 이미 추가됨", Toast.LENGTH_SHORT).show()
+                }
             }
 
 
@@ -169,26 +195,11 @@ fun InputFieldScreen(navController: NavController) {
             recyclerView.adapter = adapter
             recyclerView.layoutManager = LinearLayoutManager(context)
 
-            val recyclerView1: RecyclerView = linkedRv
+           val recyclerView1: RecyclerView = linkedRv
             recyclerView1.adapter = linkedAdapter
             recyclerView1.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
 
-            val labelList = arrayListOf(
-                LabelLocal("peach","#FFE0B2",false,false),
-                LabelLocal("mint","#CCFFCC",false,false),
-                LabelLocal("lavender","#E1BEE7",false,false),
-                LabelLocal("pink","#FFC0CB",false,false),
-                LabelLocal("yellow","#FFFACD",false,false),
-                LabelLocal("purple","#E6E6FA",false,false),
-                LabelLocal("blue","#ADD8E6",false,false),
-                LabelLocal("green","#98FB98",false,false),
-                LabelLocal("green","#98FB98",false,false),
-                LabelLocal("green","#98FB98",false,false),
-                LabelLocal("green","#98FB98",false,false),
-                LabelLocal("green","#98FB98",false,false),
-                LabelLocal("green","#98FB98",false,false),
 
-            )
 
             val recyclerView2 : RecyclerView = labelRv
 
@@ -218,7 +229,7 @@ fun InputFieldScreen(navController: NavController) {
             )
 
             textStyleIv.setOnClickListener {
-                showPopup.showTextStylePopup(context, it, texts)
+                showTextStylePopup(context, it, texts)
                 if (titleRv.visibility == View.VISIBLE) {
                     titleRv.visibility = View.GONE
                 }
@@ -229,15 +240,57 @@ fun InputFieldScreen(navController: NavController) {
             }
 
             var isListMode = false;
-            listIv.setOnClickListener{
-                val makelist = MakeList()
-                isListMode = !isListMode
-                makelist.makeList(isListMode,listIv,texts)
+            fun makeList(isListMode:Boolean, listIv: ImageView, editTexts: List<EditText>){
 
+                if (isListMode) {
+                    listIv.setImageResource(R.drawable.ic_space_selected)
+                    editTexts.forEach { editText ->
+
+                        val cursorPosition = editText.selectionStart
+                        val textBeforeCursor = editText.text.substring(0, cursorPosition)
+
+                        val currentLineStart = textBeforeCursor.lastIndexOf("\n") + 1
+                        val currentLineEnd = cursorPosition
+
+                        val currentLine = textBeforeCursor.substring(currentLineStart, currentLineEnd)
+                        if (!currentLine.startsWith("□")) {
+                            val updatedLine = "□ $currentLine"
+                            editText.text.replace(
+                                currentLineStart,
+                                currentLineEnd,
+                                updatedLine
+                            )
+                        }
+
+                        editText.setSelection(editText.text.length)
+
+
+                        editText.setOnKeyListener { _, keyCode, event ->
+                            if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN) {
+                                editText.append("\n□ ")
+                                editText.setSelection(editText.text.length)
+                                true
+                            } else {
+                                false
+                            }
+                        }
+                    }
+                } else {
+
+                    listIv.setImageResource(R.drawable.ic_list_tool_off)
+                    editTexts.forEach { editText ->
+                        editText.setOnKeyListener(null)
+                    }
+                }
+
+            }
+            listIv.setOnClickListener{
+                isListMode = !isListMode
+                makeList(isListMode,listIv,texts)
             }
 
             cameraIv.setOnClickListener {
-                showPopup.showCameraPopup(context, it,galleryPermissionLauncher, cameraPermissionLauncher , pickImageLauncher, takePictureLauncher)
+                showCameraPopup(context, it,galleryPermissionLauncher, cameraPermissionLauncher , pickImageLauncher, takePictureLauncher)
                 
                 if (titleRv.visibility == View.VISIBLE) {
                     titleRv.visibility = View.GONE
@@ -262,7 +315,7 @@ fun InputFieldScreen(navController: NavController) {
 
 
                 imageViews[index].setOnLongClickListener {
-                    showPopup.showDeletePopup(context, it) {
+                    showDeletePopup(context, it) {
                         val currentText = texts.getOrNull(index + 1)?.text?.toString() ?: ""
                         val previousText = texts[index].text.toString()
 

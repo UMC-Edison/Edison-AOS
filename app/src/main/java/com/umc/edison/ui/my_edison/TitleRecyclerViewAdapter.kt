@@ -8,29 +8,31 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.umc.edison.R
+import com.umc.edison.databinding.LabelItemBinding
+import com.umc.edison.databinding.TitleItemBinding
+import com.umc.edison.domain.model.Bubble
 import com.umc.edison.local.model.BubbleLocal
 
 class TitleRecyclerViewAdapter(
-    private val list: ArrayList<BubbleLocal>,
-    private val onItemClick: (BubbleLocal) -> Unit
+    private val list: List<Bubble>,
+    private val onItemClick: (Bubble) -> Unit
 ) : RecyclerView.Adapter<TitleRecyclerViewAdapter.CustomViewHolder>() {
 
-    inner class CustomViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val titleTextView: TextView = itemView.findViewById(R.id.titleTv)
+    inner class CustomViewHolder(private val binding:TitleItemBinding) : RecyclerView.ViewHolder(binding.root) {
+        val titleTextView: TextView = binding.titleTv
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CustomViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.title_item, parent, false) // 아이템 레이아웃 설정
+        val view = TitleItemBinding.inflate(LayoutInflater.from(parent.context),parent,false)
         return CustomViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: CustomViewHolder, position: Int) {
         val item = list[position]
-        holder.titleTextView.text = "[[ " + item.title + " ]]"
+        holder.titleTextView.text =  "[["+item.title+"]]"
         holder.titleTextView.setOnClickListener {
-            Toast.makeText(it.context, "${item.title} 클릭됨", Toast.LENGTH_SHORT).show()
-        }// BubbleLocal의 title만 표시
+            onItemClick(item)
+        }
     }
 
     override fun getItemCount(): Int = list.size

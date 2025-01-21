@@ -21,8 +21,6 @@ import com.umc.edison.R
 import com.umc.edison.databinding.CameraPopupBinding
 import com.umc.edison.databinding.TextStylePopupBinding
 
-class ShowPopup {
-
     fun showDeletePopup(context: Context, anchorView: View, onDeleteConfirmed: () -> Unit) {
 
         val popupView = LayoutInflater.from(context).inflate(R.layout.delete_popup, null)
@@ -140,4 +138,3 @@ class ShowPopup {
     fun Int.dpToPx(): Int {
         return (this * Resources.getSystem().displayMetrics.density).toInt()
     }
-}

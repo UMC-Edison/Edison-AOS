@@ -10,18 +10,20 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.umc.edison.R
+import com.umc.edison.databinding.LabelItemBinding
+import com.umc.edison.domain.model.Label
 import com.umc.edison.local.model.BubbleLocal
 import com.umc.edison.local.model.LabelLocal
 
 class LabelRecyclerViewAdapter(
-    private val list: ArrayList<LabelLocal>,
-    private val selectedLabel: MutableList<LabelLocal>,
-   private val onItemClick: (LabelLocal) -> Unit,
+    private val list: List<Label>,
+    private val selectedLabel: MutableList<Label>,
+    private val onItemClick: (Label) -> Unit,
 ) : RecyclerView.Adapter<LabelRecyclerViewAdapter.CustomViewHolder>() {
 
-    class CustomViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView){
+    class CustomViewHolder(private val binding: LabelItemBinding) : RecyclerView.ViewHolder(binding.root){
 
-        val labelView : Button = itemView.findViewById(R.id.labelBt)
+        val labelView : Button = binding.labelBt
 
     }
 
@@ -29,9 +31,7 @@ class LabelRecyclerViewAdapter(
         parent: ViewGroup,
         viewType: Int
     ): LabelRecyclerViewAdapter.CustomViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.label_item, parent, false)
-
+        val view = LabelItemBinding.inflate(LayoutInflater.from(parent.context),parent,false)
         return CustomViewHolder(view)
     }
 
@@ -50,7 +50,7 @@ class LabelRecyclerViewAdapter(
             // 선택 상태에 따라 테두리 추가
             if (selectedLabel.contains(item)) {
 
-                backgroundDrawable.setColor(darkenColor(baseColor, 0.8f))
+                backgroundDrawable.setColor(darkenColor(baseColor, 0.7f))
                 //backgroundDrawable.setStroke(4, Color.parseColor("#E8E8E8")) // 테두리 추가
             } else {
 
