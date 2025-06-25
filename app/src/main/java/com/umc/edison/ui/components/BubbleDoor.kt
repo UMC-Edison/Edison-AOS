@@ -54,6 +54,7 @@ import com.umc.edison.ui.theme.Gray700
 import com.umc.edison.ui.theme.Gray800
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
@@ -448,9 +449,10 @@ private fun BubbleContent(
                     }
                 }
 
+
                 Box(
                     modifier = Modifier
-                        .wrapContentWidth() // ✅ FlowRow 대응
+                        .wrapContentWidth()
                         .pointerInput(backLink.id) {
                             detectTapGestures(
                                 onLongPress = {
@@ -476,49 +478,27 @@ private fun BubbleContent(
                     )
 
                     if (isLongPressed) {
-                        Column(
+
+
+                        Button(
+                            shape = RoundedCornerShape(100.dp),
+                            onClick = {
+                                isLongPressed = false
+                                onBackLinkDeleted(backLink)
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Gray800
+                            ),
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp)
-                                .clickable { isLongPressed = false }, // 바깥 클릭 시 닫기
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
+                                .align(Alignment.BottomEnd)
+                                .padding(top = 20.dp)
+                                .size(width = 90.dp, height = 41.dp)
                         ) {
-                            Button(
-                                shape = RoundedCornerShape(100.dp),
-                                onClick = {
-                                    isLongPressed = false
-                                    onBackLinkDeleted(backLink)
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor =  Gray100
-                                )
-                            ) {
-                                Text(
-                                    text = "백링크 삭제하기",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontSize = 14.sp,
-                                    color = Red500
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(1.dp))
-
-                            Button(
-                                shape = RoundedCornerShape(100.dp),
-                                onClick = {
-                                   isLongPressed = false
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Gray700,
-                                )
-                            ) {
-                                Text(
-                                    text = "취소",
-                                    style = MaterialTheme.typography.bodyMedium.copy(color = Red100),
-                                    fontSize = 14.sp
-                                )
-                            }
+                            Text(
+                                text = "삭제하기",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = Red100
+                            )
                         }
                     }
                 }
@@ -579,49 +559,26 @@ private fun BubbleContent(
                 )
 
                 if (isLongPressed) {
-                    Column(
+
+                    Button(
+                        shape = RoundedCornerShape(100.dp),
+                        onClick = {
+                            isLongPressed = false
+                            onLinkBubbleDeleted(linkedBubble)
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Gray800
+                        ),
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                            .clickable { isLongPressed = false },
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
+                            .align(Alignment.BottomEnd)
+                            .padding(top = 20.dp)
+                            .size(width = 90.dp, height = 41.dp)
                     ) {
-                        Button(
-                            shape = RoundedCornerShape(100.dp),
-                            onClick = {
-                                isLongPressed = false
-                                onLinkBubbleDeleted(linkedBubble)
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor =  Gray100
-                            )
-                        ) {
-                            Text(
-                                text = "링크버블 삭제하기",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontSize = 14.sp,
-                                color = Red500
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(1.dp))
-
-                        Button(
-                            shape = RoundedCornerShape(100.dp),
-                            onClick = {
-                                isLongPressed = false
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Gray700,
-                            )
-                        ) {
-                            Text(
-                                text = "취소",
-                                style = MaterialTheme.typography.bodyMedium.copy(color = Red100),
-                                fontSize = 14.sp
-                            )
-                        }
+                        Text(
+                            text = "삭제하기",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = Red100
+                        )
                     }
                 }
             }
