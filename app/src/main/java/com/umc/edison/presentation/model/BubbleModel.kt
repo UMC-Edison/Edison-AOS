@@ -4,11 +4,12 @@ import com.umc.edison.domain.model.bubble.Bubble
 import com.umc.edison.presentation.edison.parseHtml
 import java.util.Date
 import java.util.UUID
+import java.util.LinkedList
 
 data class BubbleModel(
     val id: String?,
     val title: String?,
-    val contentBlocks: List<ContentBlockModel>,
+    val contentBlocks: LinkedList<ContentBlockModel>, // LinkedList로 변경
     val mainImage: String?,
     val labels: List<LabelModel>,
     val backLinks: List<BubbleModel>,
@@ -19,7 +20,7 @@ data class BubbleModel(
         return Bubble(
             id = id ?: UUID.randomUUID().toString(),
             title = title,
-            content = contentBlocks.joinToString { it.toDomain() },
+            content = contentBlocks,
             mainImage = mainImage,
             labels = labels.map { it.toDomain() },
             backLinks = backLinks.map { it.toDomain() },
@@ -32,7 +33,7 @@ data class BubbleModel(
         val DEFAULT = BubbleModel(
             id = null,
             title = null,
-            contentBlocks = emptyList(),
+            contentBlocks = LinkedList(), // 빈 LinkedList로 초기화
             mainImage = null,
             labels = emptyList(),
             backLinks = emptyList(),
@@ -43,28 +44,28 @@ data class BubbleModel(
 }
 
 fun Bubble.toPresentation(): BubbleModel {
-    // Text 타입의 경우 앞에 %<TEXT>와 뒤에 </TEXT>%가 붙어있고
-    // Image 타입의 경우 앞에 %<IMAGE>와 뒤에 </IMAGE>%가 붙어있음
-    val contentBlocks = content?.split("%<")?.mapIndexed { idx, s ->
-        val type = when {
-            s.startsWith("${ContentType.TEXT}>") -> ContentType.TEXT
-            s.startsWith("${ContentType.IMAGE}>") -> ContentType.IMAGE
-            else -> return@mapIndexed null
+    val contentBlocks = content?.let { contentString ->
+        // contentString을 직접 처리하여 ContentBlockModel 리스트로 변환
+        contentString.split("%<").mapIndexed { idx, s ->
+            val type = when {
+                s.startsWith("${ContentType.TEXT}>") -> ContentType.TEXT
+                s.startsWith("${ContentType.IMAGE}>") -> ContentType.IMAGE
+                else -> return@mapIndexed null
+            }
+            val content = when (type) {
+                ContentType.TEXT -> s.substringAfter("${ContentType.TEXT}>")
+                    .substringBefore("</${ContentType.TEXT}>")
+                ContentType.IMAGE -> s.substringAfter("${ContentType.IMAGE}>")
+                    .substringBefore("</${ContentType.IMAGE}>")
+            }
+            ContentBlockModel(type, content, idx)
         }
-        val content = when (type) {
-            ContentType.TEXT -> s.substringAfter("${ContentType.TEXT}>")
-                .substringBefore("</${ContentType.TEXT}")
-
-            ContentType.IMAGE -> s.substringAfter("${ContentType.IMAGE}>")
-                .substringBefore("</${ContentType.IMAGE}")
-        }
-        ContentBlockModel(type, content, idx)
-    }?.filterNotNull() ?: emptyList()
+    }?.filterNotNull()?.toCollection(LinkedList()) ?: LinkedList() // LinkedList로 변경
 
     return BubbleModel(
         id,
         title,
-        contentBlocks,
+        contentBlocks,  // LinkedList<ContentBlockModel>
         mainImage?.ifEmpty { null },
         labels.toPresentation(),
         backLinks.toPresentation(),

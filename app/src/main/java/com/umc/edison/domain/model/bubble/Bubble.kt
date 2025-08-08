@@ -8,7 +8,7 @@ import java.util.LinkedList
 data class Bubble(
     val id: String,
     val title: String?,
-    val content: String?,
+    val content: LinkedList<ContentBlockModel>,  // LinkedList 변경
     val mainImage: String?,
     val labels: List<Label>,
     val backLinks: List<Bubble>,
