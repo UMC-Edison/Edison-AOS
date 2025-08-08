@@ -30,6 +30,23 @@ abstract class BaseBubbleViewModel<M : BaseBubbleMode, S : BaseBubbleState<M>>(
         }
     }
 
+    // 특정 위치에 컨텐츠 블럭 추가
+    fun addContentBlockAtPosition(type: ContentType, position: Int) {
+        val newBlock = ContentBlockModel(type, "", position)
+        _uiState.update { currentState ->
+            val updatedContentBlocks = currentState.contentBlocks.apply {
+                // 지정된 위치에 새로운 블럭을 추가
+                add(position, newBlock)
+                // 이후의 블럭들의 position을 갱신
+                for (i in position + 1 until size) {
+                    this[i] = this[i].copy(position = i)
+                }
+            }
+
+            currentState.copyState(contentBlocks = updatedContentBlocks) as S
+        }
+    }
+
     // 컨텐츠 블럭 삭제
     fun deleteContentBlock(contentBlock: ContentBlockModel) {
         _uiState.update { currentState ->
