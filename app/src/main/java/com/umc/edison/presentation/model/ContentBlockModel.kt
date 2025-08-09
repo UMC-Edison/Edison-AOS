@@ -15,6 +15,7 @@ data class ContentBlockModel(
     }
 }
 
+
 enum class ContentType {
     TEXT, IMAGE
 }
