@@ -31,6 +31,8 @@ import java.io.File
 import java.io.FileOutputStream
 import javax.inject.Inject
 import androidx.core.net.toUri
+import io.reactivex.internal.util.BackpressureHelper.add
+import java.util.LinkedList
 
 @HiltViewModel
 class BubbleInputViewModel @Inject constructor(
@@ -43,7 +45,9 @@ class BubbleInputViewModel @Inject constructor(
     private val addBubbleUseCase: AddBubbleUseCase,
     private val updateBubbleUseCase: UpdateBubbleUseCase,
 ) : BaseViewModel(toastManager) {
-    private val _uiState = MutableStateFlow(BubbleInputState.DEFAULT)
+    private val _uiState = MutableStateFlow(BubbleInputState.DEFAULT.copy(
+        bubble = BubbleModel.DEFAULT.copy(contentBlocks = LinkedList())
+    ))
     val uiState = _uiState.asStateFlow()
 
     init {
@@ -62,11 +66,10 @@ class BubbleInputViewModel @Inject constructor(
         collectDataResource(
             flow = getBubbleUseCase(bubbleId),
             onSuccess = { bubble ->
-                val sortedContentBlocks =
-                    bubble.toPresentation().contentBlocks.sortedBy { it.position }
+                val sortedContentBlocks = bubble.toPresentation().contentBlocks.sortedBy { it.position }
                 _uiState.update {
                     it.copy(
-                        bubble = bubble.toPresentation().copy(contentBlocks = sortedContentBlocks),
+                        bubble = bubble.toPresentation().copy(contentBlocks = LinkedList(sortedContentBlocks)),
                         selectedLabels = bubble.labels.toPresentation()
                     )
                 }
@@ -82,9 +85,11 @@ class BubbleInputViewModel @Inject constructor(
             flow = getAllBubblesUseCase(),
             onSuccess = { bubbles ->
                 _uiState.update {
-                    it.copy(bubbles = bubbles.toPresentation().filter { bubble ->
-                        bubble.id != _uiState.value.bubble.id
-                    })
+                    it.copy(
+                        bubbles = bubbles.toPresentation().filter { bubble ->
+                            bubble.id != _uiState.value.bubble.id
+                        }
+                    )
                 }
             },
         )
@@ -221,13 +226,12 @@ class BubbleInputViewModel @Inject constructor(
             position = 0
         )
 
-        // 기존 contentBlock의 position을 1씩 증가시킴
         val currentContentBlocks = _uiState.value.bubble.contentBlocks.map {
             it.copy(position = it.position + 1)
         }
 
         _uiState.update {
-            val updatedContentBlocks = listOf(newTextBlock) + currentContentBlocks
+            val updatedContentBlocks = LinkedList(listOf(newTextBlock) + currentContentBlocks)
             it.copy(
                 bubble = it.bubble.copy(
                     contentBlocks = updatedContentBlocks
@@ -241,7 +245,6 @@ class BubbleInputViewModel @Inject constructor(
     }
 
     fun addContentBlocks() {
-        // uiState의 selectedImages 중 현재 ContentBlocks에 없는 이미지들만 필터링
         val imagePaths = _uiState.value.selectedImages.filter { imageUri ->
             _uiState.value.bubble.contentBlocks.none { it.content == imageUri.toString() }
         }
@@ -279,7 +282,6 @@ class BubbleInputViewModel @Inject constructor(
         _uiState.update { it.copy(isGalleryOpen = false, selectedIcon = IconType.NONE) }
     }
 
-    // 내용 업데이트
     @RequiresApi(Build.VERSION_CODES.N)
     fun updateBubbleContent(bubble: BubbleModel) {
         _uiState.update {
@@ -291,11 +293,11 @@ class BubbleInputViewModel @Inject constructor(
         checkCanSave()
     }
 
-    // BackLink 삭제
     fun deleteBackLink(targetBackLink: BubbleModel) {
         val currentBubble = _uiState.value.bubble
         val updatedBackLinks = currentBubble.backLinks
             .filterNot { it.id == targetBackLink.id }
+
 
         _uiState.update { currentState ->
             currentState.copy(
@@ -306,7 +308,6 @@ class BubbleInputViewModel @Inject constructor(
         }
     }
 
-    // Linked Bubble 삭제
     fun deleteLinkBubble(targetLinkBubble: BubbleModel) {
         val currentBubble = _uiState.value.bubble
 
@@ -319,7 +320,6 @@ class BubbleInputViewModel @Inject constructor(
         }
     }
 
-    // Content Block 삭제
     fun deleteContentBlock(contentBlock: ContentBlockModel) {
         if (contentBlock.type != ContentType.IMAGE) return
 
@@ -333,12 +333,10 @@ class BubbleInputViewModel @Inject constructor(
 
         if (targetIndex == -1) return
 
-        // selectedImages에서 해당 이미지 제거
         if (_uiState.value.selectedImages.contains(contentBlock.content.toUri())) {
             _uiState.update { it.copy(selectedImages = it.selectedImages - contentBlock.content.toUri()) }
         }
 
-        // 이미지가 첫 번째 블록일 때
         if (targetIndex == 0) {
             contentBlocks.removeAt(targetIndex)
             _uiState.update { it.copy(bubble = it.bubble.copy(contentBlocks = contentBlocks)) }
@@ -349,26 +347,23 @@ class BubbleInputViewModel @Inject constructor(
             return
         }
 
-        // 이미지가 마지막 블록일 때
         if (targetIndex == currentBubble.contentBlocks.lastIndex) {
             contentBlocks.removeAt(targetIndex)
             _uiState.update { it.copy(bubble = it.bubble.copy(contentBlocks = contentBlocks)) }
 
-            // 마지막 블록이 이미지 블록이면 텍스트 블록 추가
             if (contentBlocks.last().type == ContentType.IMAGE) {
                 addTextBlock()
             }
             return
         }
 
-        // 이미지가 중간 블럭일 때 이전 블록과 다음 블록이 TEXT일 경우 연결
         if (contentBlocks[targetIndex - 1].type == ContentType.TEXT && contentBlocks[targetIndex + 1].type == ContentType.TEXT) {
             contentBlocks[targetIndex - 1] = contentBlocks[targetIndex - 1].copy(
                 content = contentBlocks[targetIndex - 1].content + contentBlocks[targetIndex + 1].content
             )
 
-            contentBlocks.removeAt(targetIndex) // 제거하려는 이미지 블록 삭제
-            contentBlocks.removeAt(targetIndex) // 다음 TEXT 블록 삭제
+            contentBlocks.removeAt(targetIndex)
+            contentBlocks.removeAt(targetIndex)
 
             _uiState.update { it.copy(bubble = it.bubble.copy(contentBlocks = contentBlocks)) }
             return
@@ -567,6 +562,7 @@ class BubbleInputViewModel @Inject constructor(
     }
 
 }
+
 
 @RequiresApi(Build.VERSION_CODES.N)
 fun String.parseHtml(): String {

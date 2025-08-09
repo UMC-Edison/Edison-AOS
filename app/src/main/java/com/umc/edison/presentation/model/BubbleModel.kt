@@ -7,14 +7,14 @@ import java.util.UUID
 data class BubbleModel(
     val id: String?,
     val title: String?,
-    val contentBlocks: List<ContentBlockModel>, // 프레젠테이션 계층에서만 LinkedList로 관리
+    val contentBlocks: List<ContentBlockModel>,
     val mainImage: String?,
     val labels: List<LabelModel>,
     val backLinks: List<BubbleModel>,
     val linkedBubble: BubbleModel?,
     val date: Date
 ) {
-    // toDomain()에서 contentBlocks를 String으로 변환
+    // contentBlocks를 String으로 변환하여 도메인 모델로 반환
     fun toDomain(): Bubble {
         return Bubble(
             id = id ?: UUID.randomUUID().toString(),
