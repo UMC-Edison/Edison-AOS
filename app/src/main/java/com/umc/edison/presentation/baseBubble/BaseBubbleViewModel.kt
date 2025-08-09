@@ -4,8 +4,6 @@ import com.umc.edison.domain.usecase.bubble.TrashBubblesUseCase
 import com.umc.edison.presentation.ToastManager
 import com.umc.edison.presentation.base.BaseViewModel
 import com.umc.edison.presentation.model.BubbleModel
-import com.umc.edison.presentation.model.ContentBlockModel
-import com.umc.edison.presentation.model.ContentType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -17,46 +15,6 @@ abstract class BaseBubbleViewModel<M : BaseBubbleMode, S : BaseBubbleState<M>>(
     open val uiState = _uiState.asStateFlow()
 
     abstract val trashBubblesUseCase: TrashBubblesUseCase
-
-    // 컨텐츠 블럭 추가
-    fun addContentBlock(type: ContentType) {
-        val newBlock = ContentBlockModel(type, "", uiState.value.contentBlocks.size)
-        _uiState.update { currentState ->
-            val updatedContentBlocks = currentState.contentBlocks.apply {
-                add(newBlock)  // LinkedList에 새 컨텐츠 블럭 추가
-            }
-
-            currentState.copyState(contentBlocks = updatedContentBlocks) as S
-        }
-    }
-
-    // 특정 위치에 컨텐츠 블럭 추가
-    fun addContentBlockAtPosition(type: ContentType, position: Int) {
-        val newBlock = ContentBlockModel(type, "", position)
-        _uiState.update { currentState ->
-            val updatedContentBlocks = currentState.contentBlocks.apply {
-                // 지정된 위치에 새로운 블럭을 추가
-                add(position, newBlock)
-                // 이후의 블럭들의 position을 갱신
-                for (i in position + 1 until size) {
-                    this[i] = this[i].copy(position = i)
-                }
-            }
-
-            currentState.copyState(contentBlocks = updatedContentBlocks) as S
-        }
-    }
-
-    // 컨텐츠 블럭 삭제
-    fun deleteContentBlock(contentBlock: ContentBlockModel) {
-        _uiState.update { currentState ->
-            val updatedContentBlocks = currentState.contentBlocks.apply {
-                remove(contentBlock)  // LinkedList에서 컨텐츠 블럭 삭제
-            }
-
-            currentState.copyState(contentBlocks = updatedContentBlocks) as S
-        }
-    }
 
     fun updateEditMode(mode: BaseBubbleMode) {
         if (mode == BaseBubbleMode.NONE) {
