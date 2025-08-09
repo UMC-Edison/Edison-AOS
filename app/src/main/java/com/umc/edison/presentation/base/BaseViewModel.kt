@@ -19,7 +19,7 @@ open class BaseViewModel @Inject constructor(
     internal val _baseState = MutableStateFlow(BaseState.DEFAULT)
     val baseState = _baseState.asStateFlow()
 
-    /**
+    /**a
      * 공통적으로 DataResource를 처리하는 함수
      */
     protected fun <T> collectDataResource(

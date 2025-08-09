@@ -29,6 +29,11 @@ import java.io.File
 import java.io.FileOutputStream
 import javax.inject.Inject
 import androidx.core.net.toUri
+import androidx.lifecycle.viewModelScope
+import com.umc.edison.domain.usecase.bubble.GetDownloadLinkUseCase
+import com.umc.edison.domain.usecase.bubble.GetPresignedUrlUseCase
+import com.umc.edison.domain.usecase.bubble.UploadImagesToS3UseCase
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 class BubbleInputViewModel @Inject constructor(
@@ -40,6 +45,9 @@ class BubbleInputViewModel @Inject constructor(
     private val addLabelUseCase: AddLabelUseCase,
     private val addBubbleUseCase: AddBubbleUseCase,
     private val updateBubbleUseCase: UpdateBubbleUseCase,
+    private val getPresignedUrlUseCase: GetPresignedUrlUseCase,
+    private val uploadImagesToS3UseCase: UploadImagesToS3UseCase,
+    private val getDownloadLinkUseCase: GetDownloadLinkUseCase
 ) : BaseViewModel(toastManager) {
     private val _uiState = MutableStateFlow(BubbleInputState.DEFAULT)
     val uiState = _uiState.asStateFlow()
@@ -477,8 +485,24 @@ class BubbleInputViewModel @Inject constructor(
         }
     }
 
-    fun saveCameraImage(context: Context) {
+    fun  saveCameraImage(context: Context) {
         val savedUri = saveImageToInternalStorage(context, _uiState.value.cameraImagePath!!)
+        val fileName = File(savedUri.path!!).name
+        val imageFile = File(savedUri.path!!)
+
+        collectDataResource(
+            flow = getPresignedUrlUseCase(fileName),
+            onSuccess = { presignedUrl ->
+                println("Presigned URL: $presignedUrl")
+
+                uploadImagesToS3UseCase(presignedUrl, imageFile)
+            },
+            onError = { e ->
+                println("Presigned URL 발급 실패: ${e.message}")
+            }
+            )
+
+
         _uiState.update {
             it.copy(
                 cameraImagePath = null,
@@ -488,6 +512,36 @@ class BubbleInputViewModel @Inject constructor(
         }
         addContentBlocks()
     }
+
+    fun resolveImageUrl(filePath: String, onResult: (String) -> Unit) {
+        val localFile = File(filePath)
+
+        if (filePath.startsWith("http")) {
+            onResult(filePath)
+            return
+        }
+
+        if (localFile.exists()) {
+            onResult(filePath)
+            return
+        }
+
+        // 로컬 파일도 없으면 S3 presigned download URL 요청
+        val fileName = filePath.substringAfterLast("/")
+        viewModelScope.launch {
+            collectDataResource(
+                flow = getDownloadLinkUseCase(fileName),
+                onSuccess = { downloadUrl ->
+                    onResult(downloadUrl)
+                },
+                onError = {
+                    println("S3 다운로드 URL 요청 실패: ${it.message}")
+                    onResult(null.toString())
+                }
+            )
+        }
+    }
+
 
     fun updateCameraOpen(isOpen: Boolean) {
         _uiState.update { it.copy(isCameraOpen = isOpen) }
@@ -556,6 +610,8 @@ class BubbleInputViewModel @Inject constructor(
             showToast("이미지는 최대 10개까지 첨부할 수 있습니다.")
         }
     }
+
+
 
 }
 

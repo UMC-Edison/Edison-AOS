@@ -4,10 +4,12 @@ import com.umc.edison.data.datasources.BubbleRemoteDataSource
 import com.umc.edison.data.model.bubble.BubbleEntity
 import com.umc.edison.data.model.bubble.PositionBubbleEntity
 import com.umc.edison.remote.api.BubbleSpaceApiService
+import com.umc.edison.remote.api.S3ApiService
 import javax.inject.Inject
 
 class BubbleRemoteDataSourceImpl @Inject constructor(
     private val bubbleSpaceApiService: BubbleSpaceApiService,
+    private val s3ApiService: S3ApiService
 ) : BubbleRemoteDataSource {
     // CREATE
     override suspend fun addBubbles(bubbles: List<BubbleEntity>): List<BubbleEntity> {
@@ -26,6 +28,14 @@ class BubbleRemoteDataSourceImpl @Inject constructor(
     // READ
     override suspend fun getAllClusteredBubbles(): List<PositionBubbleEntity> {
         return bubbleSpaceApiService.getBubblePosition().data.map { it.toData() }
+    }
+
+    override suspend fun getPresignedUrl(fileName: String): String {
+        return "s3ApiService.getPresignedUrl(fileName).data"
+    }
+
+    override suspend fun getDownloadLink(key: String): String {
+        return s3ApiService.getDownloadLink(key).data
     }
 
     // UPDATE

@@ -308,6 +308,10 @@ fun BubbleInputContent(
         },
         onLinkBubbleDeleted = { linkBubble ->
             viewModel.deleteLinkBubble(linkBubble)
+        },
+        checkImageUrl = { filePath, onResolved ->
+            viewModel.resolveImageUrl(filePath, onResolved)
         }
+
     )
 }

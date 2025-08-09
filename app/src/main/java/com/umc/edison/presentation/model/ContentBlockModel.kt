@@ -10,7 +10,9 @@ data class ContentBlockModel(
         // Image 타입의 경우 앞에 %<IMAGE>와 뒤에 </IMAGE>%가 붙어있음
         return when (type) {
             ContentType.TEXT -> "%<TEXT>$content</TEXT>%"
-            ContentType.IMAGE -> "%<IMAGE>$content</IMAGE>%"
+            ContentType.IMAGE -> {
+                "%<IMAGE>$content</IMAGE>%"
+            }
         }
     }
 }

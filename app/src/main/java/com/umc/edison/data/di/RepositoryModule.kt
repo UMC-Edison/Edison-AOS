@@ -16,6 +16,9 @@ import com.umc.edison.domain.repository.OnboardingRepository
 import com.umc.edison.domain.repository.RecentSearchRepository
 import com.umc.edison.domain.repository.SyncRepository
 import com.umc.edison.domain.repository.UserRepository
+import com.umc.edison.data.repository.S3RepositoryImpl
+import com.umc.edison.domain.repository.S3Repository
+
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -72,4 +75,11 @@ internal abstract class RepositoryModule {
     abstract fun bindOnboardingRepository(
         onboardingRepositoryImpl: OnboardingRepositoryImpl
     ): OnboardingRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindS3Repository(
+        s3RepositoryImpl: S3RepositoryImpl
+    ): S3Repository
+
 }

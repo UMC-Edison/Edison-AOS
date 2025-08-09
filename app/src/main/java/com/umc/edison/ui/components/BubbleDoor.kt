@@ -83,6 +83,7 @@ import com.umc.edison.ui.theme.Red100
 import com.umc.edison.ui.theme.Red500
 import com.umc.edison.ui.theme.White000
 import com.umc.edison.ui.theme.Yellow100
+import java.io.File
 
 @Composable
 fun BubbleDoor(
@@ -96,6 +97,7 @@ fun BubbleDoor(
     onLinkClick: (String) -> Unit = {},
     onBackLinkDeleted: (BubbleModel) -> Unit = {},
     onLinkBubbleDeleted: (BubbleModel) -> Unit = {},
+    checkImageUrl: (String, (String) -> Unit) -> Unit = { _, _ -> }
 ) {
     val colors = bubble.labels.map { it.color }
     val outerColors = when (colors.size) {
@@ -156,7 +158,8 @@ fun BubbleDoor(
                 mainClicked = onMainSelected,
                 onLinkClick = onLinkClick,
                 onBackLinkDeleted = onBackLinkDeleted,
-                onLinkBubbleDeleted = onLinkBubbleDeleted
+                onLinkBubbleDeleted = onLinkBubbleDeleted,
+                checkImageUrl = checkImageUrl
             )
         }
     }
@@ -173,7 +176,8 @@ private fun BubbleContent(
     mainClicked: (String?) -> Unit,
     onLinkClick: (String) -> Unit,
     onBackLinkDeleted: (BubbleModel) -> Unit,
-    onLinkBubbleDeleted: (BubbleModel) -> Unit
+    onLinkBubbleDeleted: (BubbleModel) -> Unit,
+    checkImageUrl: (String, (String) -> Unit) -> Unit
 ) {
     val scrollState = rememberScrollState()
 
@@ -334,6 +338,9 @@ private fun BubbleContent(
                     val aspectRatio = calculateAspectRatio(contentBlock.content)
                     var isLongPressed by remember { mutableStateOf(false) }
                     val isMainImage = bubble.mainImage == contentBlock.content
+                    var resolvedImageUrl by remember(contentBlock.content) { mutableStateOf(contentBlock.content) }
+                    val alreadyResolved = remember { mutableStateOf(false) }
+
 
                     Box(
                         modifier = Modifier
@@ -350,7 +357,7 @@ private fun BubbleContent(
                         Image(
                             painter = rememberAsyncImagePainter(
                                 model = ImageRequest.Builder(LocalContext.current)
-                                    .data(contentBlock.content)
+                                    .data(resolvedImageUrl)
                                     .crossfade(true)
                                     .size(Size.ORIGINAL)
                                     .build()

@@ -34,6 +34,8 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.umc.edison.ui.theme.Gray500
 import com.umc.edison.ui.theme.Gray800
+import java.io.File
+import java.io.FileOutputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -252,4 +254,36 @@ fun loadGalleryFolders(context: Context): List<String> {
 
     return listOf("Recent") + folders.toList()
 }
+
+fun copyUriToInternalStorage(context: Context, uri: Uri): File {
+    val inputStream = context.contentResolver.openInputStream(uri)
+        ?: throw IllegalArgumentException("Cannot open input stream for URI: $uri")
+
+    // 파일 이름을 contentResolver에서 추출하거나 fallback
+    val fileName = queryFileName(context, uri)
+        ?: "image_${System.currentTimeMillis()}.jpg"
+
+    val targetFile = File(context.filesDir, fileName)
+
+    FileOutputStream(targetFile).use { output ->
+        inputStream.copyTo(output)
+    }
+
+    inputStream.close()
+
+    return targetFile // 경로: /data/user/0/your.package.name/files/파일명
+}
+
+
+fun queryFileName(context: Context, uri: Uri): String? {
+    val returnCursor = context.contentResolver.query(uri, null, null, null, null)
+    returnCursor?.use {
+        val nameIndex = it.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+        if (nameIndex != -1 && it.moveToFirst()) {
+            return it.getString(nameIndex)
+        }
+    }
+    return null
+}
+
 
