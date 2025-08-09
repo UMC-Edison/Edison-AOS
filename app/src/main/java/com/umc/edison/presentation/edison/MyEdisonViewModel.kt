@@ -2,7 +2,7 @@ package com.umc.edison.presentation.edison
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntSize
-import com.umc.edison.domain.usecase.bubble.GetAllBubblesUseCase
+import com.umc.edison.domain.usecase.bubble.GetAllRecentBubblesUseCase
 import com.umc.edison.domain.usecase.bubble.SearchBubblesUseCase
 import com.umc.edison.domain.usecase.onboarding.GetHasSeenOnboardingUseCase
 import com.umc.edison.domain.usecase.onboarding.SetHasSeenOnboardingUseCase
@@ -19,9 +19,9 @@ import javax.inject.Inject
 @HiltViewModel
 class MyEdisonViewModel @Inject constructor(
     toastManager: ToastManager,
-    private val getAllBubblesUseCase: GetAllBubblesUseCase,
+    private val getAllRecentBubblesUseCase: GetAllRecentBubblesUseCase,
     private val searchBubblesUseCase: SearchBubblesUseCase,
-    private val getHasSeenOnboardingUseCase: GetHasSeenOnboardingUseCase,
+    getHasSeenOnboardingUseCase: GetHasSeenOnboardingUseCase,
     private val setHasSeenOnboardingUseCase: SetHasSeenOnboardingUseCase,
 ) : BaseViewModel(toastManager) {
     private val _uiState = MutableStateFlow(MyEdisonState.DEFAULT)
@@ -45,12 +45,10 @@ class MyEdisonViewModel @Inject constructor(
 
     fun fetchBubbles() {
         collectDataResource(
-            flow = getAllBubblesUseCase(),
+            flow = getAllRecentBubblesUseCase(),
             onSuccess = { bubbles ->
                 _uiState.update {
-                    it.copy(bubbles = bubbles.toPresentation().filter { bubble ->
-                        bubble.id != _uiState.value.bubble.id
-                    })
+                    it.copy(bubbles = bubbles.toPresentation())
                 }
             },
         )

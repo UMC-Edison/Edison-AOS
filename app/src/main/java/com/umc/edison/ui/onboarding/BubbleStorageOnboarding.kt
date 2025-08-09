@@ -60,8 +60,8 @@ fun BubbleDeleteOnboarding(
 ) {
     val density = LocalDensity.current
 
-    val bubbleCenterY = bubbleComponent.offset.x + bubbleComponent.size.width / 2f
-    val bubbleCenterX = bubbleComponent.offset.y - statusBarHeightPx + bubbleComponent.size.height / 2f
+    val bubbleCenterX = bubbleComponent.offset.x + bubbleComponent.size.width / 2f
+    val bubbleCenterY = bubbleComponent.offset.y - statusBarHeightPx + bubbleComponent.size.height / 2f
     val bubbleRadius = bubbleComponent.size.width.toFloat() / 2f
 
     Box(
@@ -104,7 +104,7 @@ fun BubbleDeleteOnboarding(
                 drawContent()
             }
     ) {
-        val offsetY = with(density) { 70.dp.toPx() }
+        val offsetY = with(density) { 50.dp.toPx() }
 
         Box(
             modifier = Modifier
@@ -112,7 +112,7 @@ fun BubbleDeleteOnboarding(
                 .offset {
                     IntOffset(
                         x = 0,
-                        y = (bubbleCenterY - bubbleRadius - offsetY).roundToInt()
+                        y = (bubbleCenterY + bubbleRadius / 2 + offsetY).roundToInt()
                     )
                 }
                 .background(color = White000, shape = RoundedCornerShape(16))
