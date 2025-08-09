@@ -8,7 +8,7 @@ import java.util.UUID
 data class BubbleModel(
     val id: String?,
     val title: String?,
-    val contentBlocks: List<ContentBlockModel>, // 프레젠테이션 계층에서만 LinkedList로 관리
+    val contentBlocks: List<ContentBlockModel>,
     val mainImage: String?,
     val labels: List<LabelModel>,
     val backLinks: List<BubbleModel>,

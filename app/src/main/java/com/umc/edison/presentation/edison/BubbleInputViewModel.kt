@@ -73,13 +73,6 @@ class BubbleInputViewModel @Inject constructor(
         }
     }
 
-    init {
-        val id: String? = savedStateHandle["bubbleId"]
-        fetchBubble(id)
-        fetchLabels()
-        fetchBubbles()
-    }
-
     private fun fetchBubble(bubbleId: String?) {
         if (bubbleId.isNullOrEmpty()) {
             chain.fromLinear(emptyList())
@@ -108,7 +101,6 @@ class BubbleInputViewModel @Inject constructor(
             onComplete = { ensureInitialText(); publish() }
         )
     }
-
 
     /** 빈 단락에서 Backspace → 삭제 후 이전 텍스트로 포커스 */
     fun onBackspaceEmptyAt(textIndex: Int) {
@@ -300,17 +292,20 @@ class BubbleInputViewModel @Inject constructor(
         checkCanSave()
     }
 
+    // BackLink 삭제
     fun deleteBackLink(targetBackLink: BubbleModel) {
         val updatedBubble = bubbleDataManager.removeBackLink(_uiState.value.bubble, targetBackLink)
         _uiState.update { it.copy(bubble = updatedBubble) }
     }
 
+    // Linked Bubble 삭제
     fun deleteLinkBubble(targetLinkBubble: BubbleModel) {
         val updatedBubble =
             bubbleDataManager.removeLinkBubble(_uiState.value.bubble, targetLinkBubble)
         _uiState.update { it.copy(bubble = updatedBubble) }
     }
 
+    // Content Block 삭제
     fun deleteContentBlock(contentBlock: ContentBlockModel) {
         val success = contentBlockManager.deleteContentBlock(contentBlock)
         if (success) {
@@ -362,6 +357,7 @@ class BubbleInputViewModel @Inject constructor(
             flow = flow,
             onSuccess = { savedBubble ->
                 showToast("저장되었습니다.")
+
                 if (isLinked) {
                     _uiState.update {
                         BubbleInputState.DEFAULT.copy(
@@ -398,9 +394,9 @@ class BubbleInputViewModel @Inject constructor(
                     setInsertionTarget(InsertionTarget.AfterText(if (lastTextIdx >= 0) lastTextIdx else 0))
                 }
         }
+
         _uiState.update { it.copy(isGalleryOpen = true) }
     }
-
 
     fun saveCameraImage(uri: Uri) {
         _uiState.update {
@@ -440,7 +436,9 @@ class BubbleInputViewModel @Inject constructor(
     }
 
     fun updateToastMessage(message: String) {
-        if (message.isNotEmpty()) showToast(message)
+        if (!message.isEmpty()) {
+            showToast(message)
+        }
     }
 
     fun updateSelectedImages(uris: List<Uri>): List<Uri> {
