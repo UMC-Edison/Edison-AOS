@@ -1,9 +1,0 @@
-{
-  "scripts": {
-    "start": "react-scripts start"
-  },
-  "dependencies": {
-    "create-react-app": "^5.1.0",
-    "react-scripts": "^5.0.1"
-  }
-}
