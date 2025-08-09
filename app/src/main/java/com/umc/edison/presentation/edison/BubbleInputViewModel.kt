@@ -2,7 +2,9 @@ package com.umc.edison.presentation.edison
 
 import android.content.Context
 import android.net.Uri
+import android.os.Build
 import android.text.Html
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.SavedStateHandle
 import com.umc.edison.domain.usecase.bubble.AddBubbleUseCase
 import com.umc.edison.domain.usecase.bubble.GetAllBubblesUseCase
@@ -271,6 +273,8 @@ class BubbleInputViewModel @Inject constructor(
         _uiState.update { it.copy(isGalleryOpen = false, selectedIcon = IconType.NONE) }
     }
 
+    // 내용 업데이트
+    @RequiresApi(Build.VERSION_CODES.N)
     fun updateBubbleContent(bubble: BubbleModel) {
         _uiState.update {
             it.copy(
@@ -281,11 +285,11 @@ class BubbleInputViewModel @Inject constructor(
         checkCanSave()
     }
 
+    // BackLink 삭제
     fun deleteBackLink(targetBackLink: BubbleModel) {
         val currentBubble = _uiState.value.bubble
         val updatedBackLinks = currentBubble.backLinks
             .filterNot { it.id == targetBackLink.id }
-
 
         _uiState.update { currentState ->
             currentState.copy(
@@ -296,6 +300,7 @@ class BubbleInputViewModel @Inject constructor(
         }
     }
 
+    // Linked Bubble 삭제
     fun deleteLinkBubble(targetLinkBubble: BubbleModel) {
         val currentBubble = _uiState.value.bubble
 
@@ -308,6 +313,7 @@ class BubbleInputViewModel @Inject constructor(
         }
     }
 
+    // Content Block 삭제
     fun deleteContentBlock(contentBlock: ContentBlockModel) {
         if (contentBlock.type != ContentType.IMAGE) return
 
@@ -365,10 +371,12 @@ class BubbleInputViewModel @Inject constructor(
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.N)
     fun updateBubbleWithLink() {
         saveBubble(true)
     }
 
+    @RequiresApi(Build.VERSION_CODES.N)
     fun saveBubble(isLinked: Boolean = false) {
         trimBlankBlock()
 
@@ -385,7 +393,6 @@ class BubbleInputViewModel @Inject constructor(
                 addBubbleUseCase(_uiState.value.bubble.toDomain())
             } else {
                 updateBubbleUseCase(_uiState.value.bubble.toDomain())
-
             },
             onSuccess = { savedBubble ->
                 showToast("저장되었습니다.")
@@ -406,6 +413,7 @@ class BubbleInputViewModel @Inject constructor(
         )
     }
 
+    @RequiresApi(Build.VERSION_CODES.N)
     private fun checkCanSave() {
         var canSave = true
 
@@ -428,6 +436,7 @@ class BubbleInputViewModel @Inject constructor(
         _uiState.update { it.copy(canSave = canSave) }
     }
 
+    @RequiresApi(Build.VERSION_CODES.N)
     private fun trimBlankBlock() {
         val contentBlocks = _uiState.value.bubble.contentBlocks.toMutableList()
         val updatedContentBlocks = mutableListOf<ContentBlockModel>()
@@ -574,6 +583,7 @@ class BubbleInputViewModel @Inject constructor(
 
 }
 
+@RequiresApi(Build.VERSION_CODES.N)
 fun String.parseHtml(): String {
     return Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY).toString()
 }
