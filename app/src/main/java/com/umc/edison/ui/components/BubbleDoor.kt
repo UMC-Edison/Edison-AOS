@@ -63,8 +63,11 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.buildAnnotatedString
@@ -76,6 +79,12 @@ import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.ui.BasicRichText
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.type
 import com.umc.edison.presentation.edison.BubbleInputState
 import com.umc.edison.presentation.edison.parseHtml
 import com.umc.edison.presentation.model.ContentType
@@ -96,6 +105,10 @@ fun BubbleDoor(
     onLinkClick: (String) -> Unit = {},
     onBackLinkDeleted: (BubbleModel) -> Unit = {},
     onLinkBubbleDeleted: (BubbleModel) -> Unit = {},
+    // 새로 추가: 기본값은 no-op
+    onTextFocused: (Int) -> Unit = {},
+    onEnterPressed: (Int) -> Unit = {},
+    onGapTapped: (leftIndex: Int?, rightIndex: Int?) -> Unit = { _, _ -> },
 ) {
     val colors = bubble.labels.map { it.color }
     val outerColors = when (colors.size) {
@@ -156,7 +169,10 @@ fun BubbleDoor(
                 mainClicked = onMainSelected,
                 onLinkClick = onLinkClick,
                 onBackLinkDeleted = onBackLinkDeleted,
-                onLinkBubbleDeleted = onLinkBubbleDeleted
+                onLinkBubbleDeleted = onLinkBubbleDeleted,
+                onTextFocused = onTextFocused,
+                onEnterPressed = onEnterPressed,
+                onGapTapped = onGapTapped
             )
         }
     }
@@ -173,7 +189,10 @@ private fun BubbleContent(
     mainClicked: (String?) -> Unit,
     onLinkClick: (String) -> Unit,
     onBackLinkDeleted: (BubbleModel) -> Unit,
-    onLinkBubbleDeleted: (BubbleModel) -> Unit
+    onLinkBubbleDeleted: (BubbleModel) -> Unit,
+    onTextFocused: (Int) -> Unit,
+    onEnterPressed: (Int) -> Unit,
+    onGapTapped: (leftIndex: Int?, rightIndex: Int?) -> Unit
 ) {
     val scrollState = rememberScrollState()
 
@@ -303,7 +322,17 @@ private fun BubbleContent(
                         BasicRichTextEditor(
                             state = richTextState,
                             textStyle = MaterialTheme.typography.bodyMedium.copy(color = Gray800),
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                // 포커스되면 해당 텍스트 position을 알려줌
+                                .onFocusChanged { if (it.isFocused) onTextFocused(index) }
+                                // 엔터키 감지 (HW 키보드는 확실, SW 키보드는 기기별 제한 있을 수 있음)
+                                .onPreviewKeyEvent { ev ->
+                                    if (ev.key == Key.Enter && ev.type == KeyEventType.KeyUp) {
+                                        onEnterPressed(index)
+                                        true // 우리가 소비
+                                    } else false
+                                },
                             decorationBox = { innerTextField ->
                                 Box(
                                     modifier = Modifier.fillMaxWidth(),
@@ -355,11 +384,38 @@ private fun BubbleContent(
                                     .size(Size.ORIGINAL)
                                     .build()
                             ),
+
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .fillMaxSize()
                                 .clip(RoundedCornerShape(8.dp))
+                        )
+
+                        // 위쪽 갭: Between(위쪽 블록, 현재 이미지)
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(24.dp)
+                                .align(Alignment.TopCenter)
+                                .clickable {
+                                    val leftIndex = (index - 1).takeIf { it >= 0 }
+                                    val rightIndex = index
+                                    onGapTapped(leftIndex, rightIndex)
+                                }
+                        )
+
+                        // 아래쪽 갭: Between(현재 이미지, 아래쪽 블록)
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(24.dp)
+                                .align(Alignment.BottomCenter)
+                                .clickable {
+                                    val leftIndex = index
+                                    val rightIndex = (index + 1).takeIf { it < bubble.contentBlocks.size }
+                                    onGapTapped(leftIndex, rightIndex)
+                                }
                         )
 
                         if (isLongPressed) {
@@ -412,8 +468,25 @@ private fun BubbleContent(
                         }
                     }
                 }
+
+            }
+            if (isEditable) {
+                // TEXT 아래 ‘갭’ 탭 영역 (투명 버튼)
+                Spacer(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(12.dp)
+                        .clickable {
+                            val left = index
+                            val right = (index + 1).takeIf { it < bubble.contentBlocks.size }
+                            onGapTapped(left, right)
+                        }
+                )
             }
         }
+
+
+
 
         FlowRow(
             verticalArrangement = Arrangement.spacedBy(8.dp),

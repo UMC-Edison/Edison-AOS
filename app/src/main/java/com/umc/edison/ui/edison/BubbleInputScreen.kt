@@ -50,7 +50,7 @@ import java.io.File
 @Composable
 fun BubbleInputScreen(
     navHostController: NavHostController,
-    updateShowBottomNav: (Boolean) -> Unit,
+    updateShowBottomNav: (Boolean) -> Unit = { _ -> true },
     viewModel: BubbleInputViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -69,8 +69,10 @@ fun BubbleInputScreen(
         } else if (uiState.isCameraOpen) {
             viewModel.updateCameraOpen(false)
             viewModel.updateIcon(IconType.NONE)
-        } else if (uiState.selectedIcon == IconType.CAMERA || uiState.selectedIcon == IconType.LINK
-            || uiState.selectedIcon == IconType.BACK_LINK
+        } else if (
+            uiState.selectedIcon == IconType.CAMERA ||
+            uiState.selectedIcon == IconType.LINK ||
+            uiState.selectedIcon == IconType.BACK_LINK
         ) {
             viewModel.updateIcon(IconType.NONE)
         } else {
@@ -135,16 +137,18 @@ fun BubbleInputScreen(
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
-            BubbleInputContent(viewModel, onLinkClick = { bubbleId ->
-                // 현재 버블 저장
-                viewModel.saveBubble()
-                navHostController.navigate(NavRoute.BubbleEdit.createRoute(bubbleId)) {
-                    // 현재 화면을 스택에서 제거하고 새로운 화면을 추가
-                    popUpTo(NavRoute.BubbleEdit.createRoute(uiState.bubble.id)) {
-                        inclusive = true
+            BubbleInputContent(
+                viewModel = viewModel,
+                onLinkClick = { bubbleId ->
+                    // 현재 버블 저장
+                    viewModel.saveBubble()
+                    navHostController.navigate(NavRoute.BubbleEdit.createRoute(bubbleId)) {
+                        popUpTo(NavRoute.BubbleEdit.createRoute(uiState.bubble.id)) {
+                            inclusive = true
+                        }
                     }
                 }
-            })
+            )
 
             LabelTagList(
                 labels = uiState.bubble.labels,
@@ -156,7 +160,9 @@ fun BubbleInputScreen(
 
 @Composable
 fun BubbleInputTopBar(
-    onBackClicked: () -> Unit, onConfirmClicked: () -> Unit, confirmButtonEnabled: Boolean
+    onBackClicked: () -> Unit,
+    onConfirmClicked: () -> Unit,
+    confirmButtonEnabled: Boolean
 ) {
     Row(
         modifier = Modifier
@@ -166,7 +172,8 @@ fun BubbleInputTopBar(
             .padding(horizontal = 12.dp, vertical = 12.dp)
     ) {
         IconButton(
-            onClick = { onBackClicked() }, modifier = Modifier.size(24.dp)
+            onClick = { onBackClicked() },
+            modifier = Modifier.size(24.dp)
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_back),
@@ -218,13 +225,16 @@ fun BubbleInputContent(
 
     if (uiState.isGalleryOpen) {
         ImageGallery(
-            onConfirmed = { selectedImages ->
-                val updatedImages = viewModel.updateSelectedImages(selectedImages)
-                viewModel.addImagesToContentBlocks(updatedImages)
-                true
+            selectedImages = uiState.selectedImages,
+            onImageSelected = { uri ->
+                viewModel.toggleImageSelection(uri)
+            },
+            onConfirmed = {
+                // 선택된 이미지들을 현재 삽입 타깃 규칙에 맞춰 추가
+                viewModel.addContentBlocks()
             },
             onClose = { viewModel.closeGallery() },
-            maxImageSize = BubbleInputViewModel.MAX_IMAGE_SELECTION,
+            multiSelectMode = true,
         )
     }
 
@@ -287,6 +297,7 @@ fun BubbleInputContent(
         }
     }
 
+    // BubbleDoor에 선택 콜백(onTextFocused/onEnterPressed)을 선택사항으로 넘김
     BubbleDoor(
         bubble = uiState.bubble,
         isEditable = true,
@@ -306,6 +317,15 @@ fun BubbleInputContent(
         },
         onLinkBubbleDeleted = { linkBubble ->
             viewModel.deleteLinkBubble(linkBubble)
+        },
+        // 추가: 포커스된 텍스트 position 전달 (없어도 됨: 기본값 no-op이면 타 화면 영향 없음)
+        onTextFocused = { index -> viewModel.onTextFocused(index) },
+        // 추가: 엔터키 시 새 텍스트 블록 삽입 (정책에 따라 나중에 활성/비활성 가능)
+        onEnterPressed = { index -> viewModel.onEnterAt(index) },
+        onGapTapped = { leftIndex, rightIndex ->
+            viewModel.setGapTarget(leftIndex, rightIndex)
+            // 정책에 따라 바로 갤러리를 열고 싶으면 아래를 함께 호출
+            // viewModel.openGallery()
         }
     )
 }
