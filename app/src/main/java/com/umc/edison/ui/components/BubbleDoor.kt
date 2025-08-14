@@ -3,6 +3,7 @@ package com.umc.edison.ui.components
 import android.graphics.BlurMaskFilter
 import android.graphics.LinearGradient
 import android.graphics.Shader
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -341,26 +342,27 @@ private fun BubbleContent(
                     val isMainImage = bubble.mainImage == contentBlock.content
                     var resolvedImageUrl by remember(contentBlock.content) { mutableStateOf(contentBlock.content) }
 
+
                     val resolveKey = remember(contentBlock.imageKey, contentBlock.content) {
-                        // S3가 필요할 땐 key, 로컬이면 content
-                        contentBlock.imageKey ?: contentBlock.content
+                        when {
+                            contentBlock.content.startsWith("file://") ||
+                                    contentBlock.content.startsWith("content://") ||
+                                    contentBlock.content.startsWith("http") -> null
+                            else -> (contentBlock.imageKey ?: contentBlock.content)
+                        }
                     }
 
-// 항목별 중복 요청 방지
                     val requested = remember { mutableStateSetOf<String>() }
 
-//                    LaunchedEffect(resolveKey) {
-//                        // 이미 처리했으면 스킵
-//
-//                        println("실행됨")
-//                        if (!requested.add(resolveKey)) return@LaunchedEffect
-//                        println("이미처리")
-//
-//                        checkImageUrl(resolveKey) { url ->
-//                            if (url.isNotBlank()) resolvedImageUrl = url
-//                            // (원하면 여기서 requested.remove(resolveKey)로 1회만 유지)
-//                        }
-//                    }
+                    LaunchedEffect(resolveKey) {
+                        if (resolveKey == null) return@LaunchedEffect
+
+                        if (!requested.add(resolveKey)) return@LaunchedEffect
+                        checkImageUrl(resolveKey) { url ->
+                            if (url.isNotBlank()) resolvedImageUrl = url
+                        }
+                    }
+
 
 
 

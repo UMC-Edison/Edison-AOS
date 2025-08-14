@@ -17,22 +17,19 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.umc.edison.R
-import com.umc.edison.presentation.login.SplashViewModel
 import com.umc.edison.ui.navigation.NavRoute
 import kotlinx.coroutines.delay
 
 @Composable
-fun SplashScreen(navController: NavController, updateShowBottomNav: (Boolean) -> Unit,viewModel: SplashViewModel = hiltViewModel()) {
+fun SplashScreen(navController: NavController, updateShowBottomNav: (Boolean) -> Unit) {
 
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
 
         updateShowBottomNav(false)
-        viewModel.checkLogin()
 
         delay(2000)
 

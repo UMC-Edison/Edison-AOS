@@ -490,7 +490,13 @@ class BubbleInputViewModel @Inject constructor(
     }
 
     fun saveCameraImage(context: Context) {
-        val savedUri = saveImageToInternalStorage(context, _uiState.value.cameraImagePath!!)
+        val originalUri = _uiState.value.cameraImagePath ?: return
+
+        val savedUri = saveImageToInternalStorage(context, originalUri)
+        val path = requireNotNull(savedUri.path)
+        val imageFile = File(path)
+        val fileName = imageFile.name
+
         _uiState.update {
             it.copy(
                 cameraImagePath = null,
@@ -499,6 +505,42 @@ class BubbleInputViewModel @Inject constructor(
             )
         }
         addContentBlocks()
+
+        viewModelScope.launch(Dispatchers.IO) {
+            collectDataResource(
+                flow = getPresignedUrlUseCase(fileName),
+                onSuccess = { presigned ->
+                    _uiState.update { state ->
+                        val newMap = state.imageKeyByPath +
+                                (savedUri.toString() to presigned.key) +
+                                (originalUri.toString() to presigned.key)
+                        val patchedBlocks = state.bubble.contentBlocks.map { b ->
+                            if (b.type == ContentType.IMAGE &&
+                                (b.content == savedUri.toString() || b.content == originalUri.toString()) &&
+                                b.imageKey.isNullOrBlank()
+                            ) b.copy(imageKey = presigned.key) else b
+                        }
+
+                        state.copy(
+                            imageKeyByPath = newMap,
+                            bubble = state.bubble.copy(contentBlocks = patchedBlocks)
+                        )
+                    }
+
+                    collectDataResource(
+                        flow = uploadImagesToS3UseCase(presigned.url, imageFile),
+                        onSuccess = {
+                        },
+                        onError = { e ->
+                            Log.e("upload fail: ${e.message}", e.toString())
+                        }
+                    )
+                },
+                onError = { e ->
+                    Log.e("get url fail: ${e.message}", e.toString())
+                }
+            )
+        }
     }
 
 
@@ -506,109 +548,71 @@ class BubbleInputViewModel @Inject constructor(
     fun saveGalleryImage(context: Context, uris: List<Uri>) {
         if (uris.isEmpty()) return
 
-        uris.forEach { srcUri ->
-
-            val savedUri = saveImageToInternalStorage(context, srcUri)
+        uris.forEach { originalUri ->
+            val savedUri = saveImageToInternalStorage(context, originalUri)
             val path = savedUri.path ?: return@forEach
-            val fileName = File(path).name
             val imageFile = File(path)
+            val fileName = imageFile.name
 
-            _uiState.update {
-                it.copy(selectedImages = it.selectedImages + savedUri)
-            }
+            _uiState.update { it.copy(selectedImages = it.selectedImages + savedUri) }
             addContentBlocks()
 
-            collectDataResource(
-                flow = getPresignedUrlUseCase(fileName),
-                onSuccess = { presigned ->
-                    collectDataResource(
-                        flow = uploadImagesToS3UseCase(presigned.url, imageFile),
-                        onSuccess = {
-                            _uiState.update {
-                                it.copy(
-                                    imageKeyByPath = it.imageKeyByPath + (savedUri.toString() to presigned.key)
-                                )
+            viewModelScope.launch(Dispatchers.IO) {
+                collectDataResource(
+                    flow = getPresignedUrlUseCase(fileName),
+                    onSuccess = { presigned ->
+                        _uiState.update { state ->
+                            val newMap = state.imageKeyByPath +
+                                    (savedUri.toString() to presigned.key) +
+                                    (originalUri.toString() to presigned.key)
+
+                            val patchedBlocks = state.bubble.contentBlocks.map { b ->
+                                if (b.type == ContentType.IMAGE &&
+                                    (b.content == savedUri.toString() || b.content == originalUri.toString()) &&
+                                    b.imageKey.isNullOrBlank()
+                                ) b.copy(imageKey = presigned.key) else b
                             }
-                        },
-                        onError = { e ->
-                            println("S3 업로드 실패: ${e.message}")
+
+                            state.copy(
+                                imageKeyByPath = newMap,
+                                bubble = state.bubble.copy(contentBlocks = patchedBlocks)
+                            )
                         }
-                    )
-                },
-                onError = { e ->
-                    println("Presigned URL 발급 실패: ${e.message}")
-                }
-            )
+                        collectDataResource(
+                            flow = uploadImagesToS3UseCase(presigned.url, imageFile),
+                            onSuccess = {
+                            },
+                            onError = { e ->
+                                Log.e("upload fail: ${e.message}", e.toString())
+                            }
+                        )
+                    },
+                    onError = { e ->
+                        Log.e("get url fail: ${e.message}", e.toString())
+                    }
+                )
+            }
         }
-
     }
 
 
-    fun resolveImageUrl(
-        input: String,
-        onResult: (String) -> Unit
-    ) {
 
-        val contentVal = input
-        val keyVal = _uiState.value.imageKeyByPath[input]
-        println("resolveImageUrl LOG → content=$contentVal, key=$keyVal")
-        // 0) http(s) → 그대로
-        if (input.startsWith("http")) {
-            println("resolveImageUrl: http → 그대로 표시: $input")
-            onResult(input)
-            return
-        }
-
-        // 1) file:// → 파일 존재 시 그대로, 없으면 path→key 매핑 찾아 원격
-        if (input.startsWith("file://")) {
-            val path = Uri.parse(input).path
-            val file = if (path.isNullOrBlank()) null else File(path!!)
-            if (file?.exists() == true) {
-                println("resolveImageUrl: file 존재 → 로컬 표시: $input")
-                onResult(input)
-                return
-            }
-            val mappedKey = _uiState.value.imageKeyByPath[input]
-            if (!mappedKey.isNullOrBlank()) {
-                println("resolveImageUrl: file 미존재 → 저장된 key로 GET 요청: $mappedKey")
-                fetchPresignedAndReturn(mappedKey!!, onResult)
-                return
-            }
-            println("resolveImageUrl: file 미존재 & key 없음 → 원문 반환(표시 실패 가능): $input")
-            onResult(input)
-            return
-        }
-
-        // 2) content:// → 기본 로컬 표시, 매핑이 있으면 원격(원하시면 주석 해제하여 사용)
-        if (input.startsWith("content://")) {
-            val mappedKey = _uiState.value.imageKeyByPath[input]
-            if (!mappedKey.isNullOrBlank()) {
-                println("resolveImageUrl: content:// + key 매핑 발견 → GET 요청: $mappedKey")
-                fetchPresignedAndReturn(mappedKey!!, onResult)
-            } else {
-                println("resolveImageUrl: content:// + key 없음 → 로컬 표시: $input")
-                onResult(input)
-            }
-            return
-        }
-
-        // 3) 그 외 → '이미 key'라고 가정하고 presigned GET 요청
-        val assumedKey = input  // <<<< 여기 핵심: 'key' 미정의 버그를 'input'으로 수정
-        println("resolveImageUrl: key로 판단 → GET 요청: $assumedKey")
-        fetchPresignedAndReturn(assumedKey, onResult)
+    fun resolveImageUrl(input: String, onResult: (String) -> Unit) {
+        if (input.startsWith("http")) { onResult(input); return }
+        if (input.startsWith("file://") || input.startsWith("content://")) { onResult(input); return }
+        fetchPresignedAndReturn(input, onResult)
     }
+
 
     private fun fetchPresignedAndReturn(key: String, onResult: (String) -> Unit) {
         viewModelScope.launch {
             collectDataResource(
                 flow = getDownloadLinkUseCase(key),
                 onSuccess = { presigned ->
-                    println("resolveImageUrl: presigned GET 성공 → ${presigned.url}")
                     onResult(presigned.url)
                 },
                 onError = {
-                    println("resolveImageUrl: presigned GET 실패(key=$key): ${it.message}")
-                    onResult("") // UI 폴백(placeholder)에서 처리
+                    onResult("")
                 }
             )
         }
