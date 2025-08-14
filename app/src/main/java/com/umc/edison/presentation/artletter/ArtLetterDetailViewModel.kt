@@ -48,24 +48,40 @@ class ArtLetterDetailViewModel @Inject constructor(
     }
 
     private fun fetchArtLetterDetail(id: Int) {
+
         collectDataResource(
             flow = getArtLetterUseCase(id),
             onSuccess = { artLetterDetail ->
-                _uiState.update { it.copy(artLetter = artLetterDetail.toDetailPresentation()) }
+                _uiState.update {
+                    it.copy(
+                        artLetter = artLetterDetail.toDetailPresentation(),
+                    )
+                }
             },
+
         )
     }
+
+
 
     private fun fetchRandomArtLetters() {
         collectDataResource(
             flow = getAllRandomArtLettersUseCase(),
             onSuccess = { artLetters ->
-                val unique =
-                    artLetters.filter { it.artLetterId != _uiState.value.artLetter.artLetterId }
-                _uiState.update { it.copy(relatedArtLetters = unique.toPreviewPresentation()) }
+                val unique = artLetters.filter {
+                    it.artLetterId != _uiState.value.artLetter.artLetterId
+                }
+                _uiState.update {
+                    it.copy(
+                        relatedArtLetters = unique.toPreviewPresentation(),
+                    )
+                }
             },
+
         )
     }
+
+
 
     fun likeArtLetter() {
         if (!_uiState.value.isLoggedIn) {

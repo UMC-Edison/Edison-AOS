@@ -1,7 +1,9 @@
 package com.umc.edison.remote.di
 
 import com.umc.edison.remote.api.ArtLetterApiService
+import com.umc.edison.remote.api.BubbleApiService
 import com.umc.edison.remote.api.BubbleSpaceApiService
+import com.umc.edison.remote.api.LabelApiService
 import com.umc.edison.remote.api.LoginApiService
 import com.umc.edison.remote.api.S3ApiService
 import com.umc.edison.remote.api.MyPageApiService
@@ -58,4 +60,16 @@ internal object ServiceModule {
     fun provideMyEdisonApiService(
         @NetworkModule.MainRetrofit retrofit: Retrofit
     ): S3ApiService = retrofit.create(S3ApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideBubbleApiService(
+        @NetworkModule.MainRetrofit retrofit: Retrofit
+    ): BubbleApiService = retrofit.create(BubbleApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideLabelApiService(
+        @NetworkModule.MainRetrofit retrofit: Retrofit
+    ): LabelApiService = retrofit.create(LabelApiService::class.java)
 }

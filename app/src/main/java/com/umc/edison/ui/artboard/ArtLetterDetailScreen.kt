@@ -3,6 +3,11 @@ package com.umc.edison.ui.artboard
 import android.content.Intent
 import io.branch.referral.util.LinkProperties
 import android.util.Log
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -38,6 +43,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -117,12 +124,16 @@ fun ArtLetterDetailScreen(
                 expandedOffset = expandedOffset,
                 onOffsetChanged = { sheetOffsetPx = it },
             ) { animatedTopPadding ->
-                ArtLetterDetailContent(
-                    viewModel = viewModel,
-                    uiState = uiState,
-                    navHostController = navHostController,
-                    topPadding = animatedTopPadding
-                )
+                if (baseState.isLoading) {
+                    ArtLetterDetailSkeleton()
+                } else {
+                    ArtLetterDetailContent(
+                        viewModel = viewModel,
+                        uiState = uiState,
+                        navHostController = navHostController,
+                        topPadding = animatedTopPadding
+                    )
+                }
             }
 
             if (sheetOffsetPx > 10f) {
@@ -278,6 +289,81 @@ fun ArtLetterDetailScreen(
         }
     }
 }
+
+@Composable
+fun ArtLetterDetailSkeleton() {
+    val shimmerColors = listOf(
+        Color(0xFFE7EBEF),
+        Color(0xFFF5F5F5),
+        Color(0xFFE7EBEF)
+    )
+    val transition = rememberInfiniteTransition(label = "skeleton")
+    val translateAnim by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1000f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1700, easing = LinearEasing)
+        ),
+        label = "skeletonAnim"
+    )
+
+    val brush = Brush.linearGradient(
+        colors = shimmerColors,
+        start = Offset(translateAnim, translateAnim),
+        end = Offset(translateAnim + 200f, translateAnim + 200f)
+    )
+
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .padding(vertical = 8.dp)) {
+
+        // 제목 1줄
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth(0.7f)
+                .height(28.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(brush)
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // 태그 1줄
+        Spacer(
+            modifier = Modifier
+                .width(100.dp)
+                .height(20.dp)
+                .clip(RoundedCornerShape(100.dp))
+                .background(brush)
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        HorizontalDivider(color = Color(0xFFE0E0E0), thickness = 1.dp)
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // 본문 2줄
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(16.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(brush)
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth(0.8f)
+                .height(16.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(brush)
+        )
+    }
+}
+
 
 
 @Composable

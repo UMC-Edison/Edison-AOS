@@ -1,5 +1,6 @@
 package com.umc.edison.presentation.artletter
 
+import com.umc.edison.presentation.base.BaseState
 import com.umc.edison.presentation.model.ArtLetterDetailModel
 import com.umc.edison.presentation.model.ArtLetterPreviewModel
 

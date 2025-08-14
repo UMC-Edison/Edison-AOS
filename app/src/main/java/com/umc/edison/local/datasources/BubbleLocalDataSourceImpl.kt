@@ -102,7 +102,7 @@ class BubbleLocalDataSourceImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateBubble(bubble: BubbleEntity): BubbleEntity {
+    override suspend fun updateBubble(bubble: BubbleEntity, isSynced: Boolean): BubbleEntity {
         update(bubble.toLocal(), tableName)
 
         bubbleLabelDao.deleteByBubbleId(bubble.id)
@@ -117,6 +117,48 @@ class BubbleLocalDataSourceImpl @Inject constructor(
 
     override suspend fun markAsSynced(bubble: BubbleEntity) {
         markAsSynced(tableName, bubble.id)
+    }
+
+    override suspend fun syncBubbles(bubbles: List<BubbleEntity>) {
+        bubbles.map {
+            syncBubble(it)
+        }
+    }
+
+    private suspend fun syncBubble(bubble: BubbleEntity) {
+        // bubble이 갖고있는 backLinks와 linkedBubble 정보 먼저 업데이트
+        for(backLink in bubble.backLinks) {
+            try {
+                val savedBubble = getBubble(backLink.id)
+                if (savedBubble.same(backLink) && savedBubble.updatedAt > backLink.updatedAt) continue
+                updateBubble(backLink, true)
+            } catch (_: IllegalArgumentException) {
+                addBubble(backLink)
+            }
+            markAsSynced(backLink)
+        }
+
+        // linkedBubble 정보 업데이트
+        try {
+            bubble.linkedBubble?.let { linkedBubble ->
+                val savedBubble = getBubble(linkedBubble.id)
+                if (savedBubble.same(linkedBubble)) return@let
+                updateBubble(linkedBubble)
+            }
+        } catch (_: IllegalArgumentException) {
+            bubble.linkedBubble?.let { addBubble(it) }
+        }
+        bubble.linkedBubble?.let { markAsSynced(it) }
+
+        // 현재 버블 업데이트
+        try {
+            val savedBubble = getBubble(bubble.id)
+            if (savedBubble.same(bubble)) return
+            updateBubble(bubble)
+        } catch (_: IllegalArgumentException) {
+            addBubble(bubble)
+        }
+        markAsSynced(bubble)
     }
 
     // DELETE

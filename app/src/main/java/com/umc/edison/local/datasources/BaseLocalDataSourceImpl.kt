@@ -24,19 +24,19 @@ open class BaseLocalDataSourceImpl<T : BaseSyncLocal>(
     }
 
     // UPDATE
-    suspend fun update(entity: T, tableName: String) {
+    suspend fun update(entity: T, tableName: String, isSynced: Boolean = false) {
         val query = SimpleSQLiteQuery("SELECT * FROM $tableName WHERE id = '${entity.uuid}'")
         baseDao.getById(query)?.let {
             entity.createdAt = it.createdAt
             entity.updatedAt = Date()
-            entity.isSynced = false
+            entity.isSynced = isSynced
             baseDao.update(entity)
         }
     }
 
     suspend fun markAsSynced(tableName: String, id: String) {
         val date = Date()
-        val query = SimpleSQLiteQuery("UPDATE $tableName SET is_synced = 1, updated_at = $date WHERE id = '$id'")
+        val query = SimpleSQLiteQuery("UPDATE $tableName SET is_synced = 1, updated_at = '$date' WHERE id = '$id'")
         baseDao.markAsSynced(query)
     }
 }

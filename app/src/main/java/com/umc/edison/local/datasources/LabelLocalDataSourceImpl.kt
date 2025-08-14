@@ -28,8 +28,8 @@ class LabelLocalDataSourceImpl @Inject constructor(
         return labelDao.getAllLabels().map { it.toData() }
     }
 
-    override suspend fun getLabel(labelId: String): LabelEntity {
-        val localLabel = labelDao.getLabelById(labelId) ?: throw Exception("Label not found")
+    override suspend fun getLabel(id: String): LabelEntity {
+        val localLabel = labelDao.getLabelById(id) ?: throw Exception("Label not found")
 
         return localLabel.toData()
     }
@@ -43,12 +43,31 @@ class LabelLocalDataSourceImpl @Inject constructor(
         markAsSynced(tableName, label.id)
     }
 
-    override suspend fun updateLabel(label: LabelEntity) {
-        update(label.toLocal(), tableName)
+    override suspend fun syncLabels(labels: List<LabelEntity>) {
+        labels.map { syncLabel(it) }
+    }
+
+    override suspend fun updateLabel(label: LabelEntity, isSynced: Boolean) {
+        update(label.toLocal(), tableName, isSynced)
+    }
+
+    private suspend fun syncLabel(label: LabelEntity) {
+        try {
+            val savedLabel = getLabel(label.id)
+            if (!savedLabel.same(label)
+                && savedLabel.updatedAt < label.updatedAt
+            ) {
+                updateLabel(label, true)
+            }
+        } catch (_: Exception) {
+            addLabel(label)
+        }
+        markAsSynced(label)
     }
 
     // DELETE
-    override suspend fun deleteLabel(label: LabelEntity) {
+    override suspend fun deleteLabel(id: String) {
+        val label = getLabel(id)
         labelDao.delete(label.toLocal())
     }
 }

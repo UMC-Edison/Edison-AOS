@@ -26,7 +26,7 @@ class BubbleStorageViewModel @Inject constructor(
     private val context: Application,
     private val getAllRecentBubblesUseCase: GetAllRecentBubblesUseCase,
     override val trashBubblesUseCase: TrashBubblesUseCase,
-    private val getHasSeenOnboardingUseCase: GetHasSeenOnboardingUseCase,
+    getHasSeenOnboardingUseCase: GetHasSeenOnboardingUseCase,
     private val setHasSeenOnboardingUseCase: SetHasSeenOnboardingUseCase,
 ) : BaseBubbleViewModel<BubbleStorageMode, BubbleStorageState>(toastManager) {
 

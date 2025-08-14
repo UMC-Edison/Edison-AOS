@@ -13,8 +13,9 @@ interface LabelLocalDataSource {
 
     // UPDATE
     suspend fun markAsSynced(label: LabelEntity)
-    suspend fun updateLabel(label: LabelEntity)
+    suspend fun syncLabels(labels: List<LabelEntity>)
+    suspend fun updateLabel(label: LabelEntity, isSynced: Boolean = false)
 
     // DELETE
-    suspend fun deleteLabel(label: LabelEntity)
+    suspend fun deleteLabel(id: String)
 }
