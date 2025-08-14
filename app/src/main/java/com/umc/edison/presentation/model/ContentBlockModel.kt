@@ -4,6 +4,7 @@ data class ContentBlockModel(
     val type: ContentType,
     var content: String,
     var position: Int,
+    var imageKey: String? = null
 ) {
     fun toDomain(): String {
         // Text 타입의 경우 앞에 %<TEXT>와 뒤에 </TEXT>%가 붙어있고
@@ -11,7 +12,8 @@ data class ContentBlockModel(
         return when (type) {
             ContentType.TEXT -> "%<TEXT>$content</TEXT>%"
             ContentType.IMAGE -> {
-                "%<IMAGE>$content</IMAGE>%"
+                val payload = if (!imageKey.isNullOrBlank()) "$content|$imageKey" else content
+                "%<IMAGE>$payload</IMAGE>%"
             }
         }
     }

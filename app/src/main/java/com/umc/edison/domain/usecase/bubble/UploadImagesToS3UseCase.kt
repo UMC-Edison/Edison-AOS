@@ -9,8 +9,7 @@ import javax.inject.Inject
 class UploadImagesToS3UseCase @Inject constructor(
     private val s3Repository: S3Repository
 ) {
-
-    operator fun invoke(presignedUrl: String, file: File) {
-        return s3Repository.uploadImageToS3(presignedUrl,file)
+    operator fun invoke(presignedUrl: String, file: File): Flow<DataResource<Unit>> {
+        return s3Repository.uploadImageToS3(presignedUrl, file)
     }
 }

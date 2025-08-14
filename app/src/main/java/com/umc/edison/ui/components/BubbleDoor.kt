@@ -62,6 +62,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.toArgb
@@ -165,7 +166,7 @@ fun BubbleDoor(
     }
 }
 
-@OptIn(ExperimentalRichTextApi::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalRichTextApi::class)
 @Composable
 private fun BubbleContent(
     isEditable: Boolean,
@@ -339,7 +340,28 @@ private fun BubbleContent(
                     var isLongPressed by remember { mutableStateOf(false) }
                     val isMainImage = bubble.mainImage == contentBlock.content
                     var resolvedImageUrl by remember(contentBlock.content) { mutableStateOf(contentBlock.content) }
-                    val alreadyResolved = remember { mutableStateOf(false) }
+
+                    val resolveKey = remember(contentBlock.imageKey, contentBlock.content) {
+                        // S3가 필요할 땐 key, 로컬이면 content
+                        contentBlock.imageKey ?: contentBlock.content
+                    }
+
+// 항목별 중복 요청 방지
+                    val requested = remember { mutableStateSetOf<String>() }
+
+//                    LaunchedEffect(resolveKey) {
+//                        // 이미 처리했으면 스킵
+//
+//                        println("실행됨")
+//                        if (!requested.add(resolveKey)) return@LaunchedEffect
+//                        println("이미처리")
+//
+//                        checkImageUrl(resolveKey) { url ->
+//                            if (url.isNotBlank()) resolvedImageUrl = url
+//                            // (원하면 여기서 requested.remove(resolveKey)로 1회만 유지)
+//                        }
+//                    }
+
 
 
                     Box(

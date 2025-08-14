@@ -222,8 +222,8 @@ fun BubbleInputContent(
             onImageSelected = { uri ->
                 viewModel.toggleImageSelection(uri)
             },
-            onConfirmed = {
-                viewModel.addContentBlocks()
+            onConfirmed = { uris ->
+                viewModel.saveGalleryImage(context, uris)
             },
             onClose = { viewModel.closeGallery() },
             multiSelectMode = true,

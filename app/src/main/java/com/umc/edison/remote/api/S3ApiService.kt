@@ -11,11 +11,11 @@ interface S3ApiService {
     @POST("s3/upload-url")
     suspend fun getPresignedUrl(
         @Query("fileName") fileName: String
-    ): ResponseWithData<UrlResponse>
+    ): UrlResponse
 
 
     @GET("s3/get-img")
     suspend fun getDownloadLink(
         @Query("key") key: String
-    ): ResponseWithData<String>
+    ): String
 }

@@ -10,8 +10,6 @@ interface BubbleRemoteDataSource {
 
     // READ
     suspend fun getAllClusteredBubbles(): List<PositionBubbleEntity>
-    suspend fun getPresignedUrl(fileName: String): String
-    suspend fun getDownloadLink(key: String): String
 
     // UPDATE
     suspend fun recoverBubbles(bubbles: List<BubbleEntity>): List<BubbleEntity>

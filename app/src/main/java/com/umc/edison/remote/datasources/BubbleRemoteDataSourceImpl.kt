@@ -8,8 +8,7 @@ import com.umc.edison.remote.api.S3ApiService
 import javax.inject.Inject
 
 class BubbleRemoteDataSourceImpl @Inject constructor(
-    private val bubbleSpaceApiService: BubbleSpaceApiService,
-    private val s3ApiService: S3ApiService
+    private val bubbleSpaceApiService: BubbleSpaceApiService
 ) : BubbleRemoteDataSource {
     // CREATE
     override suspend fun addBubbles(bubbles: List<BubbleEntity>): List<BubbleEntity> {
@@ -30,13 +29,6 @@ class BubbleRemoteDataSourceImpl @Inject constructor(
         return bubbleSpaceApiService.getBubblePosition().data.map { it.toData() }
     }
 
-    override suspend fun getPresignedUrl(fileName: String): String {
-        return "s3ApiService.getPresignedUrl(fileName).data"
-    }
-
-    override suspend fun getDownloadLink(key: String): String {
-        return s3ApiService.getDownloadLink(key).data
-    }
 
     // UPDATE
     override suspend fun recoverBubbles(bubbles: List<BubbleEntity>): List<BubbleEntity> {

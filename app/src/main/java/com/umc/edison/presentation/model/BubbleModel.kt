@@ -50,14 +50,30 @@ fun Bubble.toPresentation(): BubbleModel {
             s.startsWith("${ContentType.IMAGE}>") -> ContentType.IMAGE
             else -> return@mapIndexed null
         }
-        val content = when (type) {
-            ContentType.TEXT -> s.substringAfter("${ContentType.TEXT}>")
-                .substringBefore("</${ContentType.TEXT}")
+        when (type) {
+            ContentType.TEXT -> {
+                val text = s.substringAfter("${ContentType.TEXT}>")
+                    .substringBefore("</${ContentType.TEXT}>")
+                ContentBlockModel(type, text, idx)
+            }
+            ContentType.IMAGE -> {
+                val raw = s.substringAfter("${ContentType.IMAGE}>")
+                    .substringBefore("</${ContentType.IMAGE}>")
+                val (url, key) = raw.split('|').let {
+                    when (it.size) {
+                        2 -> it[0] to it[1]
+                        else -> raw to null
+                    }
+                }
+                ContentBlockModel(
+                    type = ContentType.IMAGE,
+                    content = url,
+                    position = idx,
+                    imageKey = key
+                )
+            }
 
-            ContentType.IMAGE -> s.substringAfter("${ContentType.IMAGE}>")
-                .substringBefore("</${ContentType.IMAGE}")
         }
-        ContentBlockModel(type, content, idx)
     }?.filterNotNull() ?: emptyList()
 
     return BubbleModel(
