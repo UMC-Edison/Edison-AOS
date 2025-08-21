@@ -258,6 +258,12 @@ fun BubbleSpaceScreen(
                             viewModel.searchBubbles()
                         },
                         placeholder = "찰나의 영감을 검색해보세요"
+                        ,
+                        showKeywordMappingButton = true
+                        ,
+                        onKeywordMappingClick = { keyword ->
+                            navHostController.navigate(NavRoute.KeywordMap.createRoute(keyword))
+                        }
                     )
                 }
 

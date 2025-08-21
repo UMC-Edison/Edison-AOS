@@ -3,6 +3,7 @@ package com.umc.edison.domain.repository
 import com.umc.edison.domain.DataResource
 import com.umc.edison.domain.model.bubble.Bubble
 import com.umc.edison.domain.model.bubble.ClusteredBubble
+import com.umc.edison.domain.model.bubble.KeywordBubble
 import kotlinx.coroutines.flow.Flow
 
 interface BubbleRepository {
@@ -19,6 +20,7 @@ interface BubbleRepository {
     fun getBubblesByLabel(labelId: String): Flow<DataResource<List<Bubble>>>
     fun getBubblesWithoutLabel(): Flow<DataResource<List<Bubble>>>
     fun searchBubbles(query: String): Flow<DataResource<List<Bubble>>>
+    fun getKeywordBubbles(keyword: String) : Flow<DataResource<List<KeywordBubble>>>
 
     // UPDATE
     fun recoverBubbles(bubbles: List<Bubble>): Flow<DataResource<Unit>>

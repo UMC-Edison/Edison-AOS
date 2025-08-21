@@ -5,6 +5,7 @@ sealed class NavRoute(val route: String) {
     companion object {
         const val MY_EDISON_ROUTE = "my-edison"
         const val SPACE_ROUTE = "space"
+        const val SPACE_KEYWORD_ROUTE = "space/keyword"
         const val ART_LETTER_ROUTE = "art-letter"
         const val ART_LETTER_SEARCH_ROUTE = "art-letter/search"
         const val MY_PAGE_ROUTE = "my-page"
@@ -35,6 +36,11 @@ sealed class NavRoute(val route: String) {
     /**
      * Dynamic Routes
      */
+
+    object KeywordMap: NavRoute(SPACE_ROUTE) {
+        fun createRoute(keyword: String) = "$route?keyword=$keyword"
+    }
+
     data object ArtLetterDetail : NavRoute(ART_LETTER_ROUTE) {
         fun createRoute(id: Int): String = "$route?artLetterId=$id"
     }

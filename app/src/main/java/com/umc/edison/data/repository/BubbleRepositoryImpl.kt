@@ -4,10 +4,13 @@ import com.umc.edison.data.bound.FlowBoundResourceFactory
 import com.umc.edison.data.datasources.BubbleLocalDataSource
 import com.umc.edison.data.datasources.BubbleRemoteDataSource
 import com.umc.edison.data.model.bubble.ClusteredBubbleEntity
+import com.umc.edison.data.model.bubble.KeywordBubbleEntity
+import com.umc.edison.data.model.bubble.SimilarityBubbleEntity
 import com.umc.edison.data.model.bubble.toData
 import com.umc.edison.domain.DataResource
 import com.umc.edison.domain.model.bubble.Bubble
 import com.umc.edison.domain.model.bubble.ClusteredBubble
+import com.umc.edison.domain.model.bubble.KeywordBubble
 import com.umc.edison.domain.repository.BubbleRepository
 import kotlinx.coroutines.flow.Flow
 import java.util.Date
@@ -65,6 +68,30 @@ class BubbleRepositoryImpl @Inject constructor(
             }
         )
 
+    override fun getKeywordBubbles(keyword: String): Flow<DataResource<List<KeywordBubble>>> =
+    // 제공해주신 예시와 동일한 resourceFactory를 사용합니다.
+        // 네트워크 통신이므로 .network 나 .remote 와 같은 다른 메소드가 있다면 그것을 사용하는 것이 더 적절할 수 있습니다.
+        resourceFactory.local(
+            dataAction = {
+
+                // 1. RemoteDataSource를 통해 API를 호출하고 키워드를 전달합니다.
+                val remoteResponse = bubbleRemoteDataSource.getKeywordBubbles(keyword)
+                val keywordBubbles = mutableListOf<KeywordBubbleEntity>()
+
+                // 2. API로부터 받은 데이터(BubbleEntity 리스트)를
+                //    화면에서 사용할 데이터(KeywordBubble 리스트)로 변환(매핑)합니다.
+                remoteResponse.map {
+                    val bubble = bubbleLocalDataSource.getBubble(it.id)
+                    keywordBubbles.add(
+                        KeywordBubbleEntity(
+                            bubble=bubble,
+                            similarity = it.similarity
+                        )
+                    )
+                }
+            }
+        )
+
     override fun getAllRecentBubbles(dayBefore: Int): Flow<DataResource<List<Bubble>>> =
         resourceFactory.local(
             dataAction = { bubbleLocalDataSource.getAllRecentBubbles(dayBefore) }
@@ -94,6 +121,8 @@ class BubbleRepositoryImpl @Inject constructor(
         resourceFactory.local(
             dataAction = { bubbleLocalDataSource.getSearchBubbleResults(query) }
         )
+
+
 
     // UPDATE
     override fun recoverBubbles(bubbles: List<Bubble>): Flow<DataResource<Unit>> =

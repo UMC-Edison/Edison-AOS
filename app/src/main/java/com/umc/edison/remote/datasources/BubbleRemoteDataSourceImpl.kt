@@ -3,6 +3,7 @@ package com.umc.edison.remote.datasources
 import com.umc.edison.data.datasources.BubbleRemoteDataSource
 import com.umc.edison.data.model.bubble.BubbleEntity
 import com.umc.edison.data.model.bubble.PositionBubbleEntity
+import com.umc.edison.data.model.bubble.SimilarityBubbleEntity
 import com.umc.edison.data.model.bubble.SyncBubbleEntity
 import com.umc.edison.remote.api.BubbleApiService
 import com.umc.edison.remote.api.BubbleSpaceApiService
@@ -39,6 +40,10 @@ class BubbleRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun getAllBubbles(): List<BubbleEntity> {
         return bubbleApiService.getAllBubbles().data.toData()
+    }
+
+    override suspend fun getKeywordBubbles(keyword: String): List<SimilarityBubbleEntity> {
+        return bubbleSpaceApiService.getKeywordBubbles(keyword).data.map { it.toData() }
     }
 
     // UPDATE
