@@ -28,6 +28,8 @@ import com.umc.edison.ui.mypage.MenuScreen
 import com.umc.edison.ui.mypage.ScrapBoardDetailScreen
 import com.umc.edison.ui.mypage.ScrapBoardScreen
 import com.umc.edison.ui.mypage.TrashScreen
+import com.umc.edison.ui.navigation.NavRoute.KeywordMap
+import com.umc.edison.ui.space.KeywordMapScreen
 
 @Composable
 fun NavigationGraph(
@@ -42,6 +44,19 @@ fun NavigationGraph(
 
         composable(NavRoute.Space.route) {
             BubbleSpaceScreen(navHostController, updateShowBottomNav)
+        }
+
+        composable(
+            route = "${KeywordMap.route}?keyword={keyword}",
+            arguments = listOf(
+                navArgument("keyword") {
+                    type = NavType.StringType
+                    nullable = true
+                }
+            )
+        ) { backStackEntry ->
+            val keyword = backStackEntry.arguments?.getString("keyword")
+            KeywordMapScreen(keyword = keyword)
         }
 
         composable(NavRoute.ArtLetter.route) {

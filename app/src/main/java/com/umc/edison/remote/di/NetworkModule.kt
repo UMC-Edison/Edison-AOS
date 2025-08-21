@@ -29,6 +29,13 @@ object NetworkModule {
     @Retention(AnnotationRetention.BINARY)
     annotation class RefreshRetrofit
 
+    @Qualifier
+    @Retention(AnnotationRetention.BINARY)
+    annotation class S3Retrofit
+
+    @Qualifier @Retention(AnnotationRetention.BINARY)
+    annotation class S3Client
+
     @Provides
     @Singleton
     fun provideConverterFactory(): GsonConverterFactory = GsonConverterFactory.create()
@@ -58,6 +65,16 @@ object NetworkModule {
         .addInterceptor(accessTokenInterceptor)
         .build()
 
+    @Provides @Singleton @S3Client
+    fun provideS3OkHttpClient(
+        httpLoggingInterceptor: HttpLoggingInterceptor
+    ): OkHttpClient = OkHttpClient.Builder()
+        .connectTimeout(TIME_OUT.toLong(), TimeUnit.SECONDS)
+        .readTimeout(TIME_OUT.toLong(), TimeUnit.SECONDS)
+        .writeTimeout(TIME_OUT.toLong(), TimeUnit.SECONDS)
+        .addInterceptor(httpLoggingInterceptor)
+        .build()
+
     @MainRetrofit
     @Provides
     @Singleton
@@ -66,6 +83,18 @@ object NetworkModule {
         gsonConverterFactory: GsonConverterFactory,
     ) : Retrofit = Retrofit.Builder()
         .baseUrl(BuildConfig.BASE_URL)
+        .addConverterFactory(gsonConverterFactory)
+        .client(okHttpClient)
+        .build()
+
+    @S3Retrofit
+    @Provides
+    @Singleton
+    fun provideS3Retrofit(
+        gsonConverterFactory: GsonConverterFactory,
+        @S3Client okHttpClient: OkHttpClient,
+    ) : Retrofit = Retrofit.Builder()
+        .baseUrl("https://s3.amazonaws.com/")
         .addConverterFactory(gsonConverterFactory)
         .client(okHttpClient)
         .build()
