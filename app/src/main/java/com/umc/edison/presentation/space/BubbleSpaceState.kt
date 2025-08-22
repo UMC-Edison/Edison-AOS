@@ -10,6 +10,7 @@ data class BubbleSpaceState(
     val query: String,
     val searchResults: List<BubbleModel>,
     val isLoggedIn: Boolean,
+    val keywordForMap: String?
 ) {
     companion object {
         val DEFAULT = BubbleSpaceState(
@@ -20,6 +21,7 @@ data class BubbleSpaceState(
             query = "",
             searchResults = emptyList(),
             isLoggedIn = false,
+            keywordForMap = null
         )
     }
 }

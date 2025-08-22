@@ -1,6 +1,7 @@
 package com.umc.edison.presentation.model
 
 import com.umc.edison.domain.model.bubble.Bubble
+import com.umc.edison.presentation.edison.parseHtml
 import java.util.Date
 import java.util.UUID
 
@@ -14,12 +15,11 @@ data class BubbleModel(
     val linkedBubble: BubbleModel?,
     val date: Date
 ) {
-    // contentBlocks를 String으로 변환하여 도메인 모델로 반환
     fun toDomain(): Bubble {
         return Bubble(
             id = id ?: UUID.randomUUID().toString(),
             title = title,
-            content = contentBlocks.joinToString("") { it.toDomain() }, // ContentBlock 리스트를 String으로 변환
+            content = contentBlocks.joinToString { it.toDomain() },
             mainImage = mainImage,
             labels = labels.map { it.toDomain() },
             backLinks = backLinks.map { it.toDomain() },
@@ -41,7 +41,6 @@ data class BubbleModel(
         )
     }
 }
-
 
 fun Bubble.toPresentation(): BubbleModel {
     // Text 타입의 경우 앞에 %<TEXT>와 뒤에 </TEXT>%가 붙어있고
@@ -75,3 +74,16 @@ fun Bubble.toPresentation(): BubbleModel {
 }
 
 fun List<Bubble>.toPresentation(): List<BubbleModel> = map { it.toPresentation() }
+
+fun BubbleModel.getDisplayTitle(): String {
+    val selectedTitle = this.title?.takeIf { it.isNotBlank() }
+        ?: this.contentBlocks
+            .filter { it.type == ContentType.TEXT }
+            .firstOrNull { it.content.parseHtml().isNotBlank() }
+            ?.content
+            ?.parseHtml()
+            ?.take(20)
+        ?: "제목 없음"
+
+    return selectedTitle.split("\n").first()
+}

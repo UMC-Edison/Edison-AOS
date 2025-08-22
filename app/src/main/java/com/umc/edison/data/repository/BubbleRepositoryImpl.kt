@@ -69,28 +69,28 @@ class BubbleRepositoryImpl @Inject constructor(
         )
 
     override fun getKeywordBubbles(keyword: String): Flow<DataResource<List<KeywordBubble>>> =
-    // 제공해주신 예시와 동일한 resourceFactory를 사용합니다.
-        // 네트워크 통신이므로 .network 나 .remote 와 같은 다른 메소드가 있다면 그것을 사용하는 것이 더 적절할 수 있습니다.
-        resourceFactory.local(
+        resourceFactory.local( // 또는 .network
             dataAction = {
-
-                // 1. RemoteDataSource를 통해 API를 호출하고 키워드를 전달합니다.
+                // 1. RemoteDataSource를 통해 API를 호출합니다.
                 val remoteResponse = bubbleRemoteDataSource.getKeywordBubbles(keyword)
-                val keywordBubbles = mutableListOf<KeywordBubbleEntity>()
 
-                // 2. API로부터 받은 데이터(BubbleEntity 리스트)를
-                //    화면에서 사용할 데이터(KeywordBubble 리스트)로 변환(매핑)합니다.
-                remoteResponse.map {
-                    val bubble = bubbleLocalDataSource.getBubble(it.id)
-                    keywordBubbles.add(
-                        KeywordBubbleEntity(
-                            bubble=bubble,
-                            similarity = it.similarity
-                        )
+                // 2. 'map'을 사용하여 remoteResponse (List<BubbleEntity>)를
+                //    원하는 형태 (List<KeywordBubbleEntity>)로 직접 변환하여 반환합니다.
+                remoteResponse.map { responseItem ->
+                    // 로컬 DB에서 추가 정보 조회
+                    val bubble = bubbleLocalDataSource.getBubble(responseItem.id)
+
+                    // 람다의 마지막 표현식인 이 객체가 새 리스트의 요소가 됩니다.
+                    KeywordBubbleEntity(
+                        bubble = bubble,
+                        similarity = responseItem.similarity
                     )
                 }
             }
         )
+
+
+
 
     override fun getAllRecentBubbles(dayBefore: Int): Flow<DataResource<List<Bubble>>> =
         resourceFactory.local(
