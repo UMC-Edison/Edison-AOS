@@ -580,7 +580,7 @@ private fun BubbleContent(
                             Button(
                                 shape = RoundedCornerShape(100.dp),
                                 onClick = {
-                                   isLongPressed = false
+                                    isLongPressed = false
                                 },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Gray700,
