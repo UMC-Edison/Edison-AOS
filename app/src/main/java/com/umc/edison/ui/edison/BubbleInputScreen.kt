@@ -322,9 +322,7 @@ fun BubbleInputContent(
         // 추가: 엔터키 시 새 텍스트 블록 삽입 (정책에 따라 나중에 활성/비활성 가능)
         onEnterPressed = { index -> viewModel.onEnterAt(index) },
         onGapTapped = { leftIndex, rightIndex ->
-            viewModel.setGapTarget(leftIndex, rightIndex)
-            // 정책에 따라 바로 갤러리를 열고 싶으면 아래를 함께 호출
-            // viewModel.openGallery()
+            viewModel.onGapTapped(leftIndex, rightIndex)
         }
     )
 }
