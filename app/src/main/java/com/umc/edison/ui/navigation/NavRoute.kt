@@ -35,8 +35,6 @@ sealed class NavRoute(val route: String) {
     /**
      * Dynamic Routes
      */
-
-
     data object ArtLetterDetail : NavRoute(ART_LETTER_ROUTE) {
         fun createRoute(id: Int): String = "$route?artLetterId=$id"
     }

@@ -30,7 +30,6 @@ class KeywordViewModel @Inject constructor(
         collectDataResource(
             flow = getKeywordBubbleUsecase(keyword),
             onSuccess = { domainBubbles ->
-                // [수정] similarity가 높은 순으로 정렬하여 상태를 업데이트합니다.
                 val sortedBubbles = domainBubbles.sortedByDescending { it.similarity }
                 _uiState.update { it.copy(bubbles = sortedBubbles.toPresentation()) }
             },

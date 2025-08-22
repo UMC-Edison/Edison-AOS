@@ -5,7 +5,6 @@ import com.umc.edison.data.datasources.BubbleLocalDataSource
 import com.umc.edison.data.datasources.BubbleRemoteDataSource
 import com.umc.edison.data.model.bubble.ClusteredBubbleEntity
 import com.umc.edison.data.model.bubble.KeywordBubbleEntity
-import com.umc.edison.data.model.bubble.SimilarityBubbleEntity
 import com.umc.edison.data.model.bubble.toData
 import com.umc.edison.domain.DataResource
 import com.umc.edison.domain.model.bubble.Bubble
@@ -69,18 +68,12 @@ class BubbleRepositoryImpl @Inject constructor(
         )
 
     override fun getKeywordBubbles(keyword: String): Flow<DataResource<List<KeywordBubble>>> =
-        resourceFactory.local( // 또는 .network
+        resourceFactory.local(
             dataAction = {
-                // 1. RemoteDataSource를 통해 API를 호출합니다.
                 val remoteResponse = bubbleRemoteDataSource.getKeywordBubbles(keyword)
 
-                // 2. 'map'을 사용하여 remoteResponse (List<BubbleEntity>)를
-                //    원하는 형태 (List<KeywordBubbleEntity>)로 직접 변환하여 반환합니다.
                 remoteResponse.map { responseItem ->
-                    // 로컬 DB에서 추가 정보 조회
                     val bubble = bubbleLocalDataSource.getBubble(responseItem.id)
-
-                    // 람다의 마지막 표현식인 이 객체가 새 리스트의 요소가 됩니다.
                     KeywordBubbleEntity(
                         bubble = bubble,
                         similarity = responseItem.similarity

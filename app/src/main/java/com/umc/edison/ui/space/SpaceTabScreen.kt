@@ -57,7 +57,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import com.umc.edison.presentation.model.BubbleModel
 import com.umc.edison.presentation.model.KeywordBubbleModel
 import com.umc.edison.presentation.model.getDisplayTitle
@@ -66,9 +65,7 @@ import com.umc.edison.presentation.space.KeywordViewModel
 import com.umc.edison.ui.components.BubblePreview
 import com.umc.edison.ui.components.BubbleType
 import com.umc.edison.ui.components.calculateBubblePreviewSize
-import com.umc.edison.ui.components.calculateBubbleSize
 import com.umc.edison.ui.components.extractPlainText
-import com.umc.edison.ui.navigation.NavRoute
 import com.umc.edison.ui.theme.Gray100
 import com.umc.edison.ui.theme.Gray300
 import com.umc.edison.ui.theme.Gray400
