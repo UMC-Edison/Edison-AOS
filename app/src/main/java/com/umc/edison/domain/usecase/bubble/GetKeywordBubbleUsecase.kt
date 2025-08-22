@@ -7,9 +7,8 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class GetKeywordBubbleUsecase @Inject constructor(
-    private val bubbleRepository: BubbleRepository,
-    private val keyword: String
+    private val bubbleRepository: BubbleRepository
 ) {
-    operator fun invoke(): Flow<DataResource<List<KeywordBubble>>> =
+    operator fun invoke(keyword: String): Flow<DataResource<List<KeywordBubble>>> =
         bubbleRepository.getKeywordBubbles(keyword)
 }

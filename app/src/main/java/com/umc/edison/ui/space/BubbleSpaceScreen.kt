@@ -56,6 +56,7 @@ import com.umc.edison.ui.components.SearchBar
 import com.umc.edison.ui.components.calculateBubbleSize
 import com.umc.edison.ui.label.LabelTabScreen
 import com.umc.edison.ui.navigation.NavRoute
+import com.umc.edison.ui.theme.Gray200
 import com.umc.edison.ui.theme.Gray300
 import com.umc.edison.ui.theme.Gray800
 import kotlinx.coroutines.launch
@@ -87,6 +88,9 @@ fun BubbleSpaceScreen(
     )
 
     BackHandler {
+        if (uiState.keywordForMap != null) {
+            viewModel.hideKeywordMap()
+        }
         if (uiState.selectedBubble != null) {
             viewModel.selectBubble(null)
             updateShowBottomNav(true)
@@ -117,15 +121,19 @@ fun BubbleSpaceScreen(
             when (page) {
                 0 -> {
                     if (uiState.isLoggedIn) {
-                        SpaceTabScreen(showBubble = { bubble ->
-                            viewModel.selectBubble(bubble)
+                        SpaceTabScreen(
 
-                            val bubbleSize = calculateBubbleSize(bubble)
+                            isMapMode = uiState.keywordForMap != null,
+                            keyword = uiState.keywordForMap,
+                             showBubble = { bubble ->
+                                viewModel.selectBubble(bubble)
 
-                            if (bubbleSize == BubbleType.BubbleDoor) {
-                                updateShowBottomNav(false)
-                            }
-                        })
+                                val bubbleSize = calculateBubbleSize(bubble)
+
+                                if (bubbleSize == BubbleType.BubbleDoor) {
+                                    updateShowBottomNav(false)
+                                }
+                            })
                     } else {
                         NeedLoginScreen(
                             navHostController = navHostController,
@@ -173,6 +181,14 @@ fun BubbleSpaceScreen(
 
                 Spacer(modifier = Modifier.weight(1f))
 
+                if (uiState.keywordForMap != null) {
+
+                    Spacer(modifier = Modifier.width(50.dp))
+
+                }
+
+
+
                 uiState.tabs.forEachIndexed { index, text ->
                     Box(
                         modifier = Modifier
@@ -201,7 +217,31 @@ fun BubbleSpaceScreen(
 
                 Spacer(modifier = Modifier.weight(1f))
 
+
                 Spacer(modifier = Modifier.size(32.dp))
+
+
+                if (uiState.keywordForMap != null) {
+
+
+                    Box(
+                        modifier = Modifier
+                            .size(50.dp, 32.dp)
+                            .clickable { viewModel.hideKeywordMap() }
+                            .clip(RoundedCornerShape(100.dp))
+                            .background(Gray200),
+
+
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "복구",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Gray800,
+                        )
+                    }
+
+                }
             }
 
             Box(
@@ -257,12 +297,10 @@ fun BubbleSpaceScreen(
                         onSearch = {
                             viewModel.searchBubbles()
                         },
-                        placeholder = "찰나의 영감을 검색해보세요"
-                        ,
-                        showKeywordMappingButton = true
-                        ,
+                        placeholder = "찰나의 영감을 검색해보세요",
+                        showKeywordMappingButton = true,
                         onKeywordMappingClick = { keyword ->
-                            navHostController.navigate(NavRoute.KeywordMap.createRoute(keyword))
+                            viewModel.showKeywordMap(keyword)
                         }
                     )
                 }

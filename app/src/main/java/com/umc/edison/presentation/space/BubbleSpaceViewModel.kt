@@ -1,5 +1,6 @@
 package com.umc.edison.presentation.space
 
+import com.umc.edison.domain.usecase.bubble.GetKeywordBubbleUsecase
 import com.umc.edison.domain.usecase.bubble.SearchBubblesUseCase
 import com.umc.edison.domain.usecase.user.GetLogInStateUseCase
 import com.umc.edison.presentation.ToastManager
@@ -16,7 +17,8 @@ import javax.inject.Inject
 class BubbleSpaceViewModel @Inject constructor(
     toastManager: ToastManager,
     private val getLogInStateUseCase: GetLogInStateUseCase,
-    private val searchBubblesUseCase: SearchBubblesUseCase,
+    private val searchBubblesUseCase: SearchBubblesUseCase
+
 ) : BaseViewModel(toastManager) {
     private val _uiState = MutableStateFlow(BubbleSpaceState.DEFAULT)
     val uiState = _uiState.asStateFlow()
@@ -68,4 +70,14 @@ class BubbleSpaceViewModel @Inject constructor(
             _uiState.update { it.copy(searchResults = emptyList()) }
         }
     }
+
+    fun showKeywordMap(keyword: String) {
+        _uiState.update { it.copy(mode = BubbleSpaceMode.DEFAULT, keywordForMap = keyword) }
+    }
+
+    fun hideKeywordMap() {
+        _uiState.update { it.copy(keywordForMap = null) }
+    }
+
+
 }
