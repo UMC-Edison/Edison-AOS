@@ -61,7 +61,8 @@ private class EditorChain {
         clear()
         var prevId: String? = null
         linear.forEach { b ->
-            val n = Node(block = b.copy(position = 0))
+            val id = b.id.ifBlank { java.util.UUID.randomUUID().toString() }
+            val n = Node(id = id, block = b.copy(id = id, position = 0))
             nodes[n.id] = n
             link(prevId, n.id)
             prevId = n.id
@@ -94,14 +95,16 @@ private class EditorChain {
     fun insertAfter(anchorId: String?, block: ContentBlockModel): String {
         val newId = java.util.UUID.randomUUID().toString()
         val next = if (anchorId == null) head else nodes[anchorId]?.next
-        nodes[newId] = Node(id = newId, block = block, prev = anchorId, next = next)
+        val newBlock = block.copy(id = newId, position = 0)
+        nodes[newId] = Node(id = newId, block = newBlock, prev = anchorId, next = next)
         link(anchorId, newId); link(newId, next)
         return newId
     }
 
     fun insertBetween(leftId: String?, rightId: String?, block: ContentBlockModel): String {
         val newId = java.util.UUID.randomUUID().toString()
-        nodes[newId] = Node(id = newId, block = block, prev = leftId, next = rightId)
+        val newBlock = block.copy(id = newId, position = 0)
+        nodes[newId] = Node(id = newId, block = newBlock, prev = leftId, next = rightId)
         link(leftId, newId); link(newId, rightId)
         return newId
     }

@@ -60,6 +60,7 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -240,251 +241,240 @@ private fun BubbleContent(
 
         var deletedImageBlockId by remember { mutableIntStateOf(-1) }
 
-        bubble.contentBlocks.forEachIndexed { index, contentBlock ->
-            when (contentBlock.type) {
-                ContentType.TEXT -> {
-                    val richTextState = rememberSaveable(
-                        key = "richTextState_${index}",
-                        saver = RichTextState.Saver
-                    ) {
-                        RichTextState().apply {
-                            setHtml(contentBlock.content)
+        bubble.contentBlocks.forEach { contentBlock ->
+            // position을 한 번만 계산해서 씁니다
+            val pos = contentBlock.position
+
+            key(contentBlock.id) { // 안정 키
+                when (contentBlock.type) {
+                    ContentType.TEXT -> {
+                        val richTextState = rememberSaveable(
+                            // index 키 → id 키 변경
+                            key = "richTextState_${contentBlock.id}",
+                            saver = RichTextState.Saver
+                        ) {
+                            RichTextState().apply { setHtml(contentBlock.content) }
                         }
-                    }
 
-                    val isInitialized = remember(index) { mutableStateOf(false) }
+                        val isInitialized = remember(contentBlock.id) { mutableStateOf(false) }
 
-                    LaunchedEffect(deletedImageBlockId) {
-                        deletedImageBlockId.let {
-                            richTextState.setHtml(contentBlock.content)
-                            deletedImageBlockId = -1
+                        LaunchedEffect(deletedImageBlockId, contentBlock.id) {
+                            // 이미지 삭제 등으로 강제 리셋 필요할 때
+                            if (deletedImageBlockId >= 0) {
+                                richTextState.setHtml(contentBlock.content)
+                                deletedImageBlockId = -1
+                            }
                         }
-                    }
 
-                    SideEffect {
-                        if (!isInitialized.value) {
-                            richTextState.setHtml(contentBlock.content)
-                            isInitialized.value = true
+                        SideEffect {
+                            if (!isInitialized.value) {
+                                richTextState.setHtml(contentBlock.content)
+                                isInitialized.value = true
+                            }
                         }
-                    }
 
-                    LaunchedEffect(richTextState.toHtml()) {
-                        onBubbleChange(
-                            bubble.copy(
-                                contentBlocks = bubble.contentBlocks.map {
-                                    if (it == contentBlock) {
-                                        it.copy(content = richTextState.toHtml())
-                                    } else {
-                                        it
+                        LaunchedEffect(contentBlock.id, richTextState.toHtml()) {
+                            onBubbleChange(
+                                bubble.copy(
+                                    contentBlocks = bubble.contentBlocks.map { b ->
+                                        if (b.id == contentBlock.id) b.copy(content = richTextState.toHtml())
+                                        else b
+                                    }
+                                )
+                            )
+                        }
+
+                        if (uiState.selectedTextStyles.contains(TextStyle.BOLD)) {
+                            richTextState.addSpanStyle(SpanStyle(fontWeight = FontWeight.Bold))
+                        } else {
+                            richTextState.removeSpanStyle(SpanStyle(fontWeight = FontWeight.Bold))
+                        }
+                        if (uiState.selectedTextStyles.contains(TextStyle.ITALIC)) {
+                            richTextState.addSpanStyle(SpanStyle(fontStyle = FontStyle.Italic))
+                        } else {
+                            richTextState.removeSpanStyle(SpanStyle(fontStyle = FontStyle.Italic))
+                        }
+                        if (uiState.selectedTextStyles.contains(TextStyle.UNDERLINE)) {
+                            richTextState.addSpanStyle(SpanStyle(textDecoration = TextDecoration.Underline))
+                        } else {
+                            richTextState.removeSpanStyle(SpanStyle(textDecoration = TextDecoration.Underline))
+                        }
+                        if (uiState.selectedTextStyles.contains(TextStyle.HIGHLIGHT)) {
+                            richTextState.addSpanStyle(SpanStyle(background = Yellow100))
+                        } else {
+                            richTextState.removeSpanStyle(SpanStyle(background = Yellow100))
+                        }
+                        if (uiState.selectedListStyle == ListStyle.UNORDERED) {
+                            richTextState.addUnorderedList()
+                        } else {
+                            richTextState.removeUnorderedList()
+                        }
+                        if (uiState.selectedListStyle == ListStyle.ORDERED) {
+                            richTextState.addOrderedList()
+                        } else {
+                            richTextState.removeOrderedList()
+                        }
+
+                        if (isEditable) {
+                            BasicRichTextEditor(
+                                state = richTextState,
+                                textStyle = MaterialTheme.typography.bodyMedium.copy(color = Gray800),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    // index → pos
+                                    .onFocusChanged { if (it.isFocused) onTextFocused(pos) }
+                                    .onPreviewKeyEvent { ev ->
+                                        if (ev.key == Key.Enter && ev.type == KeyEventType.KeyUp) {
+                                            onEnterPressed(pos)
+                                            true
+                                        } else false
+                                    },
+                                decorationBox = { innerTextField ->
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        contentAlignment = Alignment.CenterStart
+                                    ) {
+                                        if (richTextState.toHtml() == "<br>" && bubble.contentBlocks.size == 1) {
+                                            Text(
+                                                text = "내용을 입력해주세요.",
+                                                style = MaterialTheme.typography.bodyMedium.copy(color = Gray500),
+                                                modifier = Modifier.fillMaxWidth()
+                                            )
+                                        }
+                                        innerTextField()
                                     }
                                 }
                             )
-                        )
+                        } else {
+                            BasicRichText(
+                                state = richTextState,
+                                style = MaterialTheme.typography.bodyMedium.copy(color = Gray800),
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
                     }
 
-                    if (uiState.selectedTextStyles.contains(TextStyle.BOLD)) {
-                        richTextState.addSpanStyle(SpanStyle(fontWeight = FontWeight.Bold))
-                    } else {
-                        richTextState.removeSpanStyle(SpanStyle(fontWeight = FontWeight.Bold))
-                    }
+                    ContentType.IMAGE -> {
+                        val aspectRatio = calculateAspectRatio(contentBlock.content)
+                        var isLongPressed by remember(contentBlock.id) { mutableStateOf(false) }
+                        val isMainImage = bubble.mainImage == contentBlock.content
 
-                    if (uiState.selectedTextStyles.contains(TextStyle.ITALIC)) {
-                        richTextState.addSpanStyle(SpanStyle(fontStyle = FontStyle.Italic))
-                    } else {
-                        richTextState.removeSpanStyle(SpanStyle(fontStyle = FontStyle.Italic))
-                    }
-
-                    if (uiState.selectedTextStyles.contains(TextStyle.UNDERLINE)) {
-                        richTextState.addSpanStyle(SpanStyle(textDecoration = TextDecoration.Underline))
-                    } else {
-                        richTextState.removeSpanStyle(SpanStyle(textDecoration = TextDecoration.Underline))
-                    }
-
-                    if (uiState.selectedTextStyles.contains(TextStyle.HIGHLIGHT)) {
-                        richTextState.addSpanStyle(SpanStyle(background = Yellow100))
-                    } else {
-                        richTextState.removeSpanStyle(SpanStyle(background = Yellow100))
-                    }
-
-                    if (uiState.selectedListStyle == ListStyle.UNORDERED) {
-                        richTextState.addUnorderedList()
-                    } else {
-                        richTextState.removeUnorderedList()
-                    }
-
-                    if (uiState.selectedListStyle == ListStyle.ORDERED) {
-                        richTextState.addOrderedList()
-                    } else {
-                        richTextState.removeOrderedList()
-                    }
-
-                    if (isEditable) {
-                        BasicRichTextEditor(
-                            state = richTextState,
-                            textStyle = MaterialTheme.typography.bodyMedium.copy(color = Gray800),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                // 포커스되면 해당 텍스트 position을 알려줌
-                                .onFocusChanged { if (it.isFocused) onTextFocused(index) }
-                                // 엔터키 감지 (HW 키보드는 확실, SW 키보드는 기기별 제한 있을 수 있음)
-                                .onPreviewKeyEvent { ev ->
-                                    if (ev.key == Key.Enter && ev.type == KeyEventType.KeyUp) {
-                                        onEnterPressed(index)
-                                        true // 우리가 소비
-                                    } else false
-                                },
-                            decorationBox = { innerTextField ->
-                                Box(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    contentAlignment = Alignment.CenterStart
-                                ) {
-                                    if (richTextState.toHtml() == "<br>" && bubble.contentBlocks.size == 1
-                                    ) {
-                                        Text(
-                                            text = "내용을 입력해주세요.",
-                                            style = MaterialTheme.typography.bodyMedium.copy(color = Gray500),
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
-                                    }
-                                    innerTextField()
-                                }
-                            }
-                        )
-                    } else {
-                        BasicRichText(
-                            state = richTextState,
-                            style = MaterialTheme.typography.bodyMedium.copy(color = Gray800),
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    }
-                }
-
-                ContentType.IMAGE -> {
-                    val aspectRatio = calculateAspectRatio(contentBlock.content)
-                    var isLongPressed by remember { mutableStateOf(false) }
-                    val isMainImage = bubble.mainImage == contentBlock.content
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(aspectRatio)
-                            .pointerInput(Unit) {
-                                detectTapGestures(
-                                    onLongPress = {
-                                        isLongPressed = true
-                                    }
-                                )
-                            }
-                    ) {
-                        Image(
-                            painter = rememberAsyncImagePainter(
-                                model = ImageRequest.Builder(LocalContext.current)
-                                    .data(contentBlock.content)
-                                    .crossfade(true)
-                                    .size(Size.ORIGINAL)
-                                    .build()
-                            ),
-
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clip(RoundedCornerShape(8.dp))
-                        )
-
-                        // 위쪽 갭: Between(위쪽 블록, 현재 이미지)
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(24.dp)
-                                .align(Alignment.TopCenter)
-                                .clickable {
-                                    val leftIndex = (index - 1).takeIf { it >= 0 }
-                                    val rightIndex = index
-                                    onGapTapped(leftIndex, rightIndex)
+                                .aspectRatio(aspectRatio)
+                                .pointerInput(contentBlock.id) {
+                                    detectTapGestures(onLongPress = { isLongPressed = true })
                                 }
-                        )
-
-                        // 아래쪽 갭: Between(현재 이미지, 아래쪽 블록)
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(24.dp)
-                                .align(Alignment.BottomCenter)
-                                .clickable {
-                                    val leftIndex = index
-                                    val rightIndex = (index + 1).takeIf { it < bubble.contentBlocks.size }
-                                    onGapTapped(leftIndex, rightIndex)
-                                }
-                        )
-
-                        if (isLongPressed) {
-                            Column(
+                        ) {
+                            Image(
+                                painter = rememberAsyncImagePainter(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(contentBlock.content)
+                                        .crossfade(true)
+                                        .size(Size.ORIGINAL)
+                                        .build()
+                                ),
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .clickable { isLongPressed = false },
-                                verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Button(
-                                    shape = RoundedCornerShape(100.dp),
-                                    onClick = {
-                                        isLongPressed = false
-                                        mainClicked(contentBlock.content)
-                                        deletedImageBlockId = index
-                                    },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = if (isMainImage) Gray100 else Gray700,
-                                    )
-                                ) {
-                                    Text(
-                                        text = if (isMainImage) "대표 해제" else "대표 설정",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontSize = 14.sp,
-                                        color = if (isMainImage) Red500 else Gray100
-                                    )
-                                }
+                                    .clip(RoundedCornerShape(8.dp))
+                            )
 
-                                Spacer(modifier = Modifier.height(1.dp))
+                            // 위쪽 갭: index → pos
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(24.dp)
+                                    .align(Alignment.TopCenter)
+                                    .clickable {
+                                        val leftIndex = (pos - 1).takeIf { it >= 0 }
+                                        val rightIndex = pos
+                                        onGapTapped(leftIndex, rightIndex)
+                                    }
+                            )
 
-                                Button(
-                                    shape = RoundedCornerShape(100.dp),
-                                    onClick = {
-                                        isLongPressed = false
-                                        deleteClicked(contentBlock)
-                                        deletedImageBlockId = index
-                                    },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = Gray700,
-                                    )
+                            // 아래쪽 갭: index → pos
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(24.dp)
+                                    .align(Alignment.BottomCenter)
+                                    .clickable {
+                                        val leftIndex = pos
+                                        val rightIndex = (pos + 1).takeIf { it < bubble.contentBlocks.size }
+                                        onGapTapped(leftIndex, rightIndex)
+                                    }
+                            )
+
+                            if (isLongPressed) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clickable { isLongPressed = false },
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
-                                    Text(
-                                        text = "삭제하기",
-                                        style = MaterialTheme.typography.bodyMedium.copy(color = Red100),
-                                        fontSize = 14.sp
-                                    )
+                                    Button(
+                                        shape = RoundedCornerShape(100.dp),
+                                        onClick = {
+                                            isLongPressed = false
+                                            mainClicked(contentBlock.content)
+                                            deletedImageBlockId = pos // index → pos
+                                        },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = if (isMainImage) Gray100 else Gray700,
+                                        )
+                                    ) {
+                                        Text(
+                                            text = if (isMainImage) "대표 해제" else "대표 설정",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontSize = 14.sp,
+                                            color = if (isMainImage) Red500 else Gray100
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(1.dp))
+
+                                    Button(
+                                        shape = RoundedCornerShape(100.dp),
+                                        onClick = {
+                                            isLongPressed = false
+                                            deleteClicked(contentBlock)
+                                            deletedImageBlockId = pos // index → pos
+                                        },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Gray700,
+                                        )
+                                    ) {
+                                        Text(
+                                            text = "삭제하기",
+                                            style = MaterialTheme.typography.bodyMedium.copy(color = Red100),
+                                            fontSize = 14.sp
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                 }
 
-            }
-            if (isEditable) {
-                // TEXT 아래 ‘갭’ 탭 영역 (투명 버튼)
-                Spacer(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(12.dp)
-                        .clickable {
-                            val left = index
-                            val right = (index + 1).takeIf { it < bubble.contentBlocks.size }
-                            onGapTapped(left, right)
-                        }
-                )
+                if (isEditable) {
+                    // 공통 ‘갭’ 버튼: index → pos
+                    Spacer(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .clickable {
+                                val left = pos
+                                val right = (pos + 1).takeIf { it < bubble.contentBlocks.size }
+                                onGapTapped(left, right)
+                            }
+                    )
+                }
             }
         }
-
 
 
 
@@ -523,7 +513,7 @@ private fun BubbleContent(
 
                 Box(
                     modifier = Modifier
-                        .wrapContentWidth() // ✅ FlowRow 대응
+                        .wrapContentWidth() // FlowRow 대응
                         .pointerInput(backLink.id) {
                             detectTapGestures(
                                 onLongPress = {
