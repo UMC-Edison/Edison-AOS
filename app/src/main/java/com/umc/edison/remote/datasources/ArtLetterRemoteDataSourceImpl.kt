@@ -5,7 +5,6 @@ import com.umc.edison.data.model.artLetter.ArtLetterEntity
 import com.umc.edison.data.model.artLetter.ArtLetterKeyWordEntity
 import com.umc.edison.data.model.artLetter.ArtLetterPreviewEntity
 import com.umc.edison.remote.api.ArtLetterApiService
-import com.umc.edison.remote.model.artletter.GetEditorPickRequest
 import com.umc.edison.remote.model.artletter.toData
 import javax.inject.Inject
 
@@ -24,8 +23,7 @@ class ArtLetterRemoteDataSourceImpl @Inject constructor(
     }
 
     override suspend fun getAllEditorPickArtLetters(): List<ArtLetterPreviewEntity> {
-        val request = GetEditorPickRequest(listOf(1, 3, 4)) // TODO: 백엔드 API 수정 필요
-        return artLetterApiService.getEditorPick(request).data.map { it.toData() }
+        return artLetterApiService.getEditorPick().data.map { it.toData() }
     }
 
     // TODO: 백엔드 API 수정 필요
@@ -61,8 +59,7 @@ class ArtLetterRemoteDataSourceImpl @Inject constructor(
     }
 
     override suspend fun getAllRecommendArtLetterKeyWords(): List<ArtLetterKeyWordEntity> {
-        val artLetterIds = listOf(5, 6, 7) // TODO: 백엔드 API 수정 필요
-        val response = artLetterApiService.getRecommendedKeywords(artLetterIds).data
+        val response = artLetterApiService.getRecommendedKeywords().data
         return response.map { it.toData() }
     }
 
