@@ -10,6 +10,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -464,7 +465,14 @@ private fun KeywordMapScreen(
                 0.dp to Color.Transparent
             }
 
+            val borderModifier = if (index == 0) {
+                Modifier.border(1.dp, Gray100, CircleShape)
+            } else {
+                Modifier
+            }
+
             Circle(
+                modifier = borderModifier,
                 diameter = responsiveDiameter,
                 edgeColor = edgeColors[index],
                 centerColor = centerColor,
@@ -637,6 +645,7 @@ private fun RankCircle(rank: Int, baseColor: Color) {
 
 @Composable
 private fun Circle(
+    modifier: Modifier = Modifier,
     diameter: Dp,
     edgeColor: Color,
     centerColor: Color,
@@ -650,7 +659,7 @@ private fun Circle(
         )
     )
     Box(
-        modifier = Modifier
+        modifier = modifier
             .size(diameter)
             .shadow(
                 elevation = shadowElevation,
