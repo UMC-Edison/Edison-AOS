@@ -122,9 +122,11 @@ fun BubbleGraphScreen(
         modifier = Modifier
             .size(screenWidth, screenHeight)
             .pointerInput(Unit) {
-                detectTransformGestures { _, pan, zoom, _ ->
-                    scale = (scale * zoom).coerceIn(0.5f, 3f)
-                    offset += pan
+                detectTransformGestures { centroid, pan, zoom, _ ->
+                    val oldScale = scale
+                    val newScale = (scale * zoom).coerceIn(0.2f, 3f)
+                    offset = (offset - centroid) * (newScale / oldScale) + centroid + pan
+                    scale = newScale
                 }
             }
     ) {
@@ -371,27 +373,68 @@ private fun KeywordMapScreen(
 
     LaunchedEffect(Unit) {
         val duration = 3000
+
         launch {
             rotationForCircle2.animateTo(
-                targetValue = (Random.nextFloat() * 2 - 1) * 360f,
+                targetValue = Random.nextFloat() * 40f,
                 animationSpec = tween(durationMillis = duration)
             )
         }
+
         launch {
             rotationForCircle3.animateTo(
-                targetValue = (Random.nextFloat() * 2 - 1) * 360f,
+                targetValue = -(Random.nextFloat() * 40f),
                 animationSpec = tween(durationMillis = duration)
             )
         }
+
         launch {
+            val baseAngle4 = 240f
+            val selectedZone = Random.nextInt(3)
+
+
+            val safeFinalAngle = when (selectedZone) {
+                0 -> {
+                    50.1f + Random.nextFloat() * 29.8f
+                }
+
+                1 -> {
+                    170.1f + Random.nextFloat() * 29.8f
+                }
+
+                else -> {
+                    +290.1f + Random.nextFloat() * 29.8f
+                }
+            }
+
+            val targetValue = safeFinalAngle - baseAngle4
+
             rotationForCircle4.animateTo(
-                targetValue = (Random.nextFloat() * 2 - 1) * 360f,
+                targetValue = targetValue,
                 animationSpec = tween(durationMillis = duration)
             )
         }
+
         launch {
+            val selectedZone = Random.nextInt(3)
+
+
+            val targetValue = when (selectedZone) {
+                0 -> {
+                    +40.1f + Random.nextFloat() * 49.8f
+                }
+
+                1 -> {
+                    160.1f + Random.nextFloat() * 49.8f
+                }
+
+                else -> {
+                    280.1f + Random.nextFloat() * 49.8f
+                }
+            }
+
             rotationForCircle5.animateTo(
-                targetValue = (Random.nextFloat() * 2 - 1) * 360f,
+                targetValue = targetValue,
                 animationSpec = tween(durationMillis = duration)
             )
         }
@@ -404,10 +447,16 @@ private fun KeywordMapScreen(
         val baseSize = min(maxWidth.value, maxHeight.value) * 0.85f
         val originalDiameters = listOf(530, 434, 330, 234, 100)
         val maxOriginalDiameter = 530f
-        val edgeColor = Gray100
+        val edgeColors = listOf(
+            Color(0xFFFCFDFE),
+            Color(0xFFF9FBFC),
+            Color(0xFFF7F8FB),
+            Color(0xFFF4F6F9),
+            Gray100
+        )
         val centerColor = Color.White
 
-        originalDiameters.forEach { diameter ->
+        originalDiameters.forEachIndexed { index, diameter ->
             val responsiveDiameter = (baseSize * (diameter / maxOriginalDiameter)).dp
             val (elevation, shadowColor) = if (diameter == 100) {
                 30.dp to Gray400.copy(alpha = 0.5f)
@@ -417,7 +466,7 @@ private fun KeywordMapScreen(
 
             Circle(
                 diameter = responsiveDiameter,
-                edgeColor = edgeColor,
+                edgeColor = edgeColors[index],
                 centerColor = centerColor,
                 shadowElevation = elevation,
                 shadowColor = shadowColor
@@ -435,16 +484,16 @@ private fun KeywordMapScreen(
         val bubbles = uiState.bubbles
         val slots = remember {
             listOf(
-                BubbleSlot(234f, -90f, 45f, 36.dp, rotationForCircle2),
-                BubbleSlot(234f, 30f, 45f, 36.dp, rotationForCircle2),
-                BubbleSlot(234f, 150f, 45f, 36.dp, rotationForCircle2),
-                BubbleSlot(330f, -90f, 30f, 50.dp, rotationForCircle3),
-                BubbleSlot(330f, 30f, 30f, 50.dp, rotationForCircle3),
-                BubbleSlot(330f, 150f, 30f, 50.dp, rotationForCircle3),
-                BubbleSlot(434f, 240f, 0f, 64.dp, rotationForCircle4),
-                BubbleSlot(530f, 75f, 0f, 64.dp, rotationForCircle5),
-                BubbleSlot(530f, 110f, 0f, 64.dp, rotationForCircle5),
-                BubbleSlot(530f, 300f, 0f, 64.dp, rotationForCircle5)
+                BubbleSlot(234f, -90f, 10f, 36.dp, rotationForCircle2),
+                BubbleSlot(234f, 30f, 10f, 36.dp, rotationForCircle2),
+                BubbleSlot(234f, 150f, 10f, 36.dp, rotationForCircle2),
+                BubbleSlot(330f, -90f, 0f, 50.dp, rotationForCircle3),
+                BubbleSlot(330f, 30f, 0f, 50.dp, rotationForCircle3),
+                BubbleSlot(330f, 150f, 0f, 50.dp, rotationForCircle3),
+                BubbleSlot(434f, 0f, 0f, 64.dp, rotationForCircle4),
+                BubbleSlot(530f, -60f, 0f, 64.dp, rotationForCircle5),
+                BubbleSlot(530f, 60f, 0f, 64.dp, rotationForCircle5),
+                BubbleSlot(530f, 180f, 0f, 64.dp, rotationForCircle5)
             )
         }
 
@@ -562,6 +611,7 @@ private fun BackgroundBubble(size: Dp, colors: List<Color>) {
             )
     )
 }
+
 @Composable
 private fun RankCircle(rank: Int, baseColor: Color) {
     val lightenedColor = lerp(baseColor, Color.White, 0.8f)
@@ -612,8 +662,6 @@ private fun Circle(
             .background(brush = radialGradientBrush)
     )
 }
-
-
 
 
 private data class BubbleSlot(
