@@ -5,14 +5,14 @@ import com.umc.edison.data.model.bubble.PositionBubbleEntity
 import com.umc.edison.remote.model.RemoteMapper
 
 data class GetBubblePositionResponse(
-    @SerializedName("localIdx") val localIdx: String,
+    @SerializedName("localIdx") val id : String,
     @SerializedName("x") val x: Float,
     @SerializedName("y") val y: Float,
     @SerializedName("group") val group: Int
 ) : RemoteMapper<PositionBubbleEntity> {
     override fun toData(): PositionBubbleEntity =
         PositionBubbleEntity(
-            id = localIdx,
+            id = id,
             x = x,
             y = y,
             group = group
