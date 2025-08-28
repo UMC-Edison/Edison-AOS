@@ -44,6 +44,7 @@ import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.umc.edison.R
+import com.umc.edison.presentation.model.BubbleModel
 import com.umc.edison.presentation.space.BubbleSpaceMode
 import com.umc.edison.presentation.space.BubbleSpaceViewModel
 import com.umc.edison.ui.BaseContent
@@ -121,20 +122,25 @@ fun BubbleSpaceScreen(
             when (page) {
                 0 -> {
                     if (uiState.isLoggedIn) {
-                        SpaceTabScreen(
+                         val onShowBubble: (BubbleModel) -> Unit = { bubble ->
+                            viewModel.selectBubble(bubble)
+                            val bubbleSize = calculateBubbleSize(bubble)
+                            if (bubbleSize == BubbleType.BubbleDoor) {
+                                updateShowBottomNav(false)
+                            }
+                        }
 
-                            isMapMode = uiState.keywordForMap != null,
-                            keyword = uiState.keywordForMap,
-                             showBubble = { bubble ->
-                                viewModel.selectBubble(bubble)
-
-                                val bubbleSize = calculateBubbleSize(bubble)
-
-                                if (bubbleSize == BubbleType.BubbleDoor) {
-                                    updateShowBottomNav(false)
-                                }
-                            })
-                    } else {
+                        if (uiState.keywordForMap != null) {
+                            KeywordMapScreen(
+                                keyword = uiState.keywordForMap,
+                                showBubble = onShowBubble
+                            )
+                        } else {
+                            BubbleGraphScreen(
+                                showBubble = onShowBubble
+                            )
+                        }
+                    }  else {
                         NeedLoginScreen(
                             navHostController = navHostController,
                             modifier = Modifier
