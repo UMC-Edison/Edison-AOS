@@ -58,6 +58,10 @@ class ArtLetterRemoteDataSourceImpl @Inject constructor(
         return result
     }
 
+    override suspend fun getMoreArtLetters(id: Int): List<ArtLetterPreviewEntity> {
+        return artLetterApiService.getMoreArtLetters(id).data.map { it.toData() }
+    }
+
     override suspend fun getAllRecommendArtLetterKeyWords(): List<ArtLetterKeyWordEntity> {
         val response = artLetterApiService.getRecommendedKeywords().data
         return response.map { it.toData() }

@@ -2,7 +2,7 @@ package com.umc.edison.presentation.artletter
 
 import androidx.lifecycle.SavedStateHandle
 import com.umc.edison.domain.usecase.artletter.GetArtLetterUseCase
-import com.umc.edison.domain.usecase.artletter.GetAllRandomArtLettersUseCase
+import com.umc.edison.domain.usecase.artletter.GetMoreArtLettersUseCase
 import com.umc.edison.domain.usecase.artletter.LikeArtLetterUseCase
 import com.umc.edison.domain.usecase.artletter.ScrapArtLetterUseCase
 import com.umc.edison.domain.usecase.user.GetLogInStateUseCase
@@ -23,7 +23,7 @@ class ArtLetterDetailViewModel @Inject constructor(
     private val getArtLetterUseCase: GetArtLetterUseCase,
     private val likeArtLetterUseCase: LikeArtLetterUseCase,
     private val scrapArtLetterUseCase: ScrapArtLetterUseCase,
-    private val getAllRandomArtLettersUseCase: GetAllRandomArtLettersUseCase,
+    private val getMoreArtLettersUseCase: GetMoreArtLettersUseCase,
     private val getLogInStateUseCase: GetLogInStateUseCase
 ) : BaseViewModel(toastManager) {
     private val _uiState = MutableStateFlow(ArtLetterDetailState.DEFAULT)
@@ -34,7 +34,7 @@ class ArtLetterDetailViewModel @Inject constructor(
             ?: throw IllegalArgumentException("artLetterId is required")
 
         fetchArtLetterDetail(id)
-        fetchRandomArtLetters()
+        fetchMoreArtLetters(id)
         getLoginState()
     }
 
@@ -59,29 +59,21 @@ class ArtLetterDetailViewModel @Inject constructor(
                 }
             },
 
-        )
+            )
     }
 
-
-
-    private fun fetchRandomArtLetters() {
+    private fun fetchMoreArtLetters(id: Int) {
         collectDataResource(
-            flow = getAllRandomArtLettersUseCase(),
+            flow = getMoreArtLettersUseCase(id),
             onSuccess = { artLetters ->
-                val unique = artLetters.filter {
-                    it.artLetterId != _uiState.value.artLetter.artLetterId
-                }
                 _uiState.update {
                     it.copy(
-                        relatedArtLetters = unique.toPreviewPresentation(),
+                        relatedArtLetters = artLetters.toPreviewPresentation(),
                     )
                 }
             },
-
         )
     }
-
-
 
     fun likeArtLetter() {
         if (!_uiState.value.isLoggedIn) {
