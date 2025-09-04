@@ -11,6 +11,7 @@ interface ArtLetterRepository {
     fun getAllArtLetters(): Flow<DataResource<List<ArtLetter>>>
     fun getAllEditorPickArtLetters(): Flow<DataResource<List<ArtLetter>>>
     fun getAllRandomArtLetters(): Flow<DataResource<List<ArtLetter>>>
+    fun getMoreArtLetters(id: Int): Flow<DataResource<List<ArtLetter>>>
     fun getAllRecommendArtLetterKeyWords(): Flow<DataResource<List<ArtLetterKeyWord>>>
     fun getAllScrappedArtLetters(): Flow<DataResource<List<ArtLetter>>>
     fun getArtLetter(id: Int): Flow<DataResource<ArtLetter>>

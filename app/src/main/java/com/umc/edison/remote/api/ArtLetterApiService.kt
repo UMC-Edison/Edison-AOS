@@ -12,6 +12,7 @@ import com.umc.edison.remote.model.artletter.GetSortedArtLettersResponse
 import com.umc.edison.remote.model.artletter.PostArtLetterLikeResponse
 import com.umc.edison.remote.model.artletter.PostArtLetterScrapResponse
 import com.umc.edison.remote.model.artletter.GetEditorPickResponse
+import com.umc.edison.remote.model.artletter.GetMoreArtLettersResponse
 import com.umc.edison.remote.model.artletter.GetRecentSearchesResponse
 import com.umc.edison.remote.model.artletter.GetSearchArtLettersResponse
 import com.umc.edison.remote.model.mypage.GetMyScrapArtLettersResponse
@@ -31,6 +32,9 @@ interface ArtLetterApiService {
 
     @GET("/artletters/editor-pick")
     suspend fun getEditorPick(): ResponseWithListData<GetEditorPickResponse>
+
+    @GET("/artletters/more/{currentId}")
+    suspend fun getMoreArtLetters(@Path("currentId") currentId: Int): ResponseWithListData<GetMoreArtLettersResponse>
 
     @GET("/artletters/{letterId}")
     suspend fun getArtLetterDetail(@Path("letterId") letterId: Int): ResponseWithData<GetArtLetterDetailResponse>
