@@ -3,8 +3,13 @@ package com.umc.edison.presentation.edison
 import android.content.Context
 import android.net.Uri
 import android.text.Html
-import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
+import com.umc.edison.domain.usecase.bubble.AddBubbleUseCase
+import com.umc.edison.domain.usecase.bubble.GetAllBubblesUseCase
+import com.umc.edison.domain.usecase.bubble.GetBubbleUseCase
+import com.umc.edison.domain.usecase.bubble.UpdateBubbleUseCase
+import com.umc.edison.domain.usecase.label.AddLabelUseCase
+import com.umc.edison.domain.usecase.label.GetAllLabelsUseCase
 import com.umc.edison.presentation.ToastManager
 import com.umc.edison.presentation.base.BaseViewModel
 import com.umc.edison.presentation.label.LabelEditMode
@@ -24,56 +29,19 @@ import java.io.File
 import java.io.FileOutputStream
 import javax.inject.Inject
 
-private sealed class InsertionTarget {
-    data object None : InsertionTarget()
-    data class AfterText(val textIndex: Int) : InsertionTarget()
-    data class Between(val leftIndex: Int?, val rightIndex: Int?) : InsertionTarget()
-}
-
 @HiltViewModel
 class BubbleInputViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     toastManager: ToastManager,
-    private val bubbleDataManager: BubbleDataManager,
-    private val contentBlockManager: ContentBlockManager,
-    private val imageHandler: ImageHandler
+    private val getAllLabelsUseCase: GetAllLabelsUseCase,
+    private val getBubbleUseCase: GetBubbleUseCase,
+    private val getAllBubblesUseCase: GetAllBubblesUseCase,
+    private val addLabelUseCase: AddLabelUseCase,
+    private val addBubbleUseCase: AddBubbleUseCase,
+    private val updateBubbleUseCase: UpdateBubbleUseCase,
 ) : BaseViewModel(toastManager) {
-
-    private val chain = EditorChain()
-    private var lastFocusedTextIndex: Int? = null
-
-    private val _uiState = MutableStateFlow(
-        BubbleInputState.DEFAULT
-    )
+    private val _uiState = MutableStateFlow(BubbleInputState.DEFAULT)
     val uiState = _uiState.asStateFlow()
-
-    private var _currentInsertionTarget: InsertionTarget = InsertionTarget.None
-
-    init {
-        contentBlockManager.initialize(chain, ::publish, ::showToast)
-        imageHandler.initialize(chain, ::publish, ::showToast)
-
-        val id: String? = savedStateHandle["bubbleId"]
-        fetchBubble(id)
-        fetchLabels()
-        fetchBubbles()
-    }
-
-    private fun setInsertionTarget(target: InsertionTarget) {
-        _currentInsertionTarget = target
-    }
-
-    private fun publish() {
-        val ordered = chain.toLinear().map { it.block }
-        _uiState.update { s -> s.copy(bubble = s.bubble.copy(contentBlocks = ordered)) }
-        checkCanSave()
-    }
-
-    private fun ensureInitialText() {
-        if (chain.headId() == null) {
-            chain.insertAfter(null, ContentBlockModel(ContentType.TEXT, "", 0))
-        }
-    }
 
     init {
         val id: String? = savedStateHandle["bubbleId"]
@@ -84,79 +52,36 @@ class BubbleInputViewModel @Inject constructor(
 
     private fun fetchBubble(bubbleId: String?) {
         if (bubbleId.isNullOrEmpty()) {
-            chain.fromLinear(emptyList())
-            ensureInitialText()
-            publish()
+            addTextBlockToFront()
             return
         }
 
         collectDataResource(
-            flow = bubbleDataManager.getBubble(bubbleId),
+            flow = getBubbleUseCase(bubbleId),
             onSuccess = { bubble ->
-                val pres = bubble.toPresentation()
-                val sorted = pres.contentBlocks.sortedBy { it.position }
-                chain.fromLinear(sorted)
-                ensureInitialText()
-                val orderedBlocks = chain.toLinear().map { it.block }
-
+                val sortedContentBlocks =
+                    bubble.toPresentation().contentBlocks.sortedBy { it.position }
                 _uiState.update {
                     it.copy(
-                        bubble = pres.copy(contentBlocks = orderedBlocks),
-                        selectedLabels = pres.labels
+                        bubble = bubble.toPresentation().copy(contentBlocks = sortedContentBlocks),
+                        selectedLabels = bubble.labels.toPresentation()
                     )
                 }
-                checkCanSave()
             },
-            onComplete = { ensureInitialText(); publish() }
+            onComplete = {
+                addTextBlockToFront()
+            }
         )
-    }
-
-
-    /** 빈 단락에서 Backspace → 삭제 후 이전 텍스트로 포커스 */
-    fun onBackspaceEmptyAt(textIndex: Int) {
-        val result = contentBlockManager.onBackspaceEmptyAt(textIndex)
-        result?.let {
-            _uiState.update {
-                it.copy(
-                    focusedTextIndex = result.focusIndex,
-                    cursorPosition = result.cursorPosition
-                )
-            }
-            setInsertionTarget(InsertionTarget.AfterText(result.focusIndex))
-            lastFocusedTextIndex = result.focusIndex
-        }
-    }
-
-    /** 커서가 맨 앞에서 Backspace → 이전 단락과 병합 */
-    fun onBackspaceAtStart(textIndex: Int) {
-        val result = contentBlockManager.onBackspaceAtStart(textIndex)
-        result?.let {
-            _uiState.update {
-                it.copy(
-                    focusedTextIndex = result.focusIndex,
-                    cursorPosition = result.cursorPosition
-                )
-            }
-            setInsertionTarget(InsertionTarget.AfterText(result.focusIndex))
-            lastFocusedTextIndex = result.focusIndex
-        }
-    }
-
-    fun onTextFocused(textIndex: Int) {
-        lastFocusedTextIndex = textIndex
-        setInsertionTarget(InsertionTarget.AfterText(textIndex))
     }
 
     private fun fetchBubbles() {
         collectDataResource(
-            flow = bubbleDataManager.getAllBubbles(),
+            flow = getAllBubblesUseCase(),
             onSuccess = { bubbles ->
                 _uiState.update {
-                    it.copy(
-                        bubbles = bubbles.toPresentation().filter { bubble ->
-                            bubble.id != _uiState.value.bubble.id
-                        }
-                    )
+                    it.copy(bubbles = bubbles.toPresentation().filter { bubble ->
+                        bubble.id != _uiState.value.bubble.id
+                    })
                 }
             },
         )
@@ -164,16 +89,20 @@ class BubbleInputViewModel @Inject constructor(
 
     private fun fetchLabels() {
         collectDataResource(
-            flow = bubbleDataManager.getAllLabels(),
+            flow = getAllLabelsUseCase(),
             onSuccess = { labels ->
-                _uiState.update { it.copy(labels = labels.toPresentation()) }
+                _uiState.update {
+                    it.copy(
+                        labels = labels.toPresentation(),
+                    )
+                }
             },
         )
     }
 
     fun saveLabel(label: LabelModel) {
         collectDataResource(
-            flow = bubbleDataManager.addLabel(label),
+            flow = addLabelUseCase(label.toDomain()),
             onSuccess = {
                 updateLabelEditMode(LabelEditMode.EDIT)
                 fetchLabels()
@@ -182,10 +111,11 @@ class BubbleInputViewModel @Inject constructor(
     }
 
     fun updateSelectedLabels(labels: List<LabelModel>) {
-        val updatedBubble = bubbleDataManager.updateSelectedLabels(_uiState.value.bubble, labels)
         _uiState.update {
             it.copy(
-                bubble = updatedBubble,
+                bubble = it.bubble.copy(
+                    labels = labels
+                ),
                 selectedLabels = labels
             )
         }
@@ -196,26 +126,42 @@ class BubbleInputViewModel @Inject constructor(
             _uiState.update { it.copy(selectedIcon = IconType.NONE) }
             return
         }
+
         if (iconType == IconType.LINK && _uiState.value.selectedIcon == IconType.LINK) {
             _uiState.update { it.copy(selectedIcon = IconType.NONE) }
             return
         }
+
         if (iconType == IconType.NONE) {
             _uiState.update {
-                it.copy(selectedTextStyles = emptyList(), selectedListStyle = ListStyle.NONE)
+                it.copy(
+                    selectedTextStyles = emptyList(),
+                    selectedListStyle = ListStyle.NONE
+                )
             }
         }
+
         if (iconType == IconType.TAG) {
             fetchLabels()
+        }
+
+        if (iconType == IconType.TAG) {
             updateLabelEditMode(LabelEditMode.EDIT)
         }
+
         _uiState.update { it.copy(selectedIcon = iconType) }
     }
 
     fun updateTextStyle(textStyle: TextStyle) {
-        val selected = _uiState.value.selectedTextStyles.toMutableList()
-        if (selected.contains(textStyle)) selected.remove(textStyle) else selected.add(textStyle)
-        _uiState.update { it.copy(selectedTextStyles = selected) }
+        val selectedTextStyles = _uiState.value.selectedTextStyles.toMutableList()
+
+        if (selectedTextStyles.contains(textStyle)) {
+            selectedTextStyles.remove(textStyle)
+        } else {
+            selectedTextStyles.add(textStyle)
+        }
+
+        _uiState.update { it.copy(selectedTextStyles = selectedTextStyles) }
     }
 
     fun updateListStyle(listStyle: ListStyle) {
@@ -227,54 +173,67 @@ class BubbleInputViewModel @Inject constructor(
     }
 
     private fun addTextBlock() {
-        val tailId = chain.tailId()
-        if (tailId == null) return
-        val tailBlockType = chain.node(tailId)?.block?.type
-        if (tailBlockType != ContentType.TEXT) {
-            chain.insertAfter(tailId, ContentBlockModel(ContentType.TEXT, "", 0))
-            publish()
-        }
-    }
+        val newTextBlock = ContentBlockModel(
+            type = ContentType.TEXT,
+            content = "",
+            position = _uiState.value.bubble.contentBlocks.size
+        )
 
-    private fun addTextBlockToFront() {
-        val headId = chain.headId()
-        if (headId != null) {
-            val headBlockType = chain.node(headId)?.block?.type
-            if (headBlockType != ContentType.TEXT) {
-                chain.insertBetween(null, headId, ContentBlockModel(ContentType.TEXT, "", 0))
-                publish()
+        if (_uiState.value.bubble.contentBlocks.isEmpty()) {
+            _uiState.update {
+                it.copy(
+                    bubble = it.bubble.copy(
+                        contentBlocks = listOf(newTextBlock)
+                    )
+                )
+            }
+        } else {
+            _uiState.update {
+                it.copy(
+                    bubble = it.bubble.copy(
+                        contentBlocks = it.bubble.contentBlocks + newTextBlock
+                    )
+                )
             }
         }
     }
 
-    fun addContentBlocks() {
-        val imageUris = _uiState.value.selectedImages
-        if (imageUris.isEmpty()) {
-            closeGallery()
+    private fun addTextBlockToFront() {
+        if (_uiState.value.bubble.contentBlocks.isEmpty()) {
+            addTextBlock()
             return
         }
 
-        when (val target = _currentInsertionTarget) {
-            is InsertionTarget.AfterText -> imageHandler.addImagesAfterText(
-                target.textIndex,
-                imageUris
-            )
+        if (_uiState.value.bubble.contentBlocks[0].type == ContentType.TEXT && _uiState.value.bubble.contentBlocks.last().type == ContentType.TEXT) {
+            return
+        }
 
-            is InsertionTarget.Between -> imageHandler.addImagesAtGap(
-                target.leftIndex,
-                target.rightIndex,
-                imageUris
-            )
+        if (_uiState.value.bubble.contentBlocks[0].type == ContentType.TEXT) {
+            return
+        }
 
-            else -> imageHandler.addImagesDefault(imageUris)
+        val newTextBlock = ContentBlockModel(
+            type = ContentType.TEXT,
+            content = "",
+            position = 0
+        )
+
+        // 기존 contentBlock의 position을 1씩 증가시킴
+        val currentContentBlocks = _uiState.value.bubble.contentBlocks.map {
+            it.copy(position = it.position + 1)
         }
 
         _uiState.update {
+            val updatedContentBlocks = listOf(newTextBlock) + currentContentBlocks
             it.copy(
-                isGalleryOpen = false,
-                selectedIcon = IconType.NONE,
-                selectedImages = emptyList()
+                bubble = it.bubble.copy(
+                    contentBlocks = updatedContentBlocks
+                )
             )
+        }
+
+        if (_uiState.value.bubble.contentBlocks.last().type == ContentType.IMAGE) {
+            addTextBlock()
         }
     }
 
@@ -313,29 +272,40 @@ class BubbleInputViewModel @Inject constructor(
     }
 
     fun updateBubbleContent(bubble: BubbleModel) {
-        val ordered = chain.toLinear()
-        bubble.contentBlocks.forEach { incoming ->
-            if (incoming.type == ContentType.TEXT) {
-                val node = ordered.find { it.id == incoming.id }
-                if (node?.block?.type == ContentType.TEXT) {
-                    node.block.content = incoming.content
-                }
-            }
+        _uiState.update {
+            it.copy(
+                bubble = bubble
+            )
         }
-        val updatedBubble = bubbleDataManager.updateBubbleContent(_uiState.value.bubble, bubble)
-        _uiState.update { it.copy(bubble = updatedBubble) }
+
         checkCanSave()
     }
 
     fun deleteBackLink(targetBackLink: BubbleModel) {
-        val updatedBubble = bubbleDataManager.removeBackLink(_uiState.value.bubble, targetBackLink)
-        _uiState.update { it.copy(bubble = updatedBubble) }
+        val currentBubble = _uiState.value.bubble
+        val updatedBackLinks = currentBubble.backLinks
+            .filterNot { it.id == targetBackLink.id }
+
+
+        _uiState.update { currentState ->
+            currentState.copy(
+                bubble = currentBubble.copy(
+                    backLinks = updatedBackLinks
+                )
+            )
+        }
     }
 
     fun deleteLinkBubble(targetLinkBubble: BubbleModel) {
-        val updatedBubble =
-            bubbleDataManager.removeLinkBubble(_uiState.value.bubble, targetLinkBubble)
-        _uiState.update { it.copy(bubble = updatedBubble) }
+        val currentBubble = _uiState.value.bubble
+
+        _uiState.update { currentState ->
+            currentState.copy(
+                bubble = currentBubble.copy(
+                    linkedBubble = if (currentBubble.linkedBubble?.id == targetLinkBubble.id) null else currentBubble.linkedBubble
+                )
+            )
+        }
     }
 
     fun deleteContentBlock(contentBlock: ContentBlockModel) {
@@ -395,68 +365,95 @@ class BubbleInputViewModel @Inject constructor(
         }
     }
 
-    fun onGapTapped(leftIndex: Int?, rightIndex: Int?) {
-        val result = contentBlockManager.onGapTapped(leftIndex, rightIndex)
-        result?.let {
-            _uiState.update {
-                it.copy(
-                    focusedTextIndex = result.focusIndex,
-                    cursorPosition = result.cursorPosition
-                )
-            }
-            setInsertionTarget(InsertionTarget.AfterText(result.focusIndex))
-            lastFocusedTextIndex = result.focusIndex
-        }
-    }
-
-    fun clearFocusedIndex() {
-        _uiState.update { it.copy(focusedTextIndex = null) }
-    }
-
     fun updateBubbleWithLink() {
         saveBubble(true)
     }
 
     fun saveBubble(isLinked: Boolean = false) {
         trimBlankBlock()
+
         checkCanSave()
-        if (!uiState.value.canSave) {
+
+        if (!_uiState.value.canSave) {
             showToast("내용을 입력해주세요.")
             addTextBlockToFront()
             return
         }
 
-        val flow = if (uiState.value.bubble.id.isNullOrEmpty())
-            bubbleDataManager.addBubble(uiState.value.bubble)
-        else
-            bubbleDataManager.updateBubble(uiState.value.bubble)
-
         collectDataResource(
-            flow = flow,
+            flow = if (_uiState.value.bubble.id.isNullOrEmpty()) {
+                addBubbleUseCase(_uiState.value.bubble.toDomain())
+            } else {
+                updateBubbleUseCase(_uiState.value.bubble.toDomain())
+
+            },
             onSuccess = { savedBubble ->
                 showToast("저장되었습니다.")
+
                 if (isLinked) {
                     _uiState.update {
                         BubbleInputState.DEFAULT.copy(
-                            bubble = BubbleModel.DEFAULT.copy(linkedBubble = savedBubble.toPresentation()),
+                            bubble = BubbleModel.DEFAULT.copy(
+                                linkedBubble = savedBubble.toPresentation()
+                            ),
                             bubbles = it.bubbles + savedBubble.toPresentation()
                         )
                     }
+
                     addTextBlock()
-                } else {
-                    _uiState.update { it.copy(bubble = savedBubble.toPresentation()) }
                 }
             },
         )
     }
 
     private fun checkCanSave() {
-        val canSave = contentBlockManager.checkCanSave()
+        var canSave = true
+
+        val bubble = _uiState.value.bubble
+
+        if (bubble.title.isNullOrEmpty() && bubble.mainImage.isNullOrEmpty()) {
+            canSave = if (bubble.contentBlocks.isEmpty()) {
+                false
+            } else if (bubble.contentBlocks.size == 1) {
+                bubble.contentBlocks[0].content.parseHtml()
+                    .isNotEmpty() && bubble.contentBlocks[0].content != "<br>"
+            } else {
+                (bubble.contentBlocks[0].content.parseHtml()
+                    .isNotEmpty() && bubble.contentBlocks[0].content != "<br>")
+                        || (bubble.contentBlocks[1].content.parseHtml()
+                    .isNotEmpty() && bubble.contentBlocks[1].content != "<br>")
+            }
+        }
+
         _uiState.update { it.copy(canSave = canSave) }
     }
 
     private fun trimBlankBlock() {
-        contentBlockManager.trimBlankBlocks()
+        val contentBlocks = _uiState.value.bubble.contentBlocks.toMutableList()
+        val updatedContentBlocks = mutableListOf<ContentBlockModel>()
+
+        contentBlocks.forEachIndexed { _, contentBlock ->
+            if (contentBlock.type == ContentType.TEXT) {
+                val contents = contentBlock.content.split("<br>")
+                val newContent = if (contents.size > 1) {
+                    contents.joinToString(separator = "") { it.trim() }
+                } else {
+                    contentBlock.content
+                }
+
+                if (newContent.parseHtml().trim().isNotEmpty()) {
+                    updatedContentBlocks.add(contentBlock)
+                }
+            } else {
+                updatedContentBlocks.add(contentBlock)
+            }
+        }
+
+        _uiState.update {
+            it.copy(
+                bubble = it.bubble.copy(contentBlocks = updatedContentBlocks)
+            )
+        }
     }
 
     fun openGallery() {
@@ -468,11 +465,13 @@ class BubbleInputViewModel @Inject constructor(
     }
 
     fun saveCameraImage(uri: Uri) {
-        _uiState.update { it.copy(cameraImagePath = uri) }
+        _uiState.update {
+            it.copy(cameraImagePath = uri)
+        }
     }
 
     fun saveCameraImage(context: Context) {
-        val savedUri = imageHandler.saveCameraImage(context, _uiState.value.cameraImagePath!!)
+        val savedUri = saveImageToInternalStorage(context, _uiState.value.cameraImagePath!!)
         _uiState.update {
             it.copy(
                 cameraImagePath = null,
@@ -493,8 +492,17 @@ class BubbleInputViewModel @Inject constructor(
     }
 
     fun addBackLink(bubble: BubbleModel) {
-        val updatedBubble = bubbleDataManager.addBackLink(_uiState.value.bubble, bubble)
-        _uiState.update { it.copy(bubble = updatedBubble) }
+        if (_uiState.value.bubble.backLinks.map { it.id }.contains(bubble.id)) {
+            return
+        }
+
+        _uiState.update {
+            it.copy(
+                bubble = it.bubble.copy(
+                    backLinks = it.bubble.backLinks + bubble
+                )
+            )
+        }
     }
 
     private fun saveImageToInternalStorage(context: Context, uri: Uri): Uri {
@@ -528,18 +536,13 @@ class BubbleInputViewModel @Inject constructor(
     }
 
     fun updateToastMessage(message: String) {
-        if (message.isNotEmpty()) showToast(message)
+        if (!message.isEmpty()) {
+            showToast(message)
+        }
     }
 
-    fun toggleImageSelection(imageUri: Uri) {
-        val currentImageCount =
-            imageHandler.getCurrentImageCount(_uiState.value.bubble.contentBlocks)
-        val updatedImages = imageHandler.toggleImageSelection(
-            imageUri,
-            _uiState.value.selectedImages,
-            currentImageCount
-        )
-        _uiState.update { it.copy(selectedImages = updatedImages) }
+    fun showImageGalleryValidationMessage() {
+        showToast("이미지는 최대 10개까지 첨부할 수 있습니다.")
     }
 
     fun updateSelectedImages(uris: List<Uri>): List<Uri> {
@@ -548,7 +551,6 @@ class BubbleInputViewModel @Inject constructor(
 
         val availableSize = MAX_TOTAL_IMAGES - currImageSize
         return if (uris.size > availableSize) {
-            showToast(MAX_TOTAL_IMAGES_LIMIT_MESSAGE)
             uris.take(availableSize)
         } else {
             uris
@@ -559,18 +561,18 @@ class BubbleInputViewModel @Inject constructor(
         val currImageSize =
             _uiState.value.bubble.contentBlocks.filter { it.type == ContentType.IMAGE }.size
         if (currImageSize >= MAX_TOTAL_IMAGES) {
-            showToast(MAX_TOTAL_IMAGES_LIMIT_MESSAGE)
+            showToast("이미지는 최대 30개까지 첨부할 수 있습니다.")
             return false
         }
+
         return true
     }
 
     companion object {
         const val MAX_IMAGE_SELECTION = 10
         const val MAX_TOTAL_IMAGES = 30
-
-        const val MAX_TOTAL_IMAGES_LIMIT_MESSAGE = "이미지는 최대 ${MAX_TOTAL_IMAGES}개까지 첨부할 수 있습니다."
     }
+
 }
 
 fun String.parseHtml(): String {
