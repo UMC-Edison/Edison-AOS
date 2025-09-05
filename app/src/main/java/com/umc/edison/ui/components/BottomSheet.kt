@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.umc.edison.ui.ToastScreen
 import com.umc.edison.ui.theme.Gray800
 import com.umc.edison.ui.theme.White000
 import kotlinx.coroutines.launch
@@ -56,6 +57,7 @@ fun BottomSheet(
             contentAlignment = Alignment.Center
         ) {
             content()
+            ToastScreen()
         }
     }
 }

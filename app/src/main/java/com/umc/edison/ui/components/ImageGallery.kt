@@ -32,6 +32,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.umc.edison.ui.rememberToastManager
 import com.umc.edison.ui.theme.Gray500
 import com.umc.edison.ui.theme.Gray800
 import kotlin.collections.plus
@@ -41,16 +42,15 @@ import kotlin.collections.plus
 fun ImageGallery(
     onConfirmed: (List<Uri>) -> Boolean,
     onClose: () -> Unit,
-    multiSelectMode: Boolean,
-    showToastMessage: () -> Unit = {},
-    maxImageSize: Int = 10,
+    maxImageSize: Int = 1,
 ) {
+    val multiSelectMode = maxImageSize > 1
     val context = LocalContext.current
+    val toastManager = rememberToastManager()
     var imageList by remember { mutableStateOf(loadGalleryImages(context, "Recent")) }
     var folderList by remember { mutableStateOf(loadGalleryFolders(context)) } // 폴더 리스트
     var selectedFolder by remember { mutableStateOf("Recent") } // 선택된 폴더
     var isExpand by remember { mutableStateOf(false) } // 폴더 리스트 다이얼로그 상태
-
     var selectedImages by remember { mutableStateOf(listOf<Uri>()) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -162,8 +162,8 @@ fun ImageGallery(
                         modifier = Modifier
                             .aspectRatio(1f)
                             .clickable {
-                                if (multiSelectMode && !isSelected && selectedImages.size >= maxImageSize) {
-                                    showToastMessage()
+                                if (!isSelected && selectedImages.size >= maxImageSize) {
+                                    toastManager.showToast("이미지는 최대 ${maxImageSize}개까지 선택할 수 있습니다.")
                                     return@clickable
                                 }
                                 selectedImages = onSelectImage(uri, multiSelectMode, selectedImages)
@@ -186,11 +186,11 @@ fun ImageGallery(
                             RadioButton(
                                 selected = isSelected,
                                 onClick = {
-                                    if (multiSelectMode && !isSelected && selectedImages.size >= maxImageSize) {
-                                        showToastMessage()
+                                    if (!isSelected && selectedImages.size >= maxImageSize) {
+                                        toastManager.showToast("이미지는 최대 ${maxImageSize}개까지 선택할 수 있습니다.")
                                         return@RadioButton
                                     }
-                                    selectedImages = onSelectImage(uri)
+                                    selectedImages = onSelectImage(uri, multiSelectMode, selectedImages)
                                 },
                             )
 
