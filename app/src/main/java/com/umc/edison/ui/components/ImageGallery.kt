@@ -162,7 +162,7 @@ fun ImageGallery(
                         modifier = Modifier
                             .aspectRatio(1f)
                             .clickable {
-                                if (!isSelected && selectedImages.size >= maxImageSize) {
+                                if (multiSelectMode && !isSelected && selectedImages.size >= maxImageSize) {
                                     toastManager.showToast("이미지는 최대 ${maxImageSize}개까지 선택할 수 있습니다.")
                                     return@clickable
                                 }
@@ -186,7 +186,7 @@ fun ImageGallery(
                             RadioButton(
                                 selected = isSelected,
                                 onClick = {
-                                    if (!isSelected && selectedImages.size >= maxImageSize) {
+                                    if (multiSelectMode && !isSelected && selectedImages.size >= maxImageSize) {
                                         toastManager.showToast("이미지는 최대 ${maxImageSize}개까지 선택할 수 있습니다.")
                                         return@RadioButton
                                     }
