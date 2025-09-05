@@ -224,10 +224,6 @@ fun BubbleInputContent(
                 true
             },
             onClose = { viewModel.closeGallery() },
-            multiSelectMode = true,
-            showToastMessage = {
-                viewModel.showImageGalleryValidationMessage()
-            },
             maxImageSize = BubbleInputViewModel.MAX_IMAGE_SELECTION,
         )
     }

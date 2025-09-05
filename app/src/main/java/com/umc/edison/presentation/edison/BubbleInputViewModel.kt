@@ -541,16 +541,13 @@ class BubbleInputViewModel @Inject constructor(
         }
     }
 
-    fun showImageGalleryValidationMessage() {
-        showToast("이미지는 최대 10개까지 첨부할 수 있습니다.")
-    }
-
     fun updateSelectedImages(uris: List<Uri>): List<Uri> {
         val currImageSize =
             _uiState.value.bubble.contentBlocks.filter { it.type == ContentType.IMAGE }.size
 
         val availableSize = MAX_TOTAL_IMAGES - currImageSize
         return if (uris.size > availableSize) {
+            showToast(MAX_TOTAL_IMAGES_LIMIT_MESSAGE)
             uris.take(availableSize)
         } else {
             uris
@@ -561,7 +558,7 @@ class BubbleInputViewModel @Inject constructor(
         val currImageSize =
             _uiState.value.bubble.contentBlocks.filter { it.type == ContentType.IMAGE }.size
         if (currImageSize >= MAX_TOTAL_IMAGES) {
-            showToast("이미지는 최대 30개까지 첨부할 수 있습니다.")
+            showToast(MAX_TOTAL_IMAGES_LIMIT_MESSAGE)
             return false
         }
 
@@ -571,6 +568,8 @@ class BubbleInputViewModel @Inject constructor(
     companion object {
         const val MAX_IMAGE_SELECTION = 10
         const val MAX_TOTAL_IMAGES = 30
+
+        const val MAX_TOTAL_IMAGES_LIMIT_MESSAGE = "이미지는 최대 ${MAX_TOTAL_IMAGES}개까지 첨부할 수 있습니다."
     }
 
 }

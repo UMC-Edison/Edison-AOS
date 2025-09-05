@@ -76,7 +76,6 @@ fun EditProfileScreen(
                     true
                 },
                 onClose = { showGallery = false },
-                multiSelectMode = false,
             )
         }
     }
