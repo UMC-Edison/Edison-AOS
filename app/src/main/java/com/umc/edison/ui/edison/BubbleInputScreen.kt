@@ -50,7 +50,7 @@ import java.io.File
 @Composable
 fun BubbleInputScreen(
     navHostController: NavHostController,
-    updateShowBottomNav: (Boolean) -> Unit = { _ -> true },
+    updateShowBottomNav: (Boolean) -> Unit,
     viewModel: BubbleInputViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -225,16 +225,17 @@ fun BubbleInputContent(
 
     if (uiState.isGalleryOpen) {
         ImageGallery(
-            selectedImages = uiState.selectedImages,
-            onImageSelected = { uri ->
-                viewModel.toggleImageSelection(uri)
-            },
-            onConfirmed = {
-                // 선택된 이미지들을 현재 삽입 타깃 규칙에 맞춰 추가
-                viewModel.addContentBlocks()
+            onConfirmed = { selectedImages ->
+                val updatedImages = viewModel.updateSelectedImages(selectedImages)
+                viewModel.addImagesToContentBlocks(updatedImages)
+                true
             },
             onClose = { viewModel.closeGallery() },
             multiSelectMode = true,
+            showToastMessage = {
+                viewModel.showImageGalleryValidationMessage()
+            },
+            maxImageSize = BubbleInputViewModel.MAX_IMAGE_SELECTION,
         )
     }
 
@@ -297,7 +298,6 @@ fun BubbleInputContent(
         }
     }
 
-    // BubbleDoor에 선택 콜백(onTextFocused/onEnterPressed)을 선택사항으로 넘김
     BubbleDoor(
         bubble = uiState.bubble,
         isEditable = true,
