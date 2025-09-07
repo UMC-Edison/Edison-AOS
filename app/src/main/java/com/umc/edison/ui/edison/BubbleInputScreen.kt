@@ -324,6 +324,8 @@ fun BubbleInputContent(
         onEnterPressed = { index -> viewModel.onEnterAt(index) },
         onGapTapped = { leftIndex, rightIndex ->
             viewModel.onGapTapped(leftIndex, rightIndex)
-        }
+        },
+        onFocusRequestHandled = { viewModel.clearFocusedIndex() }
+
     )
 }
