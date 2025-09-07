@@ -64,6 +64,9 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.toArgb
@@ -80,11 +83,8 @@ import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.ui.BasicRichText
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
 import com.umc.edison.presentation.edison.BubbleInputState
 import com.umc.edison.presentation.edison.parseHtml
@@ -110,6 +110,7 @@ fun BubbleDoor(
     onTextFocused: (Int) -> Unit = {},
     onEnterPressed: (Int) -> Unit = {},
     onGapTapped: (leftIndex: Int?, rightIndex: Int?) -> Unit = { _, _ -> },
+    onFocusRequestHandled: () -> Unit = {}
 ) {
     val colors = bubble.labels.map { it.color }
     val outerColors = when (colors.size) {
@@ -173,7 +174,9 @@ fun BubbleDoor(
                 onLinkBubbleDeleted = onLinkBubbleDeleted,
                 onTextFocused = onTextFocused,
                 onEnterPressed = onEnterPressed,
-                onGapTapped = onGapTapped
+                onGapTapped = onGapTapped,
+                onFocusRequestHandled = onFocusRequestHandled
+
             )
         }
     }
@@ -193,13 +196,14 @@ private fun BubbleContent(
     onLinkBubbleDeleted: (BubbleModel) -> Unit,
     onTextFocused: (Int) -> Unit,
     onEnterPressed: (Int) -> Unit,
-    onGapTapped: (leftIndex: Int?, rightIndex: Int?) -> Unit
+    onGapTapped: (leftIndex: Int?, rightIndex: Int?) -> Unit,
+    onFocusRequestHandled: () -> Unit
 ) {
     val scrollState = rememberScrollState()
 
     Column(
         horizontalAlignment = Alignment.Start,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
@@ -248,6 +252,8 @@ private fun BubbleContent(
             key(contentBlock.id) { // 안정 키
                 when (contentBlock.type) {
                     ContentType.TEXT -> {
+                        val focusRequester = remember(contentBlock.id) { FocusRequester() }
+
                         val richTextState = rememberSaveable(
                             // index 키 → id 키 변경
                             key = "richTextState_${contentBlock.id}",
@@ -321,6 +327,8 @@ private fun BubbleContent(
                                 textStyle = MaterialTheme.typography.bodyMedium.copy(color = Gray800),
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .focusRequester(focusRequester)
+                                    .focusTarget()
                                     // index → pos
                                     .onFocusChanged { if (it.isFocused) onTextFocused(pos) }
                                     .onPreviewKeyEvent { ev ->
@@ -345,6 +353,12 @@ private fun BubbleContent(
                                     }
                                 }
                             )
+                            LaunchedEffect(uiState.focusedTextIndex, contentBlock.id) {
+                                if (uiState.focusedTextIndex == pos) {
+                                    focusRequester.requestFocus()
+                                    onFocusRequestHandled() // VM의 focusedTextIndex = null로 초기화
+                                }
+                            }
                         } else {
                             BasicRichText(
                                 state = richTextState,
