@@ -35,14 +35,14 @@ import com.umc.edison.ui.components.CaretWhere
 import java.util.LinkedList
 import android.net.Uri.fromFile as uriFromFile
 
-// --- 삽입 타깃(필수는 아니지만 갤러리 삽입 편의에 사용) ---
+
 private sealed class InsertionTarget {
     data object None : InsertionTarget()
     data class AfterText(val textIndex: Int) : InsertionTarget()
     data class Between(val leftIndex: Int?, val rightIndex: Int?) : InsertionTarget()
 }
 
-// --- 내부 체인 노드 ---
+
 private data class Node(
     val id: String = java.util.UUID.randomUUID().toString(),
     val block: ContentBlockModel,
@@ -50,7 +50,7 @@ private data class Node(
     var next: String? = null
 )
 
-// --- 아주 얇은 링크드 리스트 래퍼 ---
+
 private class EditorChain {
     private val nodes = mutableMapOf<String, Node>()
     private var head: String? = null
@@ -201,7 +201,6 @@ class BubbleInputViewModel @Inject constructor(
         )
     }
 
-    /** ──────────────── Notion 스타일: Enter 동작 ──────────────── **/
     fun onEnterWithCaret(
         textIndex: Int,
         where: CaretWhere,
@@ -246,7 +245,7 @@ class BubbleInputViewModel @Inject constructor(
         }
     }
 
-    /** Shift+Enter: 같은 블록에서 줄바꿈만 추가 */
+
     fun onShiftEnter(
         textIndex: Int,
         plainLeft: String?,
@@ -259,7 +258,7 @@ class BubbleInputViewModel @Inject constructor(
         val right = plainRight ?: ""
         node.block.content = (left + "<br>" + right)
         publish()
-        // 포커스 유지: UI가 selection을 유지해 줌
+
     }
 
     /** 빈 단락에서 Backspace → 삭제 후 이전 텍스트로 포커스 */
@@ -293,7 +292,7 @@ class BubbleInputViewModel @Inject constructor(
         lastFocusedTextIndex = focusIndex
     }
 
-    /** 텍스트 블록 바로 ‘아래’를 탭 → 그 아래에 새 단락 생성(노션 스타일) */
+    /** 텍스트 블록 바로 ‘아래’를 탭 → 그 아래에 새 단락 생성 */
     fun onClickBelowBlock(textIndex: Int) {
         val ordered = chain.toLinear()
         val node = ordered.getOrNull(textIndex) ?: return
@@ -581,7 +580,6 @@ class BubbleInputViewModel @Inject constructor(
         publish()
     }
 
-    /** (남아 있어도 무해) ‘갭’ 클릭 → 빈 TEXT 생성 + 포커스 */
     fun onGapTapped(leftIndex: Int?, rightIndex: Int?) {
         val ordered = chain.toLinear()
         val leftId = leftIndex?.let { ordered.getOrNull(it)?.id }
