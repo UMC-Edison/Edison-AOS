@@ -320,12 +320,20 @@ fun BubbleInputContent(
         },
         // 추가: 포커스된 텍스트 position 전달 (없어도 됨: 기본값 no-op이면 타 화면 영향 없음)
         onTextFocused = { index -> viewModel.onTextFocused(index) },
-        // 추가: 엔터키 시 새 텍스트 블록 삽입 (정책에 따라 나중에 활성/비활성 가능)
-        onEnterPressed = { index -> viewModel.onEnterAt(index) },
         onGapTapped = { leftIndex, rightIndex ->
             viewModel.onGapTapped(leftIndex, rightIndex)
         },
-        onFocusRequestHandled = { viewModel.clearFocusedIndex() }
+        onFocusRequestHandled = { viewModel.clearFocusedIndex() },
+        onEnterWithCaret = { index, where, left, right ->
+            viewModel.onEnterWithCaret(index, where, left, right)
+        },
+        onBackspaceEmptyAt = { index ->
+            viewModel.onBackspaceEmptyAt(index)
+        },
+        onBackspaceAtStart = { index ->
+            viewModel.onBackspaceAtStart(index)
+        },
 
-    )
+
+        )
 }
