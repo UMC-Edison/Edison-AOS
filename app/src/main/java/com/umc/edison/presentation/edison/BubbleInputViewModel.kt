@@ -115,47 +115,31 @@ class BubbleInputViewModel @Inject constructor(
 
     /** 빈 단락에서 Backspace → 삭제 후 이전 텍스트로 포커스 */
     fun onBackspaceEmptyAt(textIndex: Int) {
-        val focusIndex = contentBlockManager.onBackspaceEmptyAt(textIndex)
-        focusIndex?.let { idx ->
-            _uiState.update { it.copy(focusedTextIndex = idx) }
-            setInsertionTarget(InsertionTarget.AfterText(idx))
-            lastFocusedTextIndex = idx
+        val result = contentBlockManager.onBackspaceEmptyAt(textIndex)
+        result?.let { 
+            _uiState.update { 
+                it.copy(
+                    focusedTextIndex = result.focusIndex,
+                    cursorPosition = result.cursorPosition
+                ) 
+            }
+            setInsertionTarget(InsertionTarget.AfterText(result.focusIndex))
+            lastFocusedTextIndex = result.focusIndex
         }
     }
 
     /** 커서가 맨 앞에서 Backspace → 이전 단락과 병합 */
     fun onBackspaceAtStart(textIndex: Int) {
-        val focusIndex = contentBlockManager.onBackspaceAtStart(textIndex)
-        focusIndex?.let { idx ->
-            _uiState.update { it.copy(focusedTextIndex = idx) }
-            setInsertionTarget(InsertionTarget.AfterText(idx))
-            lastFocusedTextIndex = idx
-        }
-    }
-
-    /** 텍스트 블록 바로 '아래'를 탭 → 그 아래에 새 단락 생성 */
-    fun onClickBelowBlock(textIndex: Int) {
-        val focusIndex = contentBlockManager.onClickBelowBlock(textIndex)
-        focusIndex?.let { idx ->
-            _uiState.update { it.copy(focusedTextIndex = idx) }
-            setInsertionTarget(InsertionTarget.AfterText(idx))
-            lastFocusedTextIndex = idx
-        }
-    }
-
-    /** 페이지 맨 아래 빈 공간 탭 → 마지막에 새 단락 생성 후 포커스 */
-    fun onTapPageBottom() {
-        val focusIndex = contentBlockManager.onTapPageBottom()
-        if (focusIndex != null) {
-            _uiState.update { it.copy(focusedTextIndex = focusIndex) }
-            setInsertionTarget(InsertionTarget.AfterText(focusIndex))
-            lastFocusedTextIndex = focusIndex
-        } else {
-            ensureInitialText()
-            publish()
-            _uiState.update { it.copy(focusedTextIndex = 0) }
-            setInsertionTarget(InsertionTarget.AfterText(0))
-            lastFocusedTextIndex = 0
+        val result = contentBlockManager.onBackspaceAtStart(textIndex)
+        result?.let { 
+            _uiState.update { 
+                it.copy(
+                    focusedTextIndex = result.focusIndex,
+                    cursorPosition = result.cursorPosition
+                ) 
+            }
+            setInsertionTarget(InsertionTarget.AfterText(result.focusIndex))
+            lastFocusedTextIndex = result.focusIndex
         }
     }
 
@@ -350,11 +334,16 @@ class BubbleInputViewModel @Inject constructor(
     }
 
     fun onGapTapped(leftIndex: Int?, rightIndex: Int?) {
-        val focusIndex = contentBlockManager.onGapTapped(leftIndex, rightIndex)
-        focusIndex?.let { idx ->
-            _uiState.update { it.copy(focusedTextIndex = idx) }
-            setInsertionTarget(InsertionTarget.AfterText(idx))
-            lastFocusedTextIndex = idx
+        val result = contentBlockManager.onGapTapped(leftIndex, rightIndex)
+        result?.let { 
+            _uiState.update { 
+                it.copy(
+                    focusedTextIndex = result.focusIndex,
+                    cursorPosition = result.cursorPosition
+                ) 
+            }
+            setInsertionTarget(InsertionTarget.AfterText(result.focusIndex))
+            lastFocusedTextIndex = result.focusIndex
         }
     }
 
@@ -397,15 +386,6 @@ class BubbleInputViewModel @Inject constructor(
                 }
             },
         )
-    }
-
-    fun onBackspaceAt(textIndex: Int) {
-        val focusIndex = contentBlockManager.onBackspaceEmptyAt(textIndex)
-        focusIndex?.let { idx ->
-            _uiState.update { it.copy(focusedTextIndex = idx) }
-            setInsertionTarget(InsertionTarget.AfterText(idx))
-            lastFocusedTextIndex = idx
-        }
     }
 
     private fun checkCanSave() {
@@ -474,10 +454,6 @@ class BubbleInputViewModel @Inject constructor(
             currentImageCount
         )
         _uiState.update { it.copy(selectedImages = updatedImages) }
-    }
-
-    fun setGapTarget(leftIndex: Int?, rightIndex: Int?) {
-        setInsertionTarget(InsertionTarget.Between(leftIndex, rightIndex))
     }
 }
 

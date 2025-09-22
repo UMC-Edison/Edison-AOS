@@ -6,6 +6,22 @@ import android.text.Html
 import javax.inject.Inject
 
 /**
+ * 백스페이스 처리 결과
+ */
+data class BackspaceResult(
+    val focusIndex: Int,
+    val cursorPosition: Int
+)
+
+/**
+ * Gap 탭 처리 결과
+ */
+data class GapTapResult(
+    val focusIndex: Int,
+    val cursorPosition: Int
+)
+
+/**
  * 콘텐츠 블록(텍스트, 이미지)의 생성, 수정, 삭제를 담당하는 매니저 클래스
  */
 class ContentBlockManager @Inject constructor() {
@@ -28,14 +44,15 @@ class ContentBlockManager @Inject constructor() {
     /**
      * 빈 텍스트 블록에서 Backspace 처리
      */
-    fun onBackspaceEmptyAt(textIndex: Int): Int? {
+    fun onBackspaceEmptyAt(textIndex: Int): BackspaceResult? {
         return onBackspaceAtStart(textIndex)
     }
 
     /**
      * 텍스트 블록 시작에서 Backspace 처리 (이전 블록과 병합)
+     * @return Pair<포커스할 블록 인덱스, 커서 위치>
      */
-    fun onBackspaceAtStart(textIndex: Int): Int? {
+    fun onBackspaceAtStart(textIndex: Int): BackspaceResult? {
         val ordered = chain.toLinear()
         val node = ordered.getOrNull(textIndex) ?: return null
         if (node.block.type != ContentType.TEXT) return null
@@ -45,6 +62,9 @@ class ContentBlockManager @Inject constructor() {
         } ?: return null
         val prevNode = ordered[prevIdx]
 
+        // 이전 블록의 현재 길이를 저장 (커서 위치로 사용)
+        val cursorPosition = prevNode.block.content.parseHtml().length
+        
         prevNode.block.content += node.block.content
         chain.remove(node.id)
 
@@ -54,36 +74,8 @@ class ContentBlockManager @Inject constructor() {
         ensureTrailingText()
         onPublish()
 
-        return chain.toLinear().indexOfFirst { it.id == prevNode.id }
-    }
-
-    /**
-     * 텍스트 블록 아래 클릭 처리
-     */
-    fun onClickBelowBlock(textIndex: Int): Int? {
-        val ordered = chain.toLinear()
-        val node = ordered.getOrNull(textIndex) ?: return null
-        if (node.block.type != ContentType.TEXT) return null
-        
-        val newId = chain.insertAfter(node.id, ContentBlockModel(ContentType.TEXT, DEFAULT_TEXT_CONTENT, 0))
-        ensureTrailingText()
-        onPublish()
-        return chain.toLinear().indexOfFirst { it.id == newId }
-    }
-
-    /**
-     * 페이지 하단 탭 처리
-     */
-    fun onTapPageBottom(): Int? {
-        val ordered = chain.toLinear()
-        val lastTextIdx = ordered.indexOfLast { it.block.type == ContentType.TEXT }
-        return if (lastTextIdx >= 0) {
-            onClickBelowBlock(lastTextIdx)
-        } else {
-            ensureInitialText()
-            onPublish()
-            0
-        }
+        val focusIndex = chain.toLinear().indexOfFirst { it.id == prevNode.id }
+        return BackspaceResult(focusIndex, cursorPosition)
     }
 
     /**
@@ -124,14 +116,16 @@ class ContentBlockManager @Inject constructor() {
 
     /**
      * 간격 탭 처리 (새 텍스트 블록 생성)
+     * @return GapTapResult(포커스할 블록 인덱스, 커서 위치)
      */
-    fun onGapTapped(leftIndex: Int?, rightIndex: Int?): Int? {
+    fun onGapTapped(leftIndex: Int?, rightIndex: Int?): GapTapResult? {
         val ordered = chain.toLinear()
         val leftId = leftIndex?.let { ordered.getOrNull(it)?.id }
         val rightId = rightIndex?.let { ordered.getOrNull(it)?.id }
         val newTextId = chain.insertBetween(leftId, rightId, ContentBlockModel(ContentType.TEXT, DEFAULT_TEXT_CONTENT, 0))
         onPublish()
-        return chain.toLinear().indexOfFirst { it.id == newTextId }
+        val focusIndex = chain.toLinear().indexOfFirst { it.id == newTextId }
+        return GapTapResult(focusIndex, 0) // 새 블록이므로 커서 위치는 0
     }
 
     /**
@@ -166,13 +160,6 @@ class ContentBlockManager @Inject constructor() {
         onPublish()
     }
 
-    // Private helper methods
-    private fun getTextNodeAtIndex(index: Int): Node? {
-        val ordered = chain.toLinear()
-        val node = ordered.getOrNull(index)
-        return if (node?.block?.type == ContentType.TEXT) node else null
-    }
-
     private fun ensureInitialText() {
         if (chain.headId() == null) {
             chain.insertAfter(null, ContentBlockModel(ContentType.TEXT, DEFAULT_TEXT_CONTENT, 0))
@@ -183,11 +170,6 @@ class ContentBlockManager @Inject constructor() {
         if (chain.tailId() != null && chain.isImage(chain.tailId())) {
             chain.insertAfter(chain.tailId(), ContentBlockModel(ContentType.TEXT, DEFAULT_TEXT_CONTENT, 0))
         }
-    }
-
-    private fun publishAndGetFocusIndex(newId: String): Int {
-        onPublish()
-        return chain.toLinear().indexOfFirst { it.id == newId }
     }
 
     private fun String.parseHtml(): String {

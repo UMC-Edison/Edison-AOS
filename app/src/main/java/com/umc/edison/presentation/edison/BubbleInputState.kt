@@ -22,6 +22,7 @@ data class BubbleInputState(
     val cameraImagePath: Uri?,
     val canSave: Boolean,
     val focusedTextIndex: Int? = null, // 포커스 줄 텍스트 블록 position (없으면 null)
+    val cursorPosition: Int = 0, // 포커스된 텍스트 블록 내 커서 위치
 ) {
     companion object {
         val DEFAULT = BubbleInputState(
@@ -38,6 +39,7 @@ data class BubbleInputState(
             cameraImagePath = null,
             canSave = false,
             focusedTextIndex = null,
+            cursorPosition = 0,
         )
     }
 }
