@@ -176,13 +176,11 @@ fun BubbleDoor(
 
 @Composable
 private fun Gap(
-    isEditable: Boolean,
     leftIndex: Int?,      // 왼쪽 블록 position (없으면 null)
     rightIndex: Int?,     // 오른쪽 블록 position (없으면 null)
     minHeight: Int = 8,  // 터치 미스 방지 최소 높이
     onGapTapped: (Int?, Int?) -> Unit
 ) {
-    if (!isEditable) return
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -251,7 +249,6 @@ private fun BubbleContent(
         item(key = "gap_top") {
             val right = bubble.contentBlocks.firstOrNull()?.position
             Gap(
-                isEditable = isEditable,
                 leftIndex = null,
                 rightIndex = right,
                 onGapTapped = onGapTapped
@@ -385,7 +382,7 @@ private fun BubbleContent(
                             )
 
                             // 포커스/커서 이동 안정화
-                            LaunchedEffect(uiState.focusedTextIndex, contentBlock.id) {
+                            LaunchedEffect(uiState.focusedTextIndex, uiState.cursorPosition, contentBlock.id) {
                                 if (uiState.focusedTextIndex == pos) {
                                     // 1) 화면에 보이도록 스크롤
                                     bringIntoViewRequester.bringIntoView()
@@ -395,10 +392,14 @@ private fun BubbleContent(
                                     focusRequester.requestFocus()
                                     awaitFrame()
 
-                                    // 3) 커서 위치 (새 단락이면 0, 아니면 끝)
-                                    val isEmpty = richTextState.toHtml().equals("<br>", true) ||
-                                            richTextState.annotatedString.isEmpty()
-                                    richTextState.selection = if (isEmpty) TextRange(0) else TextRange(richTextState.annotatedString.length)
+                                    // 3) 커서 위치 설정
+                                    val textLength = richTextState.annotatedString.length
+                                    val targetPosition = when {
+                                        uiState.cursorPosition > 0 -> minOf(uiState.cursorPosition, textLength)
+                                        richTextState.toHtml().equals("<br>", true) || textLength == 0 -> 0
+                                        else -> textLength
+                                    }
+                                    richTextState.selection = TextRange(targetPosition)
 
                                     onFocusRequestHandled()
                                 }
@@ -414,92 +415,111 @@ private fun BubbleContent(
                     }
 
                     ContentType.IMAGE -> {
-                        val aspectRatio = calculateAspectRatio(contentBlock.content)
-                        var isLongPressed by remember(contentBlock.id) { mutableStateOf(false) }
-                        val isMainImage = bubble.mainImage == contentBlock.content &&
-                                bubble.contentBlocks.indexOfFirst {
-                                    it.type == ContentType.IMAGE && it.content == bubble.mainImage
-                                } == pos
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .aspectRatio(aspectRatio)
-                                .pointerInput(contentBlock.id) {
-                                    detectTapGestures(onLongPress = { isLongPressed = true })
-                                }
-                        ) {
-                            Image(
-                                painter = rememberAsyncImagePainter(
-                                    model = ImageRequest.Builder(LocalContext.current)
-                                        .data(contentBlock.content)
-                                        .crossfade(true)
-                                        .size(Size.ORIGINAL)
-                                        .build()
-                                ),
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .clip(RoundedCornerShape(8.dp))
-                            )
+                        Column {
+                            // 이미지 블록 위에 Gap (조건부 표시)
+                            val prevBlock = bubble.contentBlocks.getOrNull(idx - 1)
+                            val shouldShowTopGap = isEditable && (prevBlock == null || prevBlock.type == ContentType.IMAGE)
+                            
+                            if (shouldShowTopGap) {
+                                Gap(
+                                    leftIndex = prevBlock?.position,
+                                    rightIndex = pos,
+                                    onGapTapped = onGapTapped
+                                )
+                            }
 
-                            if (isLongPressed) {
-                                Column(
+                            // 이미지 블록
+                            val aspectRatio = calculateAspectRatio(contentBlock.content)
+                            var isLongPressed by remember(contentBlock.id) { mutableStateOf(false) }
+                            val isMainImage = bubble.mainImage == contentBlock.content &&
+                                    bubble.contentBlocks.indexOfFirst {
+                                        it.type == ContentType.IMAGE && it.content == bubble.mainImage
+                                    } == pos
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .aspectRatio(aspectRatio)
+                                    .pointerInput(contentBlock.id) {
+                                        detectTapGestures(onLongPress = { isLongPressed = true })
+                                    }
+                            ) {
+                                Image(
+                                    painter = rememberAsyncImagePainter(
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(contentBlock.content)
+                                            .crossfade(true)
+                                            .size(Size.ORIGINAL)
+                                            .build()
+                                    ),
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .clickable { isLongPressed = false },
-                                    verticalArrangement = Arrangement.Center,
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Button(
-                                        shape = RoundedCornerShape(100.dp),
-                                        onClick = {
-                                            isLongPressed = false
-                                            mainClicked(contentBlock.content)
-                                            deletedImageBlockId = pos
-                                        },
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = if (isMainImage) Gray100 else Gray700,
-                                        )
-                                    ) {
-                                        Text(
-                                            text = if (isMainImage) "대표 해제" else "대표 설정",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontSize = 14.sp,
-                                            color = if (isMainImage) Red500 else Gray100
-                                        )
-                                    }
+                                        .clip(RoundedCornerShape(8.dp))
+                                )
 
-                                    Spacer(modifier = Modifier.height(1.dp))
-
-                                    Button(
-                                        shape = RoundedCornerShape(100.dp),
-                                        onClick = {
-                                            isLongPressed = false
-                                            deleteClicked(contentBlock)
-                                            deletedImageBlockId = pos
-                                        },
-                                        colors = ButtonDefaults.buttonColors(containerColor = Gray700)
+                                if (isLongPressed) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clickable { isLongPressed = false },
+                                        verticalArrangement = Arrangement.Center,
+                                        horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
-                                        Text(
-                                            text = "삭제하기",
-                                            style = MaterialTheme.typography.bodyMedium.copy(color = Red100),
-                                            fontSize = 14.sp
-                                        )
+                                        Button(
+                                            shape = RoundedCornerShape(100.dp),
+                                            onClick = {
+                                                isLongPressed = false
+                                                mainClicked(contentBlock.content)
+                                                deletedImageBlockId = pos
+                                            },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = if (isMainImage) Gray100 else Gray700,
+                                            )
+                                        ) {
+                                            Text(
+                                                text = if (isMainImage) "대표 해제" else "대표 설정",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontSize = 14.sp,
+                                                color = if (isMainImage) Red500 else Gray100
+                                            )
+                                        }
+
+                                        Spacer(modifier = Modifier.height(1.dp))
+
+                                        Button(
+                                            shape = RoundedCornerShape(100.dp),
+                                            onClick = {
+                                                isLongPressed = false
+                                                deleteClicked(contentBlock)
+                                                deletedImageBlockId = pos
+                                            },
+                                            colors = ButtonDefaults.buttonColors(containerColor = Gray700)
+                                        ) {
+                                            Text(
+                                                text = "삭제하기",
+                                                style = MaterialTheme.typography.bodyMedium.copy(color = Red100),
+                                                fontSize = 14.sp
+                                            )
+                                        }
                                     }
                                 }
+                            }
+
+                            // 이미지 블록 아래에 Gap (조건부 표시)
+                            val nextBlock = bubble.contentBlocks.getOrNull(idx + 1)
+                            val shouldShowBottomGap = isEditable && (nextBlock == null || nextBlock.type == ContentType.IMAGE)
+                            
+                            if (shouldShowBottomGap) {
+                                Gap(
+                                    leftIndex = pos,
+                                    rightIndex = nextBlock?.position,
+                                    onGapTapped = onGapTapped
+                                )
                             }
                         }
                     }
                 }
-
-                val right = bubble.contentBlocks.getOrNull(idx + 1)?.position
-                Gap(
-                    isEditable = isEditable,
-                    leftIndex = pos,
-                    rightIndex = right,
-                    onGapTapped = onGapTapped
-                )
             }
         }
 
@@ -885,3 +905,4 @@ private fun DrawScope.drawBlurredInnerGradientBubbleDoor(
         canvas.drawPath(path, paint)
     }
 }
+

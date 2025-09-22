@@ -50,15 +50,39 @@ class ImageHandler @Inject constructor() {
         val ordered = chain.toLinear()
         val textNode = ordered.getOrNull(textIndex) ?: return
         require(textNode.block.type == ContentType.TEXT)
-        val isEmpty = textNode.block.content.parseHtml().isBlank()
-
-        var anchorId = textNode.id
-        uris.forEach { uri ->
-            anchorId = chain.insertAfter(anchorId, ContentBlockModel(ContentType.IMAGE, uri.toString(), 0))
-        }
-        if (!isEmpty) {
+        
+        val textContent = textNode.block.content.parseHtml().trim()
+        val isEmpty = textContent.isEmpty()
+        
+        if (isEmpty) {
+            if (uris.isNotEmpty()) {
+                // 기존 빈 텍스트 블록을 첫 번째 이미지로 교체
+                val prevId = textNode.prev
+                val nextId = textNode.next
+                
+                // 기존 텍스트 블록 제거
+                chain.remove(textNode.id)
+                
+                // 첫 번째 이미지 블록 추가
+                var anchorId = chain.insertBetween(prevId, nextId, ContentBlockModel(ContentType.IMAGE, uris.first().toString(), 0))
+                
+                // 나머지 이미지들 추가
+                uris.drop(1).forEach { uri ->
+                    anchorId = chain.insertAfter(anchorId, ContentBlockModel(ContentType.IMAGE, uri.toString(), 0))
+                }
+                
+                // 마지막에 새 텍스트 블록 추가
+                chain.insertAfter(anchorId, ContentBlockModel(ContentType.TEXT, DEFAULT_TEXT_CONTENT, 0))
+            }
+        } else {
+            var anchorId = textNode.id
+            uris.forEach { uri ->
+                anchorId = chain.insertAfter(anchorId, ContentBlockModel(ContentType.IMAGE, uri.toString(), 0))
+            }
+            // 마지막에 새 텍스트 블록 추가
             chain.insertAfter(anchorId, ContentBlockModel(ContentType.TEXT, DEFAULT_TEXT_CONTENT, 0))
         }
+        
         ensureTrailingText()
         onPublish()
     }
@@ -120,27 +144,6 @@ class ImageHandler @Inject constructor() {
             onShowToast("이미지는 최대 ${MAX_IMAGES}개까지 첨부할 수 있습니다.")
             selectedImages
         }
-    }
-
-    /**
-     * 이미지가 선택된 상태인지 확인
-     */
-    fun isImageSelected(imageUri: Uri, selectedImages: List<Uri>): Boolean {
-        return selectedImages.contains(imageUri)
-    }
-
-    /**
-     * 선택된 이미지에서 특정 URI 제거
-     */
-    fun removeImageFromSelection(imageUri: Uri, selectedImages: List<Uri>): List<Uri> {
-        return selectedImages - imageUri
-    }
-
-    /**
-     * 이미지 선택 가능 여부 확인
-     */
-    fun canSelectMoreImages(selectedImages: List<Uri>, currentImageCount: Int): Boolean {
-        return selectedImages.size < MAX_IMAGES - currentImageCount
     }
 
     /**
