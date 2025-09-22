@@ -324,16 +324,11 @@ fun BubbleInputContent(
             viewModel.onGapTapped(leftIndex, rightIndex)
         },
         onFocusRequestHandled = { viewModel.clearFocusedIndex() },
-        onEnterWithCaret = { index, where, left, right ->
-            viewModel.onEnterWithCaret(index, where, left, right)
-        },
         onBackspaceEmptyAt = { index ->
             viewModel.onBackspaceEmptyAt(index)
         },
         onBackspaceAtStart = { index ->
             viewModel.onBackspaceAtStart(index)
         },
-
-
-        )
+    )
 }
