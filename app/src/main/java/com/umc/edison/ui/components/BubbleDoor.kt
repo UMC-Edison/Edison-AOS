@@ -100,9 +100,6 @@ import com.umc.edison.ui.theme.White000
 import com.umc.edison.ui.theme.Yellow100
 import kotlinx.coroutines.android.awaitFrame
 
-
-enum class CaretWhere { AT_START, IN_MIDDLE, AT_END }
-
 @Composable
 fun BubbleDoor(
     bubble: BubbleModel,
@@ -116,7 +113,6 @@ fun BubbleDoor(
     onBackLinkDeleted: (BubbleModel) -> Unit = {},
     onLinkBubbleDeleted: (BubbleModel) -> Unit = {},
     onTextFocused: (Int) -> Unit = {},
-    onEnterWithCaret: (index: Int, where: CaretWhere, plainLeft: String?, plainRight: String?) -> Unit = { _,_,_,_ -> },
     onBackspaceEmptyAt: (Int) -> Unit = {},
     onBackspaceAtStart: (Int) -> Unit = {},
     onGapTapped: (leftIndex: Int?, rightIndex: Int?) -> Unit = { _, _ -> },
@@ -169,7 +165,6 @@ fun BubbleDoor(
                 onBackLinkDeleted = onBackLinkDeleted,
                 onLinkBubbleDeleted = onLinkBubbleDeleted,
                 onTextFocused = onTextFocused,
-                onEnterWithCaret = onEnterWithCaret,
                 onBackspaceEmptyAt = onBackspaceEmptyAt,
                 onBackspaceAtStart = onBackspaceAtStart,
                 onGapTapped = onGapTapped,
@@ -211,7 +206,6 @@ private fun BubbleContent(
     onBackLinkDeleted: (BubbleModel) -> Unit,
     onLinkBubbleDeleted: (BubbleModel) -> Unit,
     onTextFocused: (Int) -> Unit,
-    onEnterWithCaret: (index: Int, where: CaretWhere, plainLeft: String?, plainRight: String?) -> Unit,
     onBackspaceEmptyAt: (Int) -> Unit,
     onBackspaceAtStart: (Int) -> Unit,
     onGapTapped: (leftIndex: Int?, rightIndex: Int?) -> Unit,
@@ -347,27 +341,8 @@ private fun BubbleContent(
                                     .onPreviewKeyEvent { ev ->
                                         val sel = richTextState.selection
                                         val atStart = sel.start == 0 && sel.collapsed
-                                        val atEnd = sel.end == richTextState.annotatedString.length && sel.collapsed
-                                        val where = when {
-                                            atStart -> CaretWhere.AT_START
-                                            atEnd -> CaretWhere.AT_END
-                                            else -> CaretWhere.IN_MIDDLE
-                                        }
 
                                         when {
-                                            // Shift+Enter → 같은 블록 줄바꿈
-                                            ev.key == Key.Enter && ev.type == KeyEventType.KeyDown &&
-                                                    ev.nativeKeyEvent.isShiftPressed -> false
-
-                                            // Enter → 블록 분리/생성
-                                            ev.key == Key.Enter && ev.type == KeyEventType.KeyDown -> {
-                                                val text = richTextState.annotatedString.text
-                                                val left = text.substring(0, sel.start)
-                                                val right = text.substring(sel.start)
-                                                onEnterWithCaret(pos, where, left, right)
-                                                true
-                                            }
-
                                             // Backspace
                                             ev.key == Key.Backspace && ev.type == KeyEventType.KeyDown -> {
                                                 val html = richTextState.toHtml()
