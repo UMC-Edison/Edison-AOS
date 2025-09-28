@@ -21,9 +21,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,6 +57,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -58,6 +65,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.umc.edison.R
 import com.umc.edison.presentation.model.BubbleModel
 import com.umc.edison.presentation.model.KeywordBubbleModel
 import com.umc.edison.presentation.model.getDisplayTitle
@@ -83,6 +91,7 @@ import kotlin.random.Random
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun BubbleGraphScreen(
+    onShowKeywordMap :()->Unit,
     showBubble: (BubbleModel) -> Unit,
     viewModel: BubbleGraphViewModel = hiltViewModel(),
 ) {
@@ -258,8 +267,30 @@ fun BubbleGraphScreen(
                     )
                 }
             }
+
         }
+
+
+        FloatingActionButton(
+            onClick = onShowKeywordMap,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+                .size(64.dp),
+            shape = CircleShape,
+            containerColor = Gray100
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_orbit_dark),
+                contentDescription = "키워드로 매핑",
+                tint = Color.Unspecified
+            )
+        }
+
     }
+
+
+
 }
 
 private fun DrawScope.drawGradientBlurCircle(

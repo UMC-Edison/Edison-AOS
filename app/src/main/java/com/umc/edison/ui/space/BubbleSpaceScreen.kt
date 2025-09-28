@@ -1,7 +1,6 @@
 package com.umc.edison.ui.space
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -18,9 +17,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -57,9 +56,11 @@ import com.umc.edison.ui.components.SearchBar
 import com.umc.edison.ui.components.calculateBubbleSize
 import com.umc.edison.ui.label.LabelTabScreen
 import com.umc.edison.ui.navigation.NavRoute
+import com.umc.edison.ui.theme.Gray100
 import com.umc.edison.ui.theme.Gray200
 import com.umc.edison.ui.theme.Gray300
 import com.umc.edison.ui.theme.Gray800
+import com.umc.edison.ui.theme.Gray900
 import kotlinx.coroutines.launch
 
 @Composable
@@ -76,34 +77,16 @@ fun BubbleSpaceScreen(
         updateShowBottomNav(true)
     }
 
-    // 탭 & 페이지 관련
-    val pagerState = rememberPagerState(
-        pageCount = { uiState.tabs.size },
-        initialPageOffsetFraction = 0f,
-        initialPage = 0,
-    )
-    val coroutineScope = rememberCoroutineScope()
-    val indicatorOffset by animateDpAsState(
-        targetValue = (192.dp / uiState.tabs.size) * uiState.selectedTabIndex,
-        label = "Indicator Animation"
-    )
 
     BackHandler {
-        if (uiState.keywordForMap != null) {
-            viewModel.hideKeywordMap()
-        }
         if (uiState.selectedBubble != null) {
             viewModel.selectBubble(null)
             updateShowBottomNav(true)
         } else if (uiState.mode == BubbleSpaceMode.SEARCH) {
             viewModel.updateBubbleSpaceMode(BubbleSpaceMode.DEFAULT)
             viewModel.updateQuery("")
-        } else if (uiState.selectedTabIndex == 1) {
-            viewModel.updateSelectedTabIndex(0)
-            coroutineScope.launch {
-                pagerState.animateScrollToPage(0)
-            }
-        } else {
+        }
+        else {
             navHostController.navigate(NavRoute.MyEdison.route)
         }
     }
@@ -112,54 +95,34 @@ fun BubbleSpaceScreen(
     BaseContent(
         baseState = baseState,
     ) {
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier
-                .fillMaxSize()
-                .zIndex(0f)
-        ) { page ->
-            viewModel.updateSelectedTabIndex(pagerState.currentPage)
-            when (page) {
-                0 -> {
-                    if (uiState.isLoggedIn) {
-                         val onShowBubble: (BubbleModel) -> Unit = { bubble ->
-                            viewModel.selectBubble(bubble)
-                            val bubbleSize = calculateBubbleSize(bubble)
-                            if (bubbleSize == BubbleType.BubbleDoor) {
-                                updateShowBottomNav(false)
-                            }
-                        }
-
-                        if (uiState.keywordForMap != null) {
-                            KeywordMapScreen(
-                                keyword = uiState.keywordForMap,
-                                showBubble = onShowBubble
-                            )
-                        } else {
-                            BubbleGraphScreen(
-                                showBubble = onShowBubble
-                            )
-                        }
-                    }  else {
-                        NeedLoginScreen(
-                            navHostController = navHostController,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(start = 18.dp, top = 66.dp, end = 18.dp),
-                        )
-                    }
-                }
-
-                1 -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(top = 66.dp)
-                    ) {
-                        LabelTabScreen(navHostController)
-                    }
+        if (uiState.isLoggedIn) {
+            val onShowBubble: (BubbleModel) -> Unit = { bubble ->
+                viewModel.selectBubble(bubble)
+                val bubbleSize = calculateBubbleSize(bubble)
+                if (bubbleSize == BubbleType.BubbleDoor) {
+                    updateShowBottomNav(false)
                 }
             }
+
+            if (uiState.mode == BubbleSpaceMode.DEFAULT) {
+                BubbleGraphScreen(
+                    showBubble = onShowBubble,
+                    onShowKeywordMap = {
+                        viewModel.showKeywordMap()                     }
+                )
+            } else if (uiState.mode == BubbleSpaceMode.KEYWORD) {
+                KeywordMapScreen(
+                    showBubble = onShowBubble,
+                    onNavigateBack = { viewModel.switchToGraph() }
+                )
+            }
+        } else {
+            NeedLoginScreen(
+                navHostController = navHostController,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 18.dp, top = 66.dp, end = 18.dp),
+            )
         }
 
         Column(
@@ -174,104 +137,21 @@ fun BubbleSpaceScreen(
                     .align(Alignment.CenterHorizontally)
                     .zIndex(1f),
             ) {
-                Icon(
-                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_topbar_search),
-                    contentDescription = "Search",
-                    tint = Gray800,
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clickable {
-                            viewModel.updateBubbleSpaceMode(BubbleSpaceMode.SEARCH)
-                        }
-                )
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                if (uiState.keywordForMap != null) {
-
-                    Spacer(modifier = Modifier.width(50.dp))
-
-                }
-
-
-
-                uiState.tabs.forEachIndexed { index, text ->
-                    Box(
+                if (uiState.mode == BubbleSpaceMode.DEFAULT) {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id = R.drawable.ic_topbar_search),
+                        contentDescription = "Search",
+                        tint = Gray800,
                         modifier = Modifier
-                            .width(192.dp / uiState.tabs.size)
-                            .clip(RoundedCornerShape(100.dp))
-                            .clickable(
-                                indication = null,
-                                interactionSource = remember { MutableInteractionSource() }
-                            ) {
-                                coroutineScope.launch {
-                                    pagerState.animateScrollToPage(index)
-                                    viewModel.updateSelectedTabIndex(index)
-                                }
+                            .size(32.dp)
+                            .clickable {
+                                viewModel.updateBubbleSpaceMode(BubbleSpaceMode.SEARCH)
                             }
-                            .padding(4.dp)
-                            .wrapContentSize(Alignment.Center)
-                    ) {
-                        Text(
-                            text = text,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Gray800,
-                            textAlign = TextAlign.Center
-                        )
-                    }
+                    )
                 }
-
                 Spacer(modifier = Modifier.weight(1f))
-
 
                 Spacer(modifier = Modifier.size(32.dp))
-
-
-                if (uiState.keywordForMap != null) {
-
-
-                    Box(
-                        modifier = Modifier
-                            .size(50.dp, 32.dp)
-                            .clickable { viewModel.hideKeywordMap() }
-                            .clip(RoundedCornerShape(100.dp))
-                            .background(Gray200),
-
-
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "복구",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Gray800,
-                        )
-                    }
-
-                }
-            }
-
-            Box(
-                modifier = Modifier
-                    .height(4.dp)
-                    .width(192.dp)
-                    .align(Alignment.CenterHorizontally)
-                    .clip(RoundedCornerShape(100.dp))
-                    .background(Gray300)
-                    .zIndex(1f)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(width = 192.dp / uiState.tabs.size, height = 4.dp)
-                        .align(Alignment.CenterStart)
-                        .offset {
-                            IntOffset(
-                                x = indicatorOffset.roundToPx(),
-                                y = 0
-                            )
-                        }
-                        .clip(RoundedCornerShape(100.dp))
-                        .background(Gray800)
-                )
             }
         }
 
@@ -304,10 +184,6 @@ fun BubbleSpaceScreen(
                             viewModel.searchBubbles()
                         },
                         placeholder = "찰나의 영감을 검색해보세요",
-                        showKeywordMappingButton = true,
-                        onKeywordMappingClick = { keyword ->
-                            viewModel.showKeywordMap(keyword)
-                        }
                     )
                 }
 
@@ -320,6 +196,8 @@ fun BubbleSpaceScreen(
                     searchKeyword = uiState.query
                 )
             }
+
+
         }
 
         if (uiState.selectedBubble != null) {

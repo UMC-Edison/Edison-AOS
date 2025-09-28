@@ -2,6 +2,7 @@ package com.umc.edison.presentation.label
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntSize
+import com.umc.edison.domain.usecase.bubble.GetAllBubblesUseCase
 import com.umc.edison.domain.usecase.bubble.GetBubblesByLabelUseCase
 import com.umc.edison.domain.usecase.bubble.GetBubblesWithoutLabelUseCase
 import com.umc.edison.domain.usecase.label.AddLabelUseCase
@@ -25,6 +26,7 @@ import javax.inject.Inject
 class LabelListViewModel @Inject constructor(
     toastManager: ToastManager,
     private val getAllLabelsUseCase: GetAllLabelsUseCase,
+    private val getAllBubblesUseCase: GetAllBubblesUseCase,
     private val getBubblesByLabelUseCase: GetBubblesByLabelUseCase,
     private val getBubblesWithoutLabelUseCase: GetBubblesWithoutLabelUseCase,
     private val addLabelUseCase: AddLabelUseCase,
@@ -48,6 +50,17 @@ class LabelListViewModel @Inject constructor(
             flow = getHasSeenOnboardingUseCase(SCREEN_NAME),
             onSuccess = { hasSeen ->
                 _onboardingState.update { it.copy(show = !hasSeen) }
+            }
+        )
+
+        fetchTotalBubbleCount()
+    }
+
+    fun fetchTotalBubbleCount() {
+        collectDataResource(
+            flow = getAllBubblesUseCase(),
+            onSuccess = { bubbles ->
+                _uiState.update { it.copy(bubbleCount = bubbles.size) }
             }
         )
     }

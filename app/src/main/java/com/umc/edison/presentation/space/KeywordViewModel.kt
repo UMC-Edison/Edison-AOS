@@ -21,14 +21,25 @@ class KeywordViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(KeywordMapState.DEFAULT)
     val uiState = _uiState.asStateFlow()
 
-    fun fetchKeywordBubbles(keyword: String) {
-        if (keyword.isBlank()) {
-            _uiState.update { it.copy(bubbles = emptyList()) }
+
+
+    fun showKeywordBar() {
+        _uiState.update { it.copy(isBarVisible = true) }
+    }
+
+    fun hideKeywordBar() {
+        _uiState.update { it.copy(isBarVisible = false) }
+    }
+
+    fun fetchKeywordBubbles(keywordToSearch: String) {
+        if (keywordToSearch.isBlank()) {
+            showToast("키워드를 입력 후 검색해주세요.")
             return
         }
+        _uiState.update { it.copy(keyword = keywordToSearch) }
 
         collectDataResource(
-            flow = getKeywordBubbleUsecase(keyword),
+            flow = getKeywordBubbleUsecase(keywordToSearch),
             onSuccess = { domainBubbles ->
                 val sortedBubbles = domainBubbles.sortedByDescending { it.similarity }
                 _uiState.update { it.copy(bubbles = sortedBubbles.toPresentation()) }

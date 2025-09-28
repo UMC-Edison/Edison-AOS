@@ -5,14 +5,18 @@ import com.umc.edison.presentation.model.KeywordBubbleModel
 data class KeywordMapState(
     val bubbles: List<KeywordBubbleModel>,
     val selectedBubble: KeywordBubbleModel?,
-    val isBubbleDoorVisible: Boolean
+    val isBubbleDoorVisible: Boolean,
+    val keyword: String,
+    val isBarVisible: Boolean
 
 ) {
     companion object {
         val DEFAULT = KeywordMapState(
             bubbles = emptyList(),
             selectedBubble = null,
-            isBubbleDoorVisible = false
+            isBubbleDoorVisible = false,
+            keyword = "",
+            isBarVisible = false
         )
     }
 }
