@@ -1,6 +1,5 @@
 package com.umc.edison.presentation.space
 
-import com.umc.edison.domain.usecase.bubble.GetKeywordBubbleUsecase
 import com.umc.edison.domain.usecase.bubble.SearchBubblesUseCase
 import com.umc.edison.domain.usecase.user.GetLogInStateUseCase
 import com.umc.edison.presentation.ToastManager
@@ -68,7 +67,7 @@ class BubbleSpaceViewModel @Inject constructor(
         }
     }
 
-    fun showKeywordMap() {
+    fun switchToKeywordMap() {
         _uiState.update { it.copy(mode = BubbleSpaceMode.KEYWORD) }
     }
 

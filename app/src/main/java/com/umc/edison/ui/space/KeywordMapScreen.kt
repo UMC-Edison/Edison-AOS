@@ -78,7 +78,7 @@ import kotlin.random.Random
 @Composable
 fun KeywordMapScreen(
     showBubble: (BubbleModel) -> Unit,
-    onNavigateBack: () -> Unit,
+    onShowGraph: () -> Unit,
     viewModel: KeywordViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -89,7 +89,7 @@ fun KeywordMapScreen(
 
     var inputText by remember { mutableStateOf("") }
 
-    BackHandler { onNavigateBack() }
+    BackHandler { onShowGraph() }
 
     LaunchedEffect(uiState.bubbles) {
         val duration = 3000
@@ -280,7 +280,7 @@ fun KeywordMapScreen(
                 }
 
                 FloatingActionButton(
-                    onClick = onNavigateBack,
+                    onClick = onShowGraph,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(16.dp)
@@ -325,7 +325,7 @@ fun KeywordMapScreen(
                         if (newText.length <= 20) {
                             inputText = newText
                         } else {
-                            viewModel.showToast("키워드는 20자까지 입력 가능합니다.")
+                            viewModel.showKeywordToast()
                         }
                     },
                     onMap = {

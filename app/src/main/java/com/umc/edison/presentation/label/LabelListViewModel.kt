@@ -52,8 +52,6 @@ class LabelListViewModel @Inject constructor(
                 _onboardingState.update { it.copy(show = !hasSeen) }
             }
         )
-
-        fetchTotalBubbleCount()
     }
 
     fun fetchTotalBubbleCount() {

@@ -85,8 +85,7 @@ fun BubbleSpaceScreen(
         } else if (uiState.mode == BubbleSpaceMode.SEARCH) {
             viewModel.updateBubbleSpaceMode(BubbleSpaceMode.DEFAULT)
             viewModel.updateQuery("")
-        }
-        else {
+        } else {
             navHostController.navigate(NavRoute.MyEdison.route)
         }
     }
@@ -108,12 +107,13 @@ fun BubbleSpaceScreen(
                 BubbleGraphScreen(
                     showBubble = onShowBubble,
                     onShowKeywordMap = {
-                        viewModel.showKeywordMap()                     }
+                        viewModel.switchToKeywordMap()
+                    }
                 )
             } else if (uiState.mode == BubbleSpaceMode.KEYWORD) {
                 KeywordMapScreen(
                     showBubble = onShowBubble,
-                    onNavigateBack = { viewModel.switchToGraph() }
+                    onShowGraph = { viewModel.switchToGraph() }
                 )
             }
         } else {

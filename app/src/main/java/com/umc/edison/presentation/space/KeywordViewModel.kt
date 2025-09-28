@@ -31,6 +31,11 @@ class KeywordViewModel @Inject constructor(
         _uiState.update { it.copy(isBarVisible = false) }
     }
 
+
+    fun showKeywordToast() {
+        showToast("키워드는 20자까지 입력 가능합니다.")
+    }
+
     fun fetchKeywordBubbles(keywordToSearch: String) {
         if (keywordToSearch.isBlank()) {
             showToast("키워드를 입력 후 검색해주세요.")
