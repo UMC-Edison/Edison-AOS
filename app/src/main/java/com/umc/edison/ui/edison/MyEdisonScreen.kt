@@ -41,6 +41,7 @@ import com.umc.edison.ui.BaseContent
 import com.umc.edison.ui.bubblestorage.BubbleStorageScreen
 import com.umc.edison.ui.components.BubbleInput
 import com.umc.edison.ui.components.MyEdisonNavBar
+import com.umc.edison.ui.label.LabelTabScreen
 import com.umc.edison.ui.login.PrefsHelper
 import com.umc.edison.ui.navigation.NavRoute
 import com.umc.edison.ui.onboarding.MyEdisonOnboarding
@@ -62,7 +63,7 @@ fun MyEdisonScreen(
     val coroutineScope = rememberCoroutineScope()
 
     val pagerState = rememberPagerState(
-        pageCount = { 2 },
+        pageCount = { 3 },
         initialPageOffsetFraction = 0f,
         initialPage = 0,
     )
@@ -91,6 +92,8 @@ fun MyEdisonScreen(
             modifier = Modifier.fillMaxSize(),
         ) { page ->
             when (page) {
+
+
                 0 -> {
                     Column(
                         modifier = Modifier
@@ -142,6 +145,14 @@ fun MyEdisonScreen(
                         )
                     }
                 }
+
+
+
+                2 -> {
+                    LabelTabScreen(
+                        navHostController = navController,
+                    )
+                }
             }
         }
 
@@ -153,12 +164,7 @@ fun MyEdisonScreen(
             contentAlignment = Alignment.TopCenter
         ) {
             MyEdisonNavBar(
-                onSearchClick = {
-                    coroutineScope.launch {
-                        pagerState.scrollToPage(1)
-                    }
-                    viewModel.resetSearchResults()
-                },
+
                 onBubbleClick = {
                     coroutineScope.launch {
                         pagerState.scrollToPage(0)
@@ -171,11 +177,14 @@ fun MyEdisonScreen(
                     }
                     viewModel.resetSearchResults()
                 },
-                onSearchQuerySubmit = { query ->
-                    viewModel.fetchSearchBubbles(query)
+                onLabelClick = {
+                    coroutineScope.launch {
+                        pagerState.scrollToPage(2)
+                    }
+                    viewModel.resetSearchResults()
                 },
+
                 currentPage = pagerState.currentPage,
-                query = uiState.query,
                 isViewMode = isViewMode,
                 setNavBarPosition = { idx: Int, offset: Offset, size: IntSize ->
                     viewModel.setNavBarPosition(

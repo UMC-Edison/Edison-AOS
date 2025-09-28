@@ -36,9 +36,6 @@ class BubbleSpaceViewModel @Inject constructor(
         _uiState.update { it.copy(mode = mode) }
     }
 
-    fun updateSelectedTabIndex(index: Int) {
-        _uiState.update { it.copy(selectedTabIndex = index) }
-    }
 
     fun selectBubble(bubble: BubbleModel?) {
         _uiState.update { it.copy(selectedBubble = bubble) }
@@ -71,13 +68,14 @@ class BubbleSpaceViewModel @Inject constructor(
         }
     }
 
-    fun showKeywordMap(keyword: String) {
-        _uiState.update { it.copy(mode = BubbleSpaceMode.DEFAULT, keywordForMap = keyword) }
+    fun showKeywordMap() {
+        _uiState.update { it.copy(mode = BubbleSpaceMode.KEYWORD) }
     }
 
-    fun hideKeywordMap() {
-        _uiState.update { it.copy(keywordForMap = null) }
+    fun switchToGraph() {
+        _uiState.update { it.copy(mode = BubbleSpaceMode.DEFAULT) }
     }
+
 
 
 }
