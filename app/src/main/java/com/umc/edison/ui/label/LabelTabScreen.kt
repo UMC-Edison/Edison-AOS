@@ -57,6 +57,7 @@ fun LabelTabScreen(
     val draggedIndex = remember { mutableIntStateOf(-1) }
 
     LaunchedEffect(Unit) {
+        viewModel.fetchTotalBubbleCount()
         viewModel.fetchLabels()
     }
 

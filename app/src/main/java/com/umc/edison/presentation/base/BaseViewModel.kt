@@ -63,7 +63,7 @@ open class BaseViewModel @Inject constructor(
         }
     }
 
-    fun showToast(message: String) {
+    protected fun showToast(message: String) {
         viewModelScope.launch {
             toastManager.showToast(message)
         }

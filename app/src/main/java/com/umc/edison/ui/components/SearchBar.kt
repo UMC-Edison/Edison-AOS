@@ -111,7 +111,7 @@ fun KeywordMapBar(
                 .height(48.dp)
                 .clip(RoundedCornerShape(100.dp))
                 .background(Gray300)
-                .padding(horizontal = 12.dp),
+                .padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             BasicTextField(
@@ -128,7 +128,7 @@ fun KeywordMapBar(
                     ) {
                         if (value.isEmpty()) {
                             Text(
-                                text = "키워드 입력",
+                                text = "키워드를 입력하세요",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Gray600
                             )
