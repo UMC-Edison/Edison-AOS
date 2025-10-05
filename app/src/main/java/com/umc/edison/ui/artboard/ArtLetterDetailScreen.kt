@@ -490,7 +490,7 @@ fun ArtLetterDetailContent(
 
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(48.dp)
+            horizontalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             items(uiState.relatedArtLetters.size) { relatedArtLetter ->
                 val artLetter = uiState.relatedArtLetters[relatedArtLetter]

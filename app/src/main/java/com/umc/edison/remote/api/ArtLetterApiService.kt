@@ -15,6 +15,7 @@ import com.umc.edison.remote.model.artletter.GetEditorPickResponse
 import com.umc.edison.remote.model.artletter.GetMoreArtLettersResponse
 import com.umc.edison.remote.model.artletter.GetRecentSearchesResponse
 import com.umc.edison.remote.model.artletter.GetSearchArtLettersResponse
+import com.umc.edison.remote.model.artletter.GetSearchMoreArtLettersResponse
 import com.umc.edison.remote.model.mypage.GetMyScrapArtLettersResponse
 import com.umc.edison.remote.model.mypage.GetScrapArtLettersByCategoryResponse
 import retrofit2.http.DELETE
@@ -32,6 +33,9 @@ interface ArtLetterApiService {
 
     @GET("/artletters/editor-pick")
     suspend fun getEditorPick(): ResponseWithListData<GetEditorPickResponse>
+
+    @GET("/artletters/search-more")
+    suspend fun getSearchMoreArtLetters(): ResponseWithListData<GetSearchMoreArtLettersResponse>
 
     @GET("/artletters/more/{currentId}")
     suspend fun getMoreArtLetters(@Path("currentId") currentId: Int): ResponseWithListData<GetMoreArtLettersResponse>
