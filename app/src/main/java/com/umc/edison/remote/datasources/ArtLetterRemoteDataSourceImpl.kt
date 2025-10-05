@@ -26,36 +26,8 @@ class ArtLetterRemoteDataSourceImpl @Inject constructor(
         return artLetterApiService.getEditorPick().data.map { it.toData() }
     }
 
-    // TODO: 백엔드 API 수정 필요
-    override suspend fun getAllRandomArtLetters(): List<ArtLetterPreviewEntity> {
-        val artLetters = artLetterApiService.getAllArtLetters().data.shuffled()
-        val picked = mutableListOf<ArtLetterPreviewEntity>()
-
-        if (artLetters.size > 3) {
-            picked.add(artLetters[0].toData())
-            picked.add(artLetters[1].toData())
-            picked.add(artLetters[2].toData())
-        } else {
-            picked.addAll(artLetters.map { it.toData() })
-        }
-
-        val result = mutableListOf<ArtLetterPreviewEntity>()
-
-        for (i in 0 until picked.size) {
-            val detail = getArtLetter(picked[i].artLetterId)
-            result.add(
-                ArtLetterPreviewEntity(
-                    artLetterId = picked[i].artLetterId,
-                    category = picked[i].category,
-                    title = picked[i].title,
-                    thumbnail = picked[i].thumbnail,
-                    scraped = picked[i].scraped,
-                    tags = detail.tags
-                )
-            )
-        }
-
-        return result
+    override suspend fun getSearchMoreArtLetters(): List<ArtLetterPreviewEntity> {
+        return artLetterApiService.getSearchMoreArtLetters().data.map { it.toData() }
     }
 
     override suspend fun getMoreArtLetters(id: Int): List<ArtLetterPreviewEntity> {

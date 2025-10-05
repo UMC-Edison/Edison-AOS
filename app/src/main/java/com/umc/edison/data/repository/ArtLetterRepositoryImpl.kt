@@ -23,8 +23,8 @@ class ArtLetterRepositoryImpl @Inject constructor(
     override fun getAllEditorPickArtLetters(): Flow<DataResource<List<ArtLetter>>> =
         resourceFactory.remote { artLetterRemoteDataSource.getAllEditorPickArtLetters() }
 
-    override fun getAllRandomArtLetters(): Flow<DataResource<List<ArtLetter>>> =
-        resourceFactory.remote { artLetterRemoteDataSource.getAllRandomArtLetters() }
+    override fun getSearchMoreArtLetters(): Flow<DataResource<List<ArtLetter>>> =
+        resourceFactory.remote { artLetterRemoteDataSource.getSearchMoreArtLetters() }
 
     override fun getMoreArtLetters(id: Int): Flow<DataResource<List<ArtLetter>>> =
         resourceFactory.remote { artLetterRemoteDataSource.getMoreArtLetters(id) }
