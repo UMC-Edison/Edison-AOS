@@ -26,7 +26,7 @@ data class GetEditorPickResponse(
         title = title,
         thumbnail = thumbnail,
         scraped = scraped,
-        tags = tags.split(" ")
+        tags = tags.split(" ").filter { it.isNotBlank() }
     )
 }
 

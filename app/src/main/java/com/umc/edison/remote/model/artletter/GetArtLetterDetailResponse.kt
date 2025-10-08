@@ -28,7 +28,7 @@ class GetArtLetterDetailResponse (
         category = category,
         readTime = readTime,
         writer = writer,
-        tags = tags.split(" "),
+        tags = tags.split(" ").filter { it.isNotBlank() },
         thumbnail = thumbnail,
         likesCnt = likesCnt,
         liked = liked,
