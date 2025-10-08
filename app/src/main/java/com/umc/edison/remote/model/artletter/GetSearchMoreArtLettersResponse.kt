@@ -14,8 +14,7 @@ data class GetSearchMoreArtLettersResponse(
     override fun toData(): ArtLetterPreviewEntity = ArtLetterPreviewEntity(
         artLetterId = artLetterId,
         title = title,
-        category = "",
-        tags = tags.split(" "),
+        tags = tags.split(" ").filter { it.isNotBlank() },
         thumbnail = thumbnail,
         scraped = scraped
     )
