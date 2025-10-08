@@ -73,6 +73,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -117,6 +118,8 @@ fun BubbleDoor(
     onBackspaceAtStart: (Int) -> Unit = {},
     onGapTapped: (leftIndex: Int?, rightIndex: Int?) -> Unit = { _, _ -> },
     onFocusRequestHandled: () -> Unit = {},
+    textBlockVerticalPadding: Int = 8,   // 텍스트 블록 위·아래 여백 (dp)
+    imageVerticalPadding: Int = 8        // 이미지 블록 위·아래 여백 (dp)
 ) {
     val colors = bubble.labels.map { it.color }
     val outerColors = when (colors.size) {
@@ -169,6 +172,9 @@ fun BubbleDoor(
                 onBackspaceAtStart = onBackspaceAtStart,
                 onGapTapped = onGapTapped,
                 onFocusRequestHandled = onFocusRequestHandled,
+                textBlockVerticalPadding = textBlockVerticalPadding,
+                imageVerticalPadding = imageVerticalPadding
+
             )
         }
     }
@@ -208,6 +214,8 @@ private fun BubbleContent(
     onBackspaceAtStart: (Int) -> Unit,
     onGapTapped: (leftIndex: Int?, rightIndex: Int?) -> Unit,
     onFocusRequestHandled: () -> Unit,
+    textBlockVerticalPadding: Int,
+    imageVerticalPadding: Int
 ) {
     var deletedImageBlockId by remember { mutableIntStateOf(-1) }
 
@@ -328,9 +336,16 @@ private fun BubbleContent(
                         if (isEditable) {
                             BasicRichTextEditor(
                                 state = richTextState,
-                                textStyle = MaterialTheme.typography.bodyMedium.copy(color = Gray800),
+                                textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                    color = Gray800,
+                                    lineHeightStyle = LineHeightStyle(
+                                        alignment = LineHeightStyle.Alignment.Proportional,
+                                        trim = LineHeightStyle.Trim.Both
+                                    )
+                                ),
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .padding(vertical = textBlockVerticalPadding.dp)
                                     .bringIntoViewRequester(bringIntoViewRequester)
                                     .focusRequester(focusRequester)
                                     .focusTarget()
@@ -408,8 +423,16 @@ private fun BubbleContent(
                         } else {
                             BasicRichText(
                                 state = richTextState,
-                                style = MaterialTheme.typography.bodyMedium.copy(color = Gray800),
-                                modifier = Modifier.fillMaxWidth(),
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    color = Gray800,
+                                    lineHeightStyle = LineHeightStyle(
+                                        alignment = LineHeightStyle.Alignment.Proportional,
+                                        trim = LineHeightStyle.Trim.Both
+                                    )
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = textBlockVerticalPadding.dp),
                             )
                         }
                     }
@@ -438,6 +461,7 @@ private fun BubbleContent(
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .padding(vertical = imageVerticalPadding.dp)
                                     .aspectRatio(aspectRatio)
                                     .pointerInput(contentBlock.id) {
                                         detectTapGestures(onLongPress = { isLongPressed = true })
