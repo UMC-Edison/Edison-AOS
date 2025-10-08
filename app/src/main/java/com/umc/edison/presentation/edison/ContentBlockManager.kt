@@ -85,11 +85,7 @@ class ContentBlockManager @Inject constructor() {
         if (contentBlock.type != ContentType.IMAGE) return false
 
         val targetId = chain.toLinear()
-            .firstOrNull { 
-                it.block.type == ContentType.IMAGE && 
-                it.block.content == contentBlock.content && 
-                it.block.position == contentBlock.position 
-            }?.id ?: return false
+            .firstOrNull { it.block.id == contentBlock.id }?.id ?: return false
 
         val orderedBefore = chain.toLinear()
         val idx = orderedBefore.indexOfFirst { it.id == targetId }
