@@ -42,9 +42,7 @@ class BubbleInputViewModel @Inject constructor(
     private var lastFocusedTextIndex: Int? = null
 
     private val _uiState = MutableStateFlow(
-        BubbleInputState.DEFAULT.copy(
-            bubble = BubbleModel.DEFAULT.copy(contentBlocks = LinkedList())
-        )
+        BubbleInputState.DEFAULT
     )
     val uiState = _uiState.asStateFlow()
 
