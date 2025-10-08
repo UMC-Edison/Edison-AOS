@@ -228,37 +228,24 @@ class BubbleInputViewModel @Inject constructor(
     }
 
     private fun addTextBlock() {
-        val newTextBlock = ContentBlockModel(
-            type = ContentType.TEXT,
-            content = "",
-            position = _uiState.value.bubble.contentBlocks.size
-        )
-        val blocks = _uiState.value.bubble.contentBlocks
-        _uiState.update {
-            it.copy(
-                bubble = it.bubble.copy(
-                    contentBlocks =
-                        if (blocks.isEmpty()) listOf(newTextBlock) else blocks + newTextBlock
-                )
-            )
+        val tailId = chain.tailId()
+        if (tailId == null) return
+        val tailBlockType = chain.node(tailId)?.block?.type
+        if (tailBlockType != ContentType.TEXT) {
+            chain.insertAfter(tailId, ContentBlockModel(ContentType.TEXT, "", 0))
+            publish()
         }
     }
 
     private fun addTextBlockToFront() {
-        val blocks = _uiState.value.bubble.contentBlocks
-        if (blocks.isEmpty()) {
-            addTextBlock()
-            return
+        val headId = chain.headId()
+        if (headId != null) {
+            val headBlockType = chain.node(headId)?.block?.type
+            if (headBlockType != ContentType.TEXT) {
+                chain.insertBetween(null, headId, ContentBlockModel(ContentType.TEXT, "", 0))
+                publish()
+            }
         }
-        if (blocks.first().type == ContentType.TEXT && blocks.last().type == ContentType.TEXT) return
-        if (blocks.first().type == ContentType.TEXT) return
-
-        val newTextBlock = ContentBlockModel(ContentType.TEXT, "", 0)
-        val shifted = blocks.map { it.copy(position = it.position + 1) }
-        _uiState.update {
-            it.copy(bubble = it.bubble.copy(contentBlocks = LinkedList(listOf(newTextBlock) + shifted)))
-        }
-        if (_uiState.value.bubble.contentBlocks.last().type == ContentType.IMAGE) addTextBlock()
     }
 
     fun addContentBlocks() {
@@ -301,8 +288,8 @@ class BubbleInputViewModel @Inject constructor(
         val ordered = chain.toLinear()
         bubble.contentBlocks.forEach { incoming ->
             if (incoming.type == ContentType.TEXT) {
-                val node = ordered.getOrNull(incoming.position)
-                if (node != null && node.block.type == ContentType.TEXT) {
+                val node = ordered.find { it.id == incoming.id }
+                if (node?.block?.type == ContentType.TEXT) {
                     node.block.content = incoming.content
                 }
             }
