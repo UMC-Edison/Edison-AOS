@@ -251,18 +251,12 @@ fun KeywordMapScreen(
 
                 val bubbles = uiState.bubbles
                 val slots = remember(uiState.bubbles) {
-                    listOf(
-                        BubbleSlot(234f, -90f, 10f, 36.dp, rotationForCircle2),
-                        BubbleSlot(234f, 30f, 10f, 36.dp, rotationForCircle2),
-                        BubbleSlot(234f, 150f, 10f, 36.dp, rotationForCircle2),
-                        BubbleSlot(330f, -90f, 0f, 50.dp, rotationForCircle3),
-                        BubbleSlot(330f, 30f, 0f, 50.dp, rotationForCircle3),
-                        BubbleSlot(330f, 150f, 0f, 50.dp, rotationForCircle3),
-                        BubbleSlot(434f, 0f, 0f, 64.dp, rotationForCircle4),
-                        BubbleSlot(530f, -60f, 0f, 64.dp, rotationForCircle5),
-                        BubbleSlot(530f, 60f, 0f, 64.dp, rotationForCircle5),
-                        BubbleSlot(530f, 180f, 0f, 64.dp, rotationForCircle5)
-                    )
+                    val circle2Slots = createBubbleSlots(234f, listOf(-90f, 30f, 150f), 10f, 36.dp, rotationForCircle2)
+                    val circle3Slots = createBubbleSlots(330f, listOf(-90f, 30f, 150f), 0f, 50.dp, rotationForCircle3)
+                    val circle4Slots = createBubbleSlots(434f, listOf(0f), 0f, 64.dp, rotationForCircle4)
+                    val circle5Slots = createBubbleSlots(530f, listOf(-60f, 60f, 180f), 0f, 64.dp, rotationForCircle5)
+
+                    circle2Slots + circle3Slots + circle4Slots + circle5Slots
                 }
 
                 bubbles.zip(slots).forEachIndexed { index, (bubble, slot) ->
@@ -485,6 +479,17 @@ private fun Circle(
     )
 }
 
+private fun createBubbleSlots(
+    targetDiameter: Float,
+    baseAngles: List<Float>,
+    initialRotation: Float,
+    size: Dp,
+    rotationAnimatable: Animatable<Float, *>
+): List<BubbleSlot> {
+    return baseAngles.map { angle ->
+        BubbleSlot(targetDiameter, angle, initialRotation, size, rotationAnimatable)
+    }
+}
 
 private data class BubbleSlot(
     val targetDiameter: Float,
