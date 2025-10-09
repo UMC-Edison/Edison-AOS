@@ -26,7 +26,6 @@ import javax.inject.Inject
 class LabelListViewModel @Inject constructor(
     toastManager: ToastManager,
     private val getAllLabelsUseCase: GetAllLabelsUseCase,
-    private val getAllBubblesUseCase: GetAllBubblesUseCase,
     private val getBubblesByLabelUseCase: GetBubblesByLabelUseCase,
     private val getBubblesWithoutLabelUseCase: GetBubblesWithoutLabelUseCase,
     private val addLabelUseCase: AddLabelUseCase,
@@ -54,15 +53,6 @@ class LabelListViewModel @Inject constructor(
         )
     }
 
-    fun fetchTotalBubbleCount() {
-        collectDataResource(
-            flow = getAllBubblesUseCase(),
-            onSuccess = { bubbles ->
-                _uiState.update { it.copy(bubbleCount = bubbles.size) }
-            }
-        )
-    }
-
     fun fetchLabels() {
         _uiState.update { LabelListState.DEFAULT }
         collectDataResource(
@@ -71,12 +61,13 @@ class LabelListViewModel @Inject constructor(
                 _uiState.update { it.copy(labels = labels.distinctBy { it.id }.toPresentation()) }
             },
             onComplete = {
-                fetchBubblesByLabel()
+                fetchBubblesWithoutLabel()
             }
         )
     }
 
     private fun fetchBubblesByLabel() {
+
         _uiState.value.labels.forEach {
             if (it.id.isNullOrEmpty()) return@forEach
 
@@ -102,7 +93,6 @@ class LabelListViewModel @Inject constructor(
                             labels = it.labels.sortedByDescending { it.bubbleCnt }
                         )
                     }
-                    fetchBubblesWithoutLabel()
                 }
             )
         }
@@ -121,6 +111,7 @@ class LabelListViewModel @Inject constructor(
                         labels = labels.distinctBy { it.id }
                     )
                 }
+                fetchBubblesByLabel()
             }
         )
     }
