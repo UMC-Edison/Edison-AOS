@@ -12,7 +12,7 @@ data class BubbleSpaceState(
 ) {
     companion object {
         val DEFAULT = BubbleSpaceState(
-            mode = BubbleSpaceMode.DEFAULT,
+            mode = BubbleSpaceMode.GRAPH,
             selectedBubble = null,
             query = "",
             searchResults = emptyList(),
@@ -23,7 +23,7 @@ data class BubbleSpaceState(
 }
 
 enum class BubbleSpaceMode {
-    DEFAULT,
+    GRAPH,
     SEARCH,
     KEYWORD
 }

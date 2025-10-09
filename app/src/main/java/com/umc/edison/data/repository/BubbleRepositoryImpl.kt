@@ -68,7 +68,7 @@ class BubbleRepositoryImpl @Inject constructor(
         )
 
     override fun getKeywordBubbles(keyword: String): Flow<DataResource<List<KeywordBubble>>> =
-        resourceFactory.local(
+        resourceFactory.remote(
             dataAction = {
                 val remoteResponse = bubbleRemoteDataSource.getKeywordBubbles(keyword)
 
