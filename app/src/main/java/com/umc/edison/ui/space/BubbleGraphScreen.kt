@@ -193,8 +193,7 @@ fun BubbleGraphScreen(
                         )
                     }
                     drawContext.canvas.nativeCanvas.drawText(
-                        extractPlainText(positionedBubble.bubble).first.take(10)
-                            .ifEmpty { "내용 없음" },
+                        positionedBubble.bubble.getDisplayTitle(),
                         positionedBubble.position.x,
                         positionedBubble.position.y + radius.dp.toPx() + 10.dp.toPx(),
                         Paint().apply {

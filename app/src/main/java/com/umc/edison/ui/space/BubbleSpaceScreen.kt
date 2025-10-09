@@ -83,7 +83,7 @@ fun BubbleSpaceScreen(
             viewModel.selectBubble(null)
             updateShowBottomNav(true)
         } else if (uiState.mode == BubbleSpaceMode.SEARCH) {
-            viewModel.updateBubbleSpaceMode(BubbleSpaceMode.DEFAULT)
+            viewModel.updateBubbleSpaceMode(BubbleSpaceMode.GRAPH)
             viewModel.updateQuery("")
         } else {
             navHostController.navigate(NavRoute.MyEdison.route)
@@ -103,7 +103,7 @@ fun BubbleSpaceScreen(
                 }
             }
 
-            if (uiState.mode == BubbleSpaceMode.DEFAULT) {
+            if (uiState.mode == BubbleSpaceMode.GRAPH) {
                 BubbleGraphScreen(
                     showBubble = onShowBubble,
                     onShowKeywordMap = {
@@ -137,7 +137,7 @@ fun BubbleSpaceScreen(
                     .align(Alignment.CenterHorizontally)
                     .zIndex(1f),
             ) {
-                if (uiState.mode == BubbleSpaceMode.DEFAULT) {
+                if (uiState.mode == BubbleSpaceMode.GRAPH) {
                     Icon(
                         imageVector = ImageVector.vectorResource(id = R.drawable.ic_topbar_search),
                         contentDescription = "Search",

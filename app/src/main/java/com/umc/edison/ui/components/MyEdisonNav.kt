@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -82,10 +83,8 @@ fun MyEdisonNavBar(
                         )
                     }
 
-                    IconButton(
-                        onClick = {
-                            onBubbleClick()
-                        },
+                    Box(
+                        contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .size(36.dp)
                             .onGloballyPositioned { coordinates ->
@@ -95,6 +94,10 @@ fun MyEdisonNavBar(
                                     coordinates.size
                                 )
                             }
+                            .clip(CircleShape)
+                            .clickable(
+                                onClick = { onBubbleClick() }
+                            )
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_topbar_bubble),
@@ -117,12 +120,10 @@ fun MyEdisonNavBar(
                         )
                     }
 
-                    IconButton(
-                        onClick = {
-                            onStorageClick()
-                        },
+                    Box(
+                        contentAlignment = Alignment.Center,
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(36.dp)
                             .onGloballyPositioned { coordinates ->
                                 setNavBarPosition(
                                     1,
@@ -130,6 +131,10 @@ fun MyEdisonNavBar(
                                     coordinates.size
                                 )
                             }
+                            .clip(CircleShape)
+                            .clickable(
+                                onClick = { onStorageClick() }
+                            )
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_topbar_storage),
@@ -137,6 +142,8 @@ fun MyEdisonNavBar(
                             tint = Color.Unspecified
                         )
                     }
+
+
                 }
 
                 Box(
@@ -152,10 +159,9 @@ fun MyEdisonNavBar(
                                 .background(White000)
                         )
                     }
-                    IconButton(
-                        onClick = {
-                            onLabelClick()
-                        },
+
+                    Box(
+                        contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .size(36.dp)
                             .onGloballyPositioned { coordinates ->
@@ -165,13 +171,18 @@ fun MyEdisonNavBar(
                                     coordinates.size
                                 )
                             }
+                            .clip(CircleShape)
+                            .clickable(
+                                onClick = { onLabelClick() }
+                            )
                     ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_tag),
+                            painter = painterResource(id = R.drawable.ic_label),
                             contentDescription = "Label Icon",
-                            tint = Gray800
+                            tint = Color.Unspecified
                         )
                     }
+
                 }
             }
         }

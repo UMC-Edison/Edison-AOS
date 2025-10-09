@@ -16,7 +16,7 @@ import javax.inject.Inject
 class BubbleSpaceViewModel @Inject constructor(
     toastManager: ToastManager,
     private val getLogInStateUseCase: GetLogInStateUseCase,
-    private val searchBubblesUseCase: SearchBubblesUseCase
+    private val searchBubblesUseCase: SearchBubblesUseCase,
 
 ) : BaseViewModel(toastManager) {
     private val _uiState = MutableStateFlow(BubbleSpaceState.DEFAULT)
@@ -72,7 +72,7 @@ class BubbleSpaceViewModel @Inject constructor(
     }
 
     fun switchToGraph() {
-        _uiState.update { it.copy(mode = BubbleSpaceMode.DEFAULT) }
+        _uiState.update { it.copy(mode = BubbleSpaceMode.GRAPH) }
     }
 
 
