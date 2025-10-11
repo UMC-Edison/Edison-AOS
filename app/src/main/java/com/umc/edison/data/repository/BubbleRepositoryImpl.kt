@@ -1,5 +1,6 @@
 package com.umc.edison.data.repository
 
+import android.util.Log
 import com.umc.edison.data.bound.FlowBoundResourceFactory
 import com.umc.edison.data.datasources.BubbleLocalDataSource
 import com.umc.edison.data.datasources.BubbleRemoteDataSource
@@ -64,15 +65,20 @@ class BubbleRepositoryImpl @Inject constructor(
 
                 val clusteredBubbles = mutableListOf<ClusteredBubbleEntity>()
                 remoteResponse.map {
-                    val bubble = bubbleLocalDataSource.getActiveBubble(it.id)
-                    clusteredBubbles.add(
-                        ClusteredBubbleEntity(
-                            bubble = bubble,
-                            x = it.x,
-                            y = it.y,
-                            group = it.group
+                    try {
+                        val bubble = bubbleLocalDataSource.getActiveBubble(it.id)
+                        clusteredBubbles.add(
+                            ClusteredBubbleEntity(
+                                bubble = bubble,
+                                x = it.x,
+                                y = it.y,
+                                group = it.group
+                            )
                         )
-                    )
+                    } catch (e: Exception) {
+                        // 로컬에 없는 버블은 무시
+                        Log.d("BubbleRepositoryImpl", "getAllClusteredBubbles: ${e.message}")
+                    }
                 }
 
                 clusteredBubbles
@@ -85,11 +91,17 @@ class BubbleRepositoryImpl @Inject constructor(
                 val remoteResponse = bubbleRemoteDataSource.getKeywordBubbles(keyword)
 
                 remoteResponse.map { responseItem ->
-                    val bubble = bubbleLocalDataSource.getActiveBubble(responseItem.id)
-                    KeywordBubbleEntity(
-                        bubble = bubble,
-                        similarity = responseItem.similarity
-                    )
+                    try {
+                        val bubble = bubbleLocalDataSource.getActiveBubble(responseItem.id)
+                        KeywordBubbleEntity(
+                            bubble = bubble,
+                            similarity = responseItem.similarity
+                        )
+                    } catch (e: Exception) {
+                        // 로컬에 없는 버블은 무시
+                        Log.d("BubbleRepositoryImpl", "getKeywordBubbles: ${e.message}")
+                        null
+                    }
                 }
             }
         )
