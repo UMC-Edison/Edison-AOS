@@ -339,12 +339,59 @@ class BubbleInputViewModel @Inject constructor(
     }
 
     fun deleteContentBlock(contentBlock: ContentBlockModel) {
-        val success = contentBlockManager.deleteContentBlock(contentBlock)
-        if (success) {
-            val uri = contentBlock.content.toUri()
-            if (_uiState.value.selectedImages.contains(uri)) {
-                _uiState.update { it.copy(selectedImages = it.selectedImages - uri) }
+        if (contentBlock.type != ContentType.IMAGE) return
+
+        val currentBubble = _uiState.value.bubble
+        val contentBlocks = currentBubble.contentBlocks.sortedBy { it.position }.toMutableList()
+
+        val targetIndex = contentBlocks.indexOfFirst {
+            it.position == contentBlock.position
+            it.content == contentBlock.content
+        }
+
+        if (targetIndex == -1) return
+
+        // 이미지가 첫 번째 블록일 때
+        if (targetIndex == 0) {
+            contentBlocks.removeAt(targetIndex)
+            _uiState.update { it.copy(bubble = it.bubble.copy(contentBlocks = contentBlocks)) }
+
+            if (contentBlocks.isEmpty() || contentBlocks[0].type == ContentType.IMAGE) {
+                addTextBlockToFront()
             }
+            return
+        }
+
+        // 이미지가 마지막 블록일 때
+        if (targetIndex == currentBubble.contentBlocks.lastIndex) {
+            contentBlocks.removeAt(targetIndex)
+            _uiState.update { it.copy(bubble = it.bubble.copy(contentBlocks = contentBlocks)) }
+
+            // 마지막 블록이 이미지 블록이면 텍스트 블록 추가
+            if (contentBlocks.last().type == ContentType.IMAGE) {
+                addTextBlock()
+            }
+            return
+        }
+
+        // 이미지가 중간 블럭일 때 이전 블록과 다음 블록이 TEXT일 경우 연결
+        if (contentBlocks[targetIndex - 1].type == ContentType.TEXT && contentBlocks[targetIndex + 1].type == ContentType.TEXT) {
+            contentBlocks[targetIndex - 1] = contentBlocks[targetIndex - 1].copy(
+                content = contentBlocks[targetIndex - 1].content + contentBlocks[targetIndex + 1].content
+            )
+
+            contentBlocks.removeAt(targetIndex) // 제거하려는 이미지 블록 삭제
+            contentBlocks.removeAt(targetIndex) // 다음 TEXT 블록 삭제
+
+            _uiState.update { it.copy(bubble = it.bubble.copy(contentBlocks = contentBlocks)) }
+            return
+        }
+
+        contentBlocks.removeAt(targetIndex)
+        _uiState.update {
+            it.copy(
+                bubble = it.bubble.copy(contentBlocks = contentBlocks)
+            )
         }
     }
 

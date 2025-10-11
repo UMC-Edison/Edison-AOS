@@ -231,7 +231,8 @@ fun BubbleInputContent(
             },
             onConfirmed = {
                 // 선택된 이미지들을 현재 삽입 타깃 규칙에 맞춰 추가
-                viewModel.addContentBlocks()},
+                viewModel.addContentBlocks()
+            },
             onClose = { viewModel.closeGallery() },
             multiSelectMode = true,
         )
