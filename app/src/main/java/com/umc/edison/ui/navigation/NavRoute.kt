@@ -8,7 +8,7 @@ sealed class NavRoute(val route: String) {
         const val ART_LETTER_ROUTE = "art-letter"
         const val ART_LETTER_SEARCH_ROUTE = "art-letter/search"
         const val MY_PAGE_ROUTE = "my-page"
-        const val SPACE_LABEL_ROUTE = "space/labels"
+        const val LABEL_ROUTE = "my-edison/labels"
         const val SPLASH_ROUTE = "login/splash"
         const val LOGIN_ROUTE = "login"
         const val MAKE_NICKNAME_ROUTE = "login/make-nick-name"
@@ -39,7 +39,7 @@ sealed class NavRoute(val route: String) {
         fun createRoute(id: Int): String = "$route?artLetterId=$id"
     }
 
-    data object LabelDetail : NavRoute("$SPACE_LABEL_ROUTE/detail") {
+    data object LabelDetail : NavRoute("$LABEL_ROUTE/detail") {
         fun createRoute(labelId: String?): String {
             return if (labelId != null) {
                 "$route?labelId=$labelId"
