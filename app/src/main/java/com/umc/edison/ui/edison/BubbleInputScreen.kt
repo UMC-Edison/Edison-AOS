@@ -70,8 +70,10 @@ fun BubbleInputScreen(
         } else if (uiState.isCameraOpen) {
             viewModel.updateCameraOpen(false)
             viewModel.updateIcon(IconType.NONE)
-        } else if (uiState.selectedIcon == IconType.CAMERA || uiState.selectedIcon == IconType.LINK
-            || uiState.selectedIcon == IconType.BACK_LINK
+        } else if (
+            uiState.selectedIcon == IconType.CAMERA ||
+            uiState.selectedIcon == IconType.LINK ||
+            uiState.selectedIcon == IconType.BACK_LINK
         ) {
             viewModel.updateIcon(IconType.NONE)
         } else {
