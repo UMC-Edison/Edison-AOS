@@ -47,10 +47,11 @@ class EditProfileViewModel @Inject constructor(
         _uiState.update { it.copy(user = it.user.copy(nickname = nickname)) }
     }
 
-    fun updateUserProfileImage(image: Uri) {
+    fun updateUserProfileImage(profileImage: Uri) {
         _uiState.update {
             it.copy(
-                user = it.user.copy(profileImage = image.toString())
+                user = it.user.copy(profileImage = profileImage.toString()),
+                selectedImages = listOf(profileImage)
             )
         }
     }
