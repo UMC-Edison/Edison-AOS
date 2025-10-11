@@ -3,7 +3,6 @@ package com.umc.edison.ui.space
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,14 +21,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,7 +40,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -64,7 +56,6 @@ import com.umc.edison.ui.components.BubblePreview
 import com.umc.edison.ui.components.BubbleType
 import com.umc.edison.ui.components.KeywordMapBar
 import com.umc.edison.ui.theme.Gray100
-import com.umc.edison.ui.theme.Gray200
 import com.umc.edison.ui.theme.Gray400
 import com.umc.edison.ui.theme.Gray800
 import com.umc.edison.ui.theme.Gray900
@@ -251,10 +242,29 @@ fun KeywordMapScreen(
 
                 val bubbles = uiState.bubbles
                 val slots = remember(uiState.bubbles) {
-                    val circle2Slots = createBubbleSlots(234f, listOf(-90f, 30f, 150f), 10f, 36.dp, rotationForCircle2)
-                    val circle3Slots = createBubbleSlots(330f, listOf(-90f, 30f, 150f), 0f, 50.dp, rotationForCircle3)
-                    val circle4Slots = createBubbleSlots(434f, listOf(0f), 0f, 64.dp, rotationForCircle4)
-                    val circle5Slots = createBubbleSlots(530f, listOf(-60f, 60f, 180f), 0f, 64.dp, rotationForCircle5)
+                    val circle2Slots = createBubbleSlots(
+                        234f,
+                        listOf(-90f, 30f, 150f),
+                        10f,
+                        36.dp,
+                        rotationForCircle2
+                    )
+                    val circle3Slots = createBubbleSlots(
+                        330f,
+                        listOf(-90f, 30f, 150f),
+                        0f,
+                        50.dp,
+                        rotationForCircle3
+                    )
+                    val circle4Slots =
+                        createBubbleSlots(434f, listOf(0f), 0f, 64.dp, rotationForCircle4)
+                    val circle5Slots = createBubbleSlots(
+                        530f,
+                        listOf(-60f, 60f, 180f),
+                        0f,
+                        64.dp,
+                        rotationForCircle5
+                    )
 
                     circle2Slots + circle3Slots + circle4Slots + circle5Slots
                 }

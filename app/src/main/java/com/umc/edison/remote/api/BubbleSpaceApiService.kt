@@ -1,7 +1,6 @@
 package com.umc.edison.remote.api
 
 import com.umc.edison.remote.model.ResponseWithData
-import com.umc.edison.remote.model.bubble.BubbleResponse
 import com.umc.edison.remote.model.space.GetBubblePositionResponse
 import com.umc.edison.remote.model.space.GetKeywordBubbleResponse
 import retrofit2.http.GET
