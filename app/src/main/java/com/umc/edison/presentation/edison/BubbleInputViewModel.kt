@@ -12,6 +12,8 @@ import com.umc.edison.domain.usecase.label.AddLabelUseCase
 import com.umc.edison.domain.usecase.label.GetAllLabelsUseCase
 import com.umc.edison.presentation.ToastManager
 import com.umc.edison.presentation.base.BaseViewModel
+import com.umc.edison.presentation.edison.ImageHandler.Companion.MAX_TOTAL_IMAGES
+import com.umc.edison.presentation.edison.ImageHandler.Companion.MAX_TOTAL_IMAGES_LIMIT_MESSAGE
 import com.umc.edison.presentation.label.LabelEditMode
 import com.umc.edison.presentation.model.BubbleModel
 import com.umc.edison.presentation.model.ContentBlockModel
@@ -457,7 +459,9 @@ class BubbleInputViewModel @Inject constructor(
     }
 
     fun openGallery() {
-        if (!checkCanAddImage()) {
+        val currImageSize = imageHandler.getCurrentImageCount(_uiState.value.bubble.contentBlocks)
+        if (!imageHandler.checkCanAddImage(currImageSize)) {
+            showToast(MAX_TOTAL_IMAGES_LIMIT_MESSAGE)
             return
         }
 
@@ -484,7 +488,11 @@ class BubbleInputViewModel @Inject constructor(
     }
 
     fun updateCameraOpen(isOpen: Boolean) {
-        if (isOpen && !checkCanAddImage()) {
+        val currImageSize = imageHandler.getCurrentImageCount(_uiState.value.bubble.contentBlocks)
+        if (isOpen) {
+            return
+        } else if (!imageHandler.checkCanAddImage(currImageSize)) {
+            showToast(MAX_TOTAL_IMAGES_LIMIT_MESSAGE)
             return
         }
 
@@ -542,8 +550,7 @@ class BubbleInputViewModel @Inject constructor(
     }
 
     fun updateSelectedImages(uris: List<Uri>): List<Uri> {
-        val currImageSize =
-            _uiState.value.bubble.contentBlocks.filter { it.type == ContentType.IMAGE }.size
+        val currImageSize = imageHandler.getCurrentImageCount(_uiState.value.bubble.contentBlocks)
 
         val availableSize = MAX_TOTAL_IMAGES - currImageSize
         return if (uris.size > availableSize) {
@@ -552,24 +559,6 @@ class BubbleInputViewModel @Inject constructor(
         } else {
             uris
         }
-    }
-
-    private fun checkCanAddImage(): Boolean {
-        val currImageSize =
-            _uiState.value.bubble.contentBlocks.filter { it.type == ContentType.IMAGE }.size
-        if (currImageSize >= MAX_TOTAL_IMAGES) {
-            showToast(MAX_TOTAL_IMAGES_LIMIT_MESSAGE)
-            return false
-        }
-
-        return true
-    }
-
-    companion object {
-        const val MAX_IMAGE_SELECTION = 10
-        const val MAX_TOTAL_IMAGES = 30
-
-        const val MAX_TOTAL_IMAGES_LIMIT_MESSAGE = "이미지는 최대 ${MAX_TOTAL_IMAGES}개까지 첨부할 수 있습니다."
     }
 
 }

@@ -24,7 +24,9 @@ class ImageHandler @Inject constructor() {
     }
     
     companion object {
-        private const val MAX_IMAGES = 10
+        const val MAX_IMAGE_SELECTION = 10
+        const val MAX_TOTAL_IMAGES = 30
+        const val MAX_TOTAL_IMAGES_LIMIT_MESSAGE = "이미지는 최대 ${MAX_TOTAL_IMAGES}개까지 첨부할 수 있습니다."
         private const val IMAGE_FILE_PREFIX = "image_"
         private const val IMAGE_FILE_EXTENSION = ".jpg"
         private const val DEFAULT_TEXT_CONTENT = ""
@@ -133,6 +135,14 @@ class ImageHandler @Inject constructor() {
      */
     fun getCurrentImageCount(contentBlocks: List<ContentBlockModel>): Int {
         return contentBlocks.count { it.type == ContentType.IMAGE }
+    }
+
+    fun checkCanAddImage(currImageSize: Int): Boolean {
+        if (currImageSize >= MAX_TOTAL_IMAGES) {
+            return false
+        }
+
+        return true
     }
 
     // Private helper methods
