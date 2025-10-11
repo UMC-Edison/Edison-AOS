@@ -47,10 +47,10 @@ class BubbleLocalDataSourceImpl @Inject constructor(
     }
 
     override suspend fun getAllRecentBubbles(dayBefore: Int): List<BubbleEntity> {
-        val dayBefore = Calendar.getInstance().apply {
+        val timestampLimit = Calendar.getInstance().apply {
             add(Calendar.DAY_OF_YEAR, -dayBefore)
         }.time.time
-        val localBubbles: List<BubbleLocal> = bubbleDao.getAllRecentBubbles(dayBefore)
+        val localBubbles: List<BubbleLocal> = bubbleDao.getAllRecentBubbles(timestampLimit)
 
         return convertLocalBubblesToBubbleEntities(localBubbles)
     }
