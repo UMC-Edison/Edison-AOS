@@ -9,7 +9,7 @@ interface LabelRepository {
     fun addLabel(label: Label): Flow<DataResource<Unit>>
 
     // READ
-    fun getAllLabels(): Flow<DataResource<List<Label>>>
+    fun getAllActiveLabels(): Flow<DataResource<List<Label>>>
     fun getLabel(id: String): Flow<DataResource<Label>>
 
     // UPDATE

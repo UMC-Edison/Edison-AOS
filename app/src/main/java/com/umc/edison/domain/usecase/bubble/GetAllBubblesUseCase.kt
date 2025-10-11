@@ -9,5 +9,5 @@ import javax.inject.Inject
 class GetAllBubblesUseCase @Inject constructor(
     private val bubbleRepository: BubbleRepository
 ) {
-    operator fun invoke(): Flow<DataResource<List<Bubble>>> = bubbleRepository.getAllBubbles()
+    operator fun invoke(): Flow<DataResource<List<Bubble>>> = bubbleRepository.getAllActiveBubbles()
 }

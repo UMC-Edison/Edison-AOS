@@ -36,21 +36,21 @@ class BubbleLocalDataSourceImpl @Inject constructor(
         addBubbleLabel(insertedBubble)
         addLinkedBubble(insertedBubble)
 
-        return getBubble(insertedBubble.id)
+        return getActiveBubble(insertedBubble.id)
     }
 
     // READ
-    override suspend fun getAllBubbles(): List<BubbleEntity> {
-        val localBubbles: List<BubbleLocal> = bubbleDao.getAllBubbles()
+    override suspend fun getAllActiveBubbles(): List<BubbleEntity> {
+        val localBubbles: List<BubbleLocal> = bubbleDao.getAllActiveBubbles()
 
         return convertLocalBubblesToBubbleEntities(localBubbles)
     }
 
     override suspend fun getAllRecentBubbles(dayBefore: Int): List<BubbleEntity> {
-        val sevenDaysAgo = Calendar.getInstance().apply {
+        val dayBefore = Calendar.getInstance().apply {
             add(Calendar.DAY_OF_YEAR, -dayBefore)
         }.time.time
-        val localBubbles: List<BubbleLocal> = bubbleDao.getAllRecentBubbles(sevenDaysAgo)
+        val localBubbles: List<BubbleLocal> = bubbleDao.getAllRecentBubbles(dayBefore)
 
         return convertLocalBubblesToBubbleEntities(localBubbles)
     }
@@ -61,14 +61,27 @@ class BubbleLocalDataSourceImpl @Inject constructor(
         return convertLocalBubblesToBubbleEntities(deletedBubbles)
     }
 
-    override suspend fun getBubble(id: String): BubbleEntity {
-        val bubble = bubbleDao.getBubbleById(id)?.toData()
+    override suspend fun getActiveBubble(id: String): BubbleEntity {
+        val bubble = bubbleDao.getActiveBubbleById(id)?.toData()
             ?: throw IllegalArgumentException("Bubble with id $id not found")
 
         val result = bubble.copy(
-            labels = labelDao.getAllLabelsByBubbleId(id).map { it.toData() },
-            backLinks = linkedBubbleDao.getBackLinksByBubbleId(id).map { it.toData() },
-            linkedBubble = linkedBubbleDao.getLinkedBubbleByBubbleId(id)?.toData()
+            labels = labelDao.getAllActiveLabelsByBubbleId(id).map { it.toData() },
+            backLinks = linkedBubbleDao.getActiveBackLinksByBubbleId(id).map { it.toData() },
+            linkedBubble = linkedBubbleDao.getActiveLinkedBubbleByBubbleId(id)?.toData()
+        )
+
+        return result
+    }
+
+    override suspend fun getRawBubble(id: String): BubbleEntity {
+        val bubble = bubbleDao.getRawBubbleById(id)?.toData()
+            ?: throw IllegalArgumentException("Bubble with id $id not found")
+
+        val result = bubble.copy(
+            labels = labelDao.getAllRawLabelsByBubbleId(id).map { it.toData() },
+            backLinks = linkedBubbleDao.getRawBackLinksByBubbleId(id).map { it.toData() },
+            linkedBubble = linkedBubbleDao.getRawLinkedBubbleByBubbleId(id)?.toData()
         )
 
         return result
@@ -112,7 +125,7 @@ class BubbleLocalDataSourceImpl @Inject constructor(
         addBubbleLabel(bubble)
         addLinkedBubble(bubble)
 
-        return getBubble(bubble.id)
+        return getActiveBubble(bubble.id)
     }
 
     override suspend fun markAsSynced(bubble: BubbleEntity) {
@@ -129,7 +142,7 @@ class BubbleLocalDataSourceImpl @Inject constructor(
         // bubble이 갖고있는 backLinks와 linkedBubble 정보 먼저 업데이트
         for(backLink in bubble.backLinks) {
             try {
-                val savedBubble = getBubble(backLink.id)
+                val savedBubble = getActiveBubble(backLink.id)
                 if (savedBubble.same(backLink) && savedBubble.updatedAt > backLink.updatedAt) continue
                 updateBubble(backLink, true)
             } catch (_: IllegalArgumentException) {
@@ -141,7 +154,7 @@ class BubbleLocalDataSourceImpl @Inject constructor(
         // linkedBubble 정보 업데이트
         try {
             bubble.linkedBubble?.let { linkedBubble ->
-                val savedBubble = getBubble(linkedBubble.id)
+                val savedBubble = getActiveBubble(linkedBubble.id)
                 if (savedBubble.same(linkedBubble)) return@let
                 updateBubble(linkedBubble)
             }
@@ -152,7 +165,7 @@ class BubbleLocalDataSourceImpl @Inject constructor(
 
         // 현재 버블 업데이트
         try {
-            val savedBubble = getBubble(bubble.id)
+            val savedBubble = getActiveBubble(bubble.id)
             if (savedBubble.same(bubble)) return
             updateBubble(bubble)
         } catch (_: IllegalArgumentException) {
@@ -187,7 +200,7 @@ class BubbleLocalDataSourceImpl @Inject constructor(
         }
 
         bubble.backLinks.map { backLink ->
-            bubbleDao.getBubbleById(backLink.id) ?: return@map
+            bubbleDao.getActiveBubbleById(backLink.id) ?: return@map
             val id = linkedBubbleDao.getLinkedBubbleId(bubble.id, backLink.id, true)
             if (id == null) linkedBubbleDao.insert(bubble.id, backLink.id, true)
         }
@@ -197,7 +210,7 @@ class BubbleLocalDataSourceImpl @Inject constructor(
         val bubbles: MutableList<BubbleEntity> = mutableListOf()
 
         localBubbles.map {
-            bubbles += getBubble(it.uuid)
+            bubbles += getActiveBubble(it.uuid)
         }
 
         return bubbles

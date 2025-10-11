@@ -9,7 +9,7 @@ import com.umc.edison.local.room.RoomConstant
 interface LabelDao : BaseSyncDao<LabelLocal> {
     // READ
     @Query("SELECT * FROM ${RoomConstant.Table.LABEL} WHERE is_deleted = 0")
-    suspend fun getAllLabels(): List<LabelLocal>
+    suspend fun getAllActiveLabels(): List<LabelLocal>
 
     @Query(
         "SELECT * FROM ${RoomConstant.Table.LABEL} " +
@@ -17,7 +17,15 @@ interface LabelDao : BaseSyncDao<LabelLocal> {
                     "SELECT label_id FROM ${RoomConstant.Table.BUBBLE_LABEL} WHERE bubble_id = :bubbleId" +
                 ") AND is_deleted = 0"
     )
-    suspend fun getAllLabelsByBubbleId(bubbleId: String): List<LabelLocal>
+    suspend fun getAllActiveLabelsByBubbleId(bubbleId: String): List<LabelLocal>
+
+    @Query(
+        "SELECT * FROM ${RoomConstant.Table.LABEL} " +
+                "Where id IN (" +
+                "SELECT label_id FROM ${RoomConstant.Table.BUBBLE_LABEL} WHERE bubble_id = :bubbleId" +
+                ") AND is_deleted = 0"
+    )
+    suspend fun getAllRawLabelsByBubbleId(bubbleId: String): List<LabelLocal>
 
     @Query("SELECT * FROM ${RoomConstant.Table.LABEL} WHERE id = :labelId")
     suspend fun getLabelById(labelId: String): LabelLocal?

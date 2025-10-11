@@ -10,5 +10,5 @@ class GetBubbleUseCase @Inject constructor(
     private val bubbleRepository: BubbleRepository
 ) {
     operator fun invoke(id: String): Flow<DataResource<Bubble>> =
-        bubbleRepository.getBubble(id)
+        bubbleRepository.getActiveBubble(id)
 }

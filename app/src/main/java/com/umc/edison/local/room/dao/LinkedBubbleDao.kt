@@ -30,7 +30,16 @@ interface LinkedBubbleDao {
                     "WHERE curr_bubble_id = :currId AND is_back = 0" +
                 ") AND is_deleted = 0 AND is_trashed = 0"
     )
-    suspend fun getLinkedBubbleByBubbleId(currId: String): BubbleLocal?
+    suspend fun getActiveLinkedBubbleByBubbleId(currId: String): BubbleLocal?
+
+    @Query(
+        "SELECT * FROM ${RoomConstant.Table.BUBBLE} " +
+                "WHERE id IN (" +
+                    "SELECT link_bubble_id FROM ${RoomConstant.Table.LINKED_BUBBLE} " +
+                    "WHERE curr_bubble_id = :currId AND is_back = 0" +
+                ")"
+    )
+    suspend fun getRawLinkedBubbleByBubbleId(currId: String): BubbleLocal?
 
     @Query(
         "SELECT * FROM ${RoomConstant.Table.BUBBLE} " +
@@ -39,7 +48,16 @@ interface LinkedBubbleDao {
                     "WHERE curr_bubble_id = :currId AND is_back = 1" +
                 ") AND is_deleted = 0 AND is_trashed = 0"
     )
-    suspend fun getBackLinksByBubbleId(currId: String): List<BubbleLocal>
+    suspend fun getActiveBackLinksByBubbleId(currId: String): List<BubbleLocal>
+
+    @Query(
+        "SELECT * FROM ${RoomConstant.Table.BUBBLE} " +
+                "WHERE id IN (" +
+                    "SELECT link_bubble_id FROM ${RoomConstant.Table.LINKED_BUBBLE} " +
+                    "WHERE curr_bubble_id = :currId AND is_back = 1" +
+                ")"
+    )
+    suspend fun getRawBackLinksByBubbleId(currId: String): List<BubbleLocal>
 
     @Query("SELECT id FROM ${RoomConstant.Table.LINKED_BUBBLE} WHERE curr_bubble_id = :currId AND link_bubble_id = :linkedId AND is_back = :isBack")
     suspend fun getLinkedBubbleId(currId: String, linkedId: String, isBack: Boolean): Int?

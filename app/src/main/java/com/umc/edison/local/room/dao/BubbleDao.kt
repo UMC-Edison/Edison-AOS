@@ -9,16 +9,19 @@ import com.umc.edison.local.room.RoomConstant
 interface BubbleDao : BaseSyncDao<BubbleLocal> {
     // READ
     @Query("SELECT * FROM ${RoomConstant.Table.BUBBLE} WHERE is_deleted = 0 AND is_trashed = 0")
-    suspend fun getAllBubbles(): List<BubbleLocal>
+    suspend fun getAllActiveBubbles(): List<BubbleLocal>
 
-    @Query("SELECT * FROM ${RoomConstant.Table.BUBBLE} WHERE is_deleted = 0 AND is_trashed = 0 AND created_at >= :sevenDaysAgo")
-    suspend fun getAllRecentBubbles(sevenDaysAgo: Long): List<BubbleLocal>
+    @Query("SELECT * FROM ${RoomConstant.Table.BUBBLE} WHERE is_deleted = 0 AND is_trashed = 0 AND created_at >= :dayBefore")
+    suspend fun getAllRecentBubbles(dayBefore: Long): List<BubbleLocal>
 
     @Query("SELECT * FROM ${RoomConstant.Table.BUBBLE} WHERE is_trashed = 1 AND is_deleted = 0")
     suspend fun getAllTrashedBubbles(): List<BubbleLocal>
 
+    @Query("SELECT * FROM ${RoomConstant.Table.BUBBLE} WHERE id = :bubbleId AND is_deleted = 0 AND is_trashed = 0")
+    suspend fun getActiveBubbleById(bubbleId: String): BubbleLocal?
+
     @Query("SELECT * FROM ${RoomConstant.Table.BUBBLE} WHERE id = :bubbleId")
-    suspend fun getBubbleById(bubbleId: String): BubbleLocal?
+    suspend fun getRawBubbleById(bubbleId: String): BubbleLocal?
 
     @Query("SELECT * FROM ${RoomConstant.Table.BUBBLE} WHERE id IN (SELECT bubble_id FROM ${RoomConstant.Table.BUBBLE_LABEL} WHERE label_id = :labelId) AND is_deleted = 0 AND is_trashed = 0")
     suspend fun getBubblesByLabelId(labelId: String): List<BubbleLocal>

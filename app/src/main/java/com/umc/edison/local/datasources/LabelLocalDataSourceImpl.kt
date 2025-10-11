@@ -21,11 +21,11 @@ class LabelLocalDataSourceImpl @Inject constructor(
     }
 
     // READ
-    override suspend fun getAllLabels(): List<LabelEntity> {
-        labelDao.getAllLabels().forEach {
+    override suspend fun getAllActiveLabels(): List<LabelEntity> {
+        labelDao.getAllActiveLabels().forEach {
             Log.i("LabelLocalDataSourceImpl", "Label: ${it.uuid}, ${it.name}, ${it.color}")
         }
-        return labelDao.getAllLabels().map { it.toData() }
+        return labelDao.getAllActiveLabels().map { it.toData() }
     }
 
     override suspend fun getLabel(id: String): LabelEntity {

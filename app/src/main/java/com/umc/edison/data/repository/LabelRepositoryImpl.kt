@@ -28,9 +28,9 @@ class LabelRepositoryImpl @Inject constructor(
         )
 
     // READ
-    override fun getAllLabels(): Flow<DataResource<List<Label>>> =
+    override fun getAllActiveLabels(): Flow<DataResource<List<Label>>> =
         resourceFactory.local(
-            dataAction = { labelLocalDataSource.getAllLabels() }
+            dataAction = { labelLocalDataSource.getAllActiveLabels() }
         )
 
     override fun getLabel(id: String): Flow<DataResource<Label>> =
