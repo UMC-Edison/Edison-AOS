@@ -20,6 +20,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import java.io.File
+import java.io.FileOutputStream
 import javax.inject.Inject
 
 private sealed class InsertionTarget {
@@ -448,10 +450,34 @@ class BubbleInputViewModel @Inject constructor(
         _uiState.update { it.copy(bubble = updatedBubble) }
     }
 
+    private fun saveImageToInternalStorage(context: Context, uri: Uri): Uri {
+        val inputStream = context.contentResolver.openInputStream(uri)
+
+        val fileName = "image_${System.currentTimeMillis()}.jpg"
+        val file = File(context.filesDir, fileName)
+
+        val outputStream = FileOutputStream(file)
+        inputStream?.copyTo(outputStream)
+        inputStream?.close()
+        outputStream.close()
+
+        return Uri.fromFile(file)
+    }
 
     fun selectMainImage(uri: String?) {
-        val updatedBubble = bubbleDataManager.toggleMainImage(_uiState.value.bubble, uri)
-        _uiState.update { it.copy(bubble = updatedBubble) }
+        if (_uiState.value.bubble.mainImage == uri) {
+            _uiState.update {
+                it.copy(
+                    bubble = it.bubble.copy(mainImage = null)
+                )
+            }
+        } else {
+            _uiState.update {
+                it.copy(
+                    bubble = it.bubble.copy(mainImage = uri)
+                )
+            }
+        }
     }
 
     fun updateToastMessage(message: String) {
@@ -489,7 +515,6 @@ class BubbleInputViewModel @Inject constructor(
             showToast(MAX_TOTAL_IMAGES_LIMIT_MESSAGE)
             return false
         }
-
         return true
     }
 
