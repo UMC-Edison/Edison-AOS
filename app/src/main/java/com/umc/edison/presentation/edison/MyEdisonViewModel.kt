@@ -20,7 +20,6 @@ import javax.inject.Inject
 class MyEdisonViewModel @Inject constructor(
     toastManager: ToastManager,
     private val getAllRecentBubblesUseCase: GetAllRecentBubblesUseCase,
-    private val searchBubblesUseCase: SearchBubblesUseCase,
     getHasSeenOnboardingUseCase: GetHasSeenOnboardingUseCase,
     private val setHasSeenOnboardingUseCase: SetHasSeenOnboardingUseCase,
 ) : BaseViewModel(toastManager) {
@@ -50,22 +49,6 @@ class MyEdisonViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(bubbles = bubbles.toPresentation())
                 }
-            },
-        )
-    }
-
-    fun fetchSearchBubbles(query: String) {
-        collectDataResource(
-            flow = searchBubblesUseCase(query),
-            onSuccess = { bubbles ->
-                _uiState.update { it.copy(searchResults = bubbles.toPresentation()) }
-
-                if (bubbles.isEmpty()) {
-                    showToast("검색 결과를 찾을 수 없습니다.")
-                }
-            },
-            onLoading = {
-                _uiState.update { it.copy(query = query) }
             },
         )
     }

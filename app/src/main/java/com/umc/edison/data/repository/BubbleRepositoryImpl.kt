@@ -4,10 +4,12 @@ import com.umc.edison.data.bound.FlowBoundResourceFactory
 import com.umc.edison.data.datasources.BubbleLocalDataSource
 import com.umc.edison.data.datasources.BubbleRemoteDataSource
 import com.umc.edison.data.model.bubble.ClusteredBubbleEntity
+import com.umc.edison.data.model.bubble.KeywordBubbleEntity
 import com.umc.edison.data.model.bubble.toData
 import com.umc.edison.domain.DataResource
 import com.umc.edison.domain.model.bubble.Bubble
 import com.umc.edison.domain.model.bubble.ClusteredBubble
+import com.umc.edison.domain.model.bubble.KeywordBubble
 import com.umc.edison.domain.repository.BubbleRepository
 import kotlinx.coroutines.flow.Flow
 import java.util.Date
@@ -65,6 +67,24 @@ class BubbleRepositoryImpl @Inject constructor(
             }
         )
 
+    override fun getKeywordBubbles(keyword: String): Flow<DataResource<List<KeywordBubble>>> =
+        resourceFactory.remote(
+            dataAction = {
+                val remoteResponse = bubbleRemoteDataSource.getKeywordBubbles(keyword)
+
+                remoteResponse.map { responseItem ->
+                    val bubble = bubbleLocalDataSource.getBubble(responseItem.id)
+                    KeywordBubbleEntity(
+                        bubble = bubble,
+                        similarity = responseItem.similarity
+                    )
+                }
+            }
+        )
+
+
+
+
     override fun getAllRecentBubbles(dayBefore: Int): Flow<DataResource<List<Bubble>>> =
         resourceFactory.local(
             dataAction = { bubbleLocalDataSource.getAllRecentBubbles(dayBefore) }
@@ -94,6 +114,8 @@ class BubbleRepositoryImpl @Inject constructor(
         resourceFactory.local(
             dataAction = { bubbleLocalDataSource.getSearchBubbleResults(query) }
         )
+
+
 
     // UPDATE
     override fun recoverBubbles(bubbles: List<Bubble>): Flow<DataResource<Unit>> =

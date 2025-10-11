@@ -2,7 +2,7 @@ package com.umc.edison.presentation.artletter
 
 import com.umc.edison.domain.usecase.artletter.GetAllArtLetterCategoriesUseCase
 import com.umc.edison.domain.usecase.artletter.GetAllRecommendArtLetterKeyWordsUseCase
-import com.umc.edison.domain.usecase.artletter.GetAllRandomArtLettersUseCase
+import com.umc.edison.domain.usecase.artletter.GetSearchMoreArtLettersUseCase
 import com.umc.edison.domain.usecase.recentSearch.GetAllRecentSearchesUseCase
 import com.umc.edison.domain.usecase.artletter.SearchArtLettersUseCase
 import com.umc.edison.domain.usecase.recentSearch.DeleteRecentSearchUseCase
@@ -21,7 +21,7 @@ import javax.inject.Inject
 class ArtLetterSearchViewModel @Inject constructor(
     toastManager: ToastManager,
     private val searchArtLettersUseCase: SearchArtLettersUseCase,
-    private val getAllRandomArtLettersUseCase: GetAllRandomArtLettersUseCase,
+    private val getSearchMoreArtLettersUseCase: GetSearchMoreArtLettersUseCase,
     private val scrapArtLetterUseCase: ScrapArtLetterUseCase,
     private val getAllRecommendArtLetterKeyWordsUseCase: GetAllRecommendArtLetterKeyWordsUseCase,
     private val deleteRecentSearchUseCase: DeleteRecentSearchUseCase,
@@ -111,7 +111,7 @@ class ArtLetterSearchViewModel @Inject constructor(
 
     private fun fetchRecommendedArtLetters() {
         collectDataResource(
-            flow = getAllRandomArtLettersUseCase(),
+            flow = getSearchMoreArtLettersUseCase(),
             onSuccess = { artLetters ->
                 _uiState.update { it.copy(recommendedArtLetters = artLetters.toPreviewPresentation()) }
             },

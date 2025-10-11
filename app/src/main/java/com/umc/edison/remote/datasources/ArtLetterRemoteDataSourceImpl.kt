@@ -5,7 +5,6 @@ import com.umc.edison.data.model.artLetter.ArtLetterEntity
 import com.umc.edison.data.model.artLetter.ArtLetterKeyWordEntity
 import com.umc.edison.data.model.artLetter.ArtLetterPreviewEntity
 import com.umc.edison.remote.api.ArtLetterApiService
-import com.umc.edison.remote.model.artletter.GetEditorPickRequest
 import com.umc.edison.remote.model.artletter.toData
 import javax.inject.Inject
 
@@ -24,45 +23,19 @@ class ArtLetterRemoteDataSourceImpl @Inject constructor(
     }
 
     override suspend fun getAllEditorPickArtLetters(): List<ArtLetterPreviewEntity> {
-        val request = GetEditorPickRequest(listOf(1, 3, 4)) // TODO: 백엔드 API 수정 필요
-        return artLetterApiService.getEditorPick(request).data.map { it.toData() }
+        return artLetterApiService.getEditorPick().data.map { it.toData() }
     }
 
-    // TODO: 백엔드 API 수정 필요
-    override suspend fun getAllRandomArtLetters(): List<ArtLetterPreviewEntity> {
-        val artLetters = artLetterApiService.getAllArtLetters().data.shuffled()
-        val picked = mutableListOf<ArtLetterPreviewEntity>()
+    override suspend fun getSearchMoreArtLetters(): List<ArtLetterPreviewEntity> {
+        return artLetterApiService.getSearchMoreArtLetters().data.map { it.toData() }
+    }
 
-        if (artLetters.size > 3) {
-            picked.add(artLetters[0].toData())
-            picked.add(artLetters[1].toData())
-            picked.add(artLetters[2].toData())
-        } else {
-            picked.addAll(artLetters.map { it.toData() })
-        }
-
-        val result = mutableListOf<ArtLetterPreviewEntity>()
-
-        for (i in 0 until picked.size) {
-            val detail = getArtLetter(picked[i].artLetterId)
-            result.add(
-                ArtLetterPreviewEntity(
-                    artLetterId = picked[i].artLetterId,
-                    category = picked[i].category,
-                    title = picked[i].title,
-                    thumbnail = picked[i].thumbnail,
-                    scraped = picked[i].scraped,
-                    tags = detail.tags
-                )
-            )
-        }
-
-        return result
+    override suspend fun getMoreArtLetters(id: Int): List<ArtLetterPreviewEntity> {
+        return artLetterApiService.getMoreArtLetters(id).data.map { it.toData() }
     }
 
     override suspend fun getAllRecommendArtLetterKeyWords(): List<ArtLetterKeyWordEntity> {
-        val artLetterIds = listOf(5, 6, 7) // TODO: 백엔드 API 수정 필요
-        val response = artLetterApiService.getRecommendedKeywords(artLetterIds).data
+        val response = artLetterApiService.getRecommendedKeywords().data
         return response.map { it.toData() }
     }
 

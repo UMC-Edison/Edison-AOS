@@ -23,8 +23,11 @@ class ArtLetterRepositoryImpl @Inject constructor(
     override fun getAllEditorPickArtLetters(): Flow<DataResource<List<ArtLetter>>> =
         resourceFactory.remote { artLetterRemoteDataSource.getAllEditorPickArtLetters() }
 
-    override fun getAllRandomArtLetters(): Flow<DataResource<List<ArtLetter>>> =
-        resourceFactory.remote { artLetterRemoteDataSource.getAllRandomArtLetters() }
+    override fun getSearchMoreArtLetters(): Flow<DataResource<List<ArtLetter>>> =
+        resourceFactory.remote { artLetterRemoteDataSource.getSearchMoreArtLetters() }
+
+    override fun getMoreArtLetters(id: Int): Flow<DataResource<List<ArtLetter>>> =
+        resourceFactory.remote { artLetterRemoteDataSource.getMoreArtLetters(id) }
 
     override fun getAllRecommendArtLetterKeyWords(): Flow<DataResource<List<ArtLetterKeyWord>>> =
         resourceFactory.remote { artLetterRemoteDataSource.getAllRecommendArtLetterKeyWords() }
@@ -32,8 +35,8 @@ class ArtLetterRepositoryImpl @Inject constructor(
     override fun getAllScrappedArtLetters(): Flow<DataResource<List<ArtLetter>>> =
         resourceFactory.remote { artLetterRemoteDataSource.getAllScrappedArtLetters() }
 
-    override fun getArtLetter(letterId: Int): Flow<DataResource<ArtLetter>> =
-        resourceFactory.remote { artLetterRemoteDataSource.getArtLetter(letterId) }
+    override fun getArtLetter(id: Int): Flow<DataResource<ArtLetter>> =
+        resourceFactory.remote { artLetterRemoteDataSource.getArtLetter(id) }
 
     override fun getScrappedArtLettersByCategory(category: String): Flow<DataResource<List<ArtLetter>>> =
         resourceFactory.remote { artLetterRemoteDataSource.getScrappedArtLettersByCategory(category) }

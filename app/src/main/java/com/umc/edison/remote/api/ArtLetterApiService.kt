@@ -8,16 +8,16 @@ import com.umc.edison.remote.model.artletter.GetAllArtLettersResponse
 import com.umc.edison.remote.model.artletter.GetArtLetterCategoryResponse
 import com.umc.edison.remote.model.artletter.GetArtLetterDetailResponse
 import com.umc.edison.remote.model.artletter.GetArtLetterKeywordResponse
-import com.umc.edison.remote.model.artletter.GetEditorPickRequest
 import com.umc.edison.remote.model.artletter.GetSortedArtLettersResponse
 import com.umc.edison.remote.model.artletter.PostArtLetterLikeResponse
 import com.umc.edison.remote.model.artletter.PostArtLetterScrapResponse
 import com.umc.edison.remote.model.artletter.GetEditorPickResponse
+import com.umc.edison.remote.model.artletter.GetMoreArtLettersResponse
 import com.umc.edison.remote.model.artletter.GetRecentSearchesResponse
 import com.umc.edison.remote.model.artletter.GetSearchArtLettersResponse
+import com.umc.edison.remote.model.artletter.GetSearchMoreArtLettersResponse
 import com.umc.edison.remote.model.mypage.GetMyScrapArtLettersResponse
 import com.umc.edison.remote.model.mypage.GetScrapArtLettersByCategoryResponse
-import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -31,14 +31,20 @@ interface ArtLetterApiService {
     @GET("/artletters")
     suspend fun getSortedArtLetters(@Query("sortType") sortBy: String): ResponseWithListData<GetSortedArtLettersResponse>
 
-    @POST("/artletters/editor-pick")
-    suspend fun getEditorPick(@Body ids: GetEditorPickRequest): ResponseWithListData<GetEditorPickResponse>
+    @GET("/artletters/editor-pick")
+    suspend fun getEditorPick(): ResponseWithListData<GetEditorPickResponse>
+
+    @GET("/artletters/search-more")
+    suspend fun getSearchMoreArtLetters(): ResponseWithListData<GetSearchMoreArtLettersResponse>
+
+    @GET("/artletters/more/{currentId}")
+    suspend fun getMoreArtLetters(@Path("currentId") currentId: Int): ResponseWithListData<GetMoreArtLettersResponse>
 
     @GET("/artletters/{letterId}")
     suspend fun getArtLetterDetail(@Path("letterId") letterId: Int): ResponseWithData<GetArtLetterDetailResponse>
 
     @GET("/artletters/recommend-bar/keyword")
-    suspend fun getRecommendedKeywords(@Query("artletterIds") artletterIds: List<Int>): ResponseWithListData<GetArtLetterKeywordResponse>
+    suspend fun getRecommendedKeywords(): ResponseWithListData<GetArtLetterKeywordResponse>
 
     @GET("/artletters/recommend-bar/category")
     suspend fun getRecommendedCategories(): ResponseWithData<GetArtLetterCategoryResponse>

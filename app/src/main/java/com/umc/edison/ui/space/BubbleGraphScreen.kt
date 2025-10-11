@@ -6,13 +6,32 @@ import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Shader
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -23,6 +42,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -30,41 +51,47 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.umc.edison.R
 import com.umc.edison.presentation.model.BubbleModel
+import com.umc.edison.presentation.model.KeywordBubbleModel
+import com.umc.edison.presentation.model.getDisplayTitle
 import com.umc.edison.presentation.space.BubbleGraphViewModel
+import com.umc.edison.presentation.space.KeywordViewModel
 import com.umc.edison.ui.components.BubblePreview
+import com.umc.edison.ui.components.BubbleType
 import com.umc.edison.ui.components.calculateBubblePreviewSize
 import com.umc.edison.ui.components.extractPlainText
+import com.umc.edison.ui.theme.Gray100
 import com.umc.edison.ui.theme.Gray300
+import com.umc.edison.ui.theme.Gray400
 import com.umc.edison.ui.theme.Gray500
 import com.umc.edison.ui.theme.Gray800
+import com.umc.edison.ui.theme.Gray900
+import kotlinx.coroutines.launch
 import kotlin.math.cos
+import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.math.sin
-
-@Composable
-fun SpaceTabScreen(
-    showBubble: (BubbleModel) -> Unit,
-) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        BubbleGraphScreen(showBubble)
-    }
-}
+import kotlin.random.Random
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun BubbleGraphScreen(
+    onShowKeywordMap :()->Unit,
     showBubble: (BubbleModel) -> Unit,
     viewModel: BubbleGraphViewModel = hiltViewModel(),
 ) {
@@ -82,9 +109,11 @@ fun BubbleGraphScreen(
         modifier = Modifier
             .size(screenWidth, screenHeight)
             .pointerInput(Unit) {
-                detectTransformGestures { _, pan, zoom, _ ->
-                    scale = (scale * zoom).coerceIn(0.5f, 3f)
-                    offset += pan
+                detectTransformGestures { centroid, pan, zoom, _ ->
+                    val oldScale = scale
+                    val newScale = (scale * zoom).coerceIn(0.2f, 3f)
+                    offset = (offset - centroid) * (newScale / oldScale) + centroid + pan
+                    scale = newScale
                 }
             }
     ) {
@@ -134,8 +163,9 @@ fun BubbleGraphScreen(
 
                 // 연결선 그리기
                 uiState.edges.forEach { edge ->
-                    val start = uiState.bubbles.find { it.bubble.id == edge.startBubbleId }?.position
-                        ?: Offset.Zero
+                    val start =
+                        uiState.bubbles.find { it.bubble.id == edge.startBubbleId }?.position
+                            ?: Offset.Zero
                     val end = uiState.bubbles.find { it.bubble.id == edge.endBubbleId }?.position
                         ?: Offset.Zero
                     drawLine(color = Gray500, start = start, end = end, strokeWidth = 1.dp.toPx())
@@ -163,7 +193,7 @@ fun BubbleGraphScreen(
                         )
                     }
                     drawContext.canvas.nativeCanvas.drawText(
-                        extractPlainText(positionedBubble.bubble).first.take(10).ifEmpty { "내용 없음" },
+                        positionedBubble.bubble.getDisplayTitle(),
                         positionedBubble.position.x,
                         positionedBubble.position.y + radius.dp.toPx() + 10.dp.toPx(),
                         Paint().apply {
@@ -204,7 +234,12 @@ fun BubbleGraphScreen(
                     if (startBubble != null && endBubble != null) {
                         val start = startBubble.position * scale + offset
                         val end = endBubble.position * scale + offset
-                        drawLine(color = Gray500, start = start, end = end, strokeWidth = 1.dp.toPx())
+                        drawLine(
+                            color = Gray500,
+                            start = start,
+                            end = end,
+                            strokeWidth = 1.dp.toPx()
+                        )
                     }
                 }
             }
@@ -231,8 +266,30 @@ fun BubbleGraphScreen(
                     )
                 }
             }
+
         }
+
+
+        FloatingActionButton(
+            onClick = onShowKeywordMap,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+                .size(64.dp),
+            shape = CircleShape,
+            containerColor = Gray100
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_orbit_dark),
+                contentDescription = "키워드로 매핑",
+                tint = Color.Unspecified
+            )
+        }
+
     }
+
+
+
 }
 
 private fun DrawScope.drawGradientBlurCircle(
@@ -249,6 +306,7 @@ private fun DrawScope.drawGradientBlurCircle(
                 0 -> {
                     color = Gray300.copy(alpha = alphaRatio).toArgb()
                 }
+
                 1 -> {
                     // 단일 색상
                     color = colors.first().copy(alpha = alphaRatio).toArgb()
@@ -301,3 +359,4 @@ private fun DrawScope.drawOverlappingBlurCircles(
         )
     }
 }
+

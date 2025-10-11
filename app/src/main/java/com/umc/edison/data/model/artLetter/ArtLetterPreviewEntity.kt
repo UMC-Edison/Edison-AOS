@@ -5,7 +5,7 @@ import com.umc.edison.domain.model.artLetter.ArtLetter
 
 data class ArtLetterPreviewEntity(
     val artLetterId: Int,
-    val category: String,
+    val category: String? = null,
     val title: String,
     val thumbnail: String,
     val scraped: Boolean,
@@ -13,7 +13,7 @@ data class ArtLetterPreviewEntity(
 ) : DataMapper<ArtLetter> {
     override fun toDomain(): ArtLetter = ArtLetter.DEFAULT.copy(
         artLetterId = artLetterId,
-        category = category,
+        category = category ?: "",
         title = title,
         thumbnail = thumbnail,
         scraped = scraped,

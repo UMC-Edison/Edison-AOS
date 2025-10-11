@@ -17,6 +17,7 @@ class BubbleSpaceViewModel @Inject constructor(
     toastManager: ToastManager,
     private val getLogInStateUseCase: GetLogInStateUseCase,
     private val searchBubblesUseCase: SearchBubblesUseCase,
+
 ) : BaseViewModel(toastManager) {
     private val _uiState = MutableStateFlow(BubbleSpaceState.DEFAULT)
     val uiState = _uiState.asStateFlow()
@@ -34,9 +35,6 @@ class BubbleSpaceViewModel @Inject constructor(
         _uiState.update { it.copy(mode = mode) }
     }
 
-    fun updateSelectedTabIndex(index: Int) {
-        _uiState.update { it.copy(selectedTabIndex = index) }
-    }
 
     fun selectBubble(bubble: BubbleModel?) {
         _uiState.update { it.copy(selectedBubble = bubble) }
@@ -68,4 +66,15 @@ class BubbleSpaceViewModel @Inject constructor(
             _uiState.update { it.copy(searchResults = emptyList()) }
         }
     }
+
+    fun switchToKeywordMap() {
+        _uiState.update { it.copy(mode = BubbleSpaceMode.KEYWORD) }
+    }
+
+    fun switchToGraph() {
+        _uiState.update { it.copy(mode = BubbleSpaceMode.GRAPH) }
+    }
+
+
+
 }

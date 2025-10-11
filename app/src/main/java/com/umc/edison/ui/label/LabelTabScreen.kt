@@ -4,18 +4,23 @@ import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -36,6 +41,8 @@ import com.umc.edison.ui.components.LabelModalContent
 import com.umc.edison.ui.navigation.NavRoute
 import com.umc.edison.ui.onboarding.LabelListOnboardingScreen
 import com.umc.edison.ui.theme.Aqua100
+import com.umc.edison.ui.theme.Gray600
+import com.umc.edison.ui.theme.Gray800
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,6 +57,7 @@ fun LabelTabScreen(
     val draggedIndex = remember { mutableIntStateOf(-1) }
 
     LaunchedEffect(Unit) {
+        viewModel.fetchTotalBubbleCount()
         viewModel.fetchLabels()
     }
 
@@ -102,8 +110,18 @@ fun LabelTabScreen(
                 .fillMaxWidth()
                 .wrapContentHeight()
                 .verticalScroll(rememberScrollState())
-                .padding(start = 24.dp, top = 42.dp)
+                .padding(start = 24.dp, top = 100.dp),
+
+            horizontalAlignment = Alignment.Start
         ) {
+            Text(
+                modifier = Modifier.padding(start = 4.dp),
+                text = "버블 ${uiState.bubbleCount}개",
+                style = MaterialTheme.typography.labelMedium,
+                color = Gray600
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+
             AddLabelButton(
                 onClick = {
                     viewModel.updateEditMode(LabelEditMode.ADD)

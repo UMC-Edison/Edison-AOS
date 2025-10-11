@@ -2,6 +2,7 @@ package com.umc.edison.presentation.label
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntSize
+import com.umc.edison.domain.usecase.bubble.GetAllBubblesUseCase
 import com.umc.edison.domain.usecase.bubble.GetBubblesByLabelUseCase
 import com.umc.edison.domain.usecase.bubble.GetBubblesWithoutLabelUseCase
 import com.umc.edison.domain.usecase.label.AddLabelUseCase
@@ -30,6 +31,7 @@ class LabelListViewModel @Inject constructor(
     private val addLabelUseCase: AddLabelUseCase,
     private val updateLabelUseCase: UpdateLabelUseCase,
     private val deleteLabelUseCase: DeleteLabelUseCase,
+    private val getAllBubblesUseCase: GetAllBubblesUseCase,
     private val getHasSeenOnboardingUseCase: GetHasSeenOnboardingUseCase,
     private val setHasSeenOnboardingUseCase: SetHasSeenOnboardingUseCase
 ) : BaseViewModel(toastManager) {
@@ -60,12 +62,22 @@ class LabelListViewModel @Inject constructor(
                 _uiState.update { it.copy(labels = labels.distinctBy { it.id }.toPresentation()) }
             },
             onComplete = {
-                fetchBubblesByLabel()
+                fetchBubblesWithoutLabel()
+            }
+        )
+    }
+
+    fun fetchTotalBubbleCount() {
+        collectDataResource(
+            flow = getAllBubblesUseCase(),
+            onSuccess = { bubbles ->
+                _uiState.update { it.copy(bubbleCount = bubbles.size) }
             }
         )
     }
 
     private fun fetchBubblesByLabel() {
+
         _uiState.value.labels.forEach {
             if (it.id.isNullOrEmpty()) return@forEach
 
@@ -91,7 +103,6 @@ class LabelListViewModel @Inject constructor(
                             labels = it.labels.sortedByDescending { it.bubbleCnt }
                         )
                     }
-                    fetchBubblesWithoutLabel()
                 }
             )
         }
@@ -110,6 +121,7 @@ class LabelListViewModel @Inject constructor(
                         labels = labels.distinctBy { it.id }
                     )
                 }
+                fetchBubblesByLabel()
             }
         )
     }
