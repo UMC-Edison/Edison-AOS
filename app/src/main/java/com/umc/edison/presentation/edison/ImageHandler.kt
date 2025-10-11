@@ -129,24 +129,6 @@ class ImageHandler @Inject constructor() {
     }
 
     /**
-     * 이미지 선택 토글
-     */
-    fun toggleImageSelection(
-        imageUri: Uri, 
-        selectedImages: List<Uri>, 
-        currentImageCount: Int
-    ): List<Uri> {
-        return if (selectedImages.contains(imageUri)) {
-            selectedImages - imageUri
-        } else if (selectedImages.size < MAX_IMAGES - currentImageCount) {
-            selectedImages + imageUri
-        } else {
-            onShowToast("이미지는 최대 ${MAX_IMAGES}개까지 첨부할 수 있습니다.")
-            selectedImages
-        }
-    }
-
-    /**
      * 현재 콘텐츠 블록에서 이미지 개수 계산
      */
     fun getCurrentImageCount(contentBlocks: List<ContentBlockModel>): Int {
