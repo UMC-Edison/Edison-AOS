@@ -114,12 +114,12 @@ class BubbleInputViewModel @Inject constructor(
     /** 빈 단락에서 Backspace → 삭제 후 이전 텍스트로 포커스 */
     fun onBackspaceEmptyAt(textIndex: Int) {
         val result = contentBlockManager.onBackspaceEmptyAt(textIndex)
-        result?.let { 
-            _uiState.update { 
+        result?.let {
+            _uiState.update {
                 it.copy(
                     focusedTextIndex = result.focusIndex,
                     cursorPosition = result.cursorPosition
-                ) 
+                )
             }
             setInsertionTarget(InsertionTarget.AfterText(result.focusIndex))
             lastFocusedTextIndex = result.focusIndex
@@ -129,12 +129,12 @@ class BubbleInputViewModel @Inject constructor(
     /** 커서가 맨 앞에서 Backspace → 이전 단락과 병합 */
     fun onBackspaceAtStart(textIndex: Int) {
         val result = contentBlockManager.onBackspaceAtStart(textIndex)
-        result?.let { 
-            _uiState.update { 
+        result?.let {
+            _uiState.update {
                 it.copy(
                     focusedTextIndex = result.focusIndex,
                     cursorPosition = result.cursorPosition
-                ) 
+                )
             }
             setInsertionTarget(InsertionTarget.AfterText(result.focusIndex))
             lastFocusedTextIndex = result.focusIndex
@@ -318,12 +318,12 @@ class BubbleInputViewModel @Inject constructor(
 
     fun onGapTapped(leftIndex: Int?, rightIndex: Int?) {
         val result = contentBlockManager.onGapTapped(leftIndex, rightIndex)
-        result?.let { 
-            _uiState.update { 
+        result?.let {
+            _uiState.update {
                 it.copy(
                     focusedTextIndex = result.focusIndex,
                     cursorPosition = result.cursorPosition
-                ) 
+                )
             }
             setInsertionTarget(InsertionTarget.AfterText(result.focusIndex))
             lastFocusedTextIndex = result.focusIndex

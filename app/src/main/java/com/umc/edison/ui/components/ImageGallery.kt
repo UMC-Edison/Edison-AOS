@@ -273,4 +273,3 @@ fun loadGalleryFolders(context: Context): List<String> {
 
     return listOf("Recent") + folders.toList()
 }
-
