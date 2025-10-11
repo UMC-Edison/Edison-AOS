@@ -200,7 +200,7 @@ class BubbleRepositoryImpl @Inject constructor(
                 }
             },
             onRemoteSuccess = { deletedBubbles ->
-               val localBubbles = deletedBubbles.map { remote -> bubbleLocalDataSource.getActiveBubble(remote.id) }
+               val localBubbles = deletedBubbles.map { remote -> bubbleLocalDataSource.getRawBubble(remote.id) }
                 bubbleLocalDataSource.deleteBubbles(localBubbles)
             }
         )
