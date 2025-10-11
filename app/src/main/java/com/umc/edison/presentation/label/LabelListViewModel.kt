@@ -32,7 +32,7 @@ class LabelListViewModel @Inject constructor(
     private val updateLabelUseCase: UpdateLabelUseCase,
     private val deleteLabelUseCase: DeleteLabelUseCase,
     private val getAllBubblesUseCase: GetAllBubblesUseCase,
-    private val getHasSeenOnboardingUseCase: GetHasSeenOnboardingUseCase,
+    getHasSeenOnboardingUseCase: GetHasSeenOnboardingUseCase,
     private val setHasSeenOnboardingUseCase: SetHasSeenOnboardingUseCase
 ) : BaseViewModel(toastManager) {
     private val _uiState = MutableStateFlow(LabelListState.DEFAULT)
@@ -59,7 +59,9 @@ class LabelListViewModel @Inject constructor(
         collectDataResource(
             flow = getAllLabelsUseCase(),
             onSuccess = { labels ->
-                _uiState.update { it.copy(labels = labels.distinctBy { it.id }.toPresentation()) }
+                _uiState.update { uiState ->
+                    uiState.copy(labels = labels.toPresentation())
+                }
             },
             onComplete = {
                 fetchBubblesWithoutLabel()
@@ -77,7 +79,6 @@ class LabelListViewModel @Inject constructor(
     }
 
     private fun fetchBubblesByLabel() {
-
         _uiState.value.labels.forEach {
             if (it.id.isNullOrEmpty()) return@forEach
 
@@ -97,10 +98,12 @@ class LabelListViewModel @Inject constructor(
                     }
                 },
                 onComplete = {
-                    // 버블 개수 많은 순으로 정렬
-                    _uiState.update {
-                        it.copy(
-                            labels = it.labels.sortedByDescending { it.bubbleCnt }
+                    _uiState.update { uiState ->
+                        uiState.copy(
+                            labels = uiState.labels.sortedWith(
+                                compareByDescending<LabelModel> { label -> label.id == null }
+                                    .thenByDescending { label -> label.bubbleCnt }
+                            )
                         )
                     }
                 }
@@ -112,12 +115,12 @@ class LabelListViewModel @Inject constructor(
         collectDataResource(
             flow = getBubblesWithoutLabelUseCase(),
             onSuccess = { bubbles ->
-                _uiState.update {
+                _uiState.update { uiState ->
                     val labels = listOf(
                         LabelModel.DEFAULT.copy(bubbleCnt = bubbles.size)
-                    ) + it.labels
+                    ) + uiState.labels
 
-                    it.copy(
+                    uiState.copy(
                         labels = labels.distinctBy { it.id }
                     )
                 }
