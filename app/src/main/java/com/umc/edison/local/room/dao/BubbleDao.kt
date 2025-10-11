@@ -44,6 +44,9 @@ interface BubbleDao : BaseSyncDao<BubbleLocal> {
     @Query("SELECT * FROM ${RoomConstant.Table.BUBBLE} WHERE id NOT IN (SELECT bubble_id FROM ${RoomConstant.Table.BUBBLE_LABEL}) AND is_deleted = 0 AND is_trashed = 0")
     suspend fun getBubblesWithoutLabel(): List<BubbleLocal>
 
+    @Query("SELECT * FROM ${RoomConstant.Table.BUBBLE} WHERE id IN (:bubbleIds) AND is_deleted = 0 AND is_trashed = 0")
+    suspend fun getActiveBubblesByIds(bubbleIds: List<String>): List<BubbleLocal>
+
     // DELETE
     @Query("DELETE FROM ${RoomConstant.Table.BUBBLE} WHERE id IN (:ids)")
     suspend fun deleteBubbles(ids: List<String>)

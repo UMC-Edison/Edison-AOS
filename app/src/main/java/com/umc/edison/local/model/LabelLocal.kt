@@ -42,3 +42,25 @@ fun LabelEntity.toLocal(): LabelLocal = LabelLocal(
     updatedAt = updatedAt,
     deletedAt = deletedAt,
 )
+
+data class LabelWithBubbleId(
+    @ColumnInfo(name = "id") val uuid: String,
+    val name: String,
+    val color: Int,
+    @ColumnInfo(name = "is_synced") val isSynced: Boolean,
+    @ColumnInfo(name = "is_deleted") val isDeleted: Boolean,
+    @ColumnInfo(name = "created_at") val createdAt: Date,
+    @ColumnInfo(name = "updated_at") val updatedAt: Date,
+    @ColumnInfo(name = "deleted_at") val deletedAt: Date?,
+    @ColumnInfo(name = "bubble_id") val bubbleId: String
+) {
+    fun toLabelEntity(): LabelEntity = LabelEntity(
+        id = uuid,
+        name = name,
+        color = Color(color),
+        isDeleted = isDeleted,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        deletedAt = deletedAt,
+    )
+}

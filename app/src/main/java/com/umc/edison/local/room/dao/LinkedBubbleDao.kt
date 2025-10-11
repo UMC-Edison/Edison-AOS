@@ -3,6 +3,7 @@ package com.umc.edison.local.room.dao
 import androidx.room.Dao
 import androidx.room.Query
 import com.umc.edison.local.model.BubbleLocal
+import com.umc.edison.local.model.BubbleWithParentId
 import com.umc.edison.local.room.RoomConstant
 import java.util.Date
 
@@ -61,6 +62,23 @@ interface LinkedBubbleDao {
 
     @Query("SELECT id FROM ${RoomConstant.Table.LINKED_BUBBLE} WHERE curr_bubble_id = :currId AND link_bubble_id = :linkedId AND is_back = :isBack")
     suspend fun getLinkedBubbleId(currId: String, linkedId: String, isBack: Boolean): Int?
+
+    // 배치 조회 메서드들
+    @Query(
+        "SELECT b.*, lb.curr_bubble_id FROM ${RoomConstant.Table.BUBBLE} b " +
+                "INNER JOIN ${RoomConstant.Table.LINKED_BUBBLE} lb ON b.id = lb.link_bubble_id " +
+                "WHERE lb.curr_bubble_id IN (:bubbleIds) AND lb.is_back = 0 " +
+                "AND b.is_deleted = 0 AND b.is_trashed = 0"
+    )
+    suspend fun getActiveLinkedBubblesByBubbleIds(bubbleIds: List<String>): List<BubbleWithParentId>
+
+    @Query(
+        "SELECT b.*, lb.curr_bubble_id FROM ${RoomConstant.Table.BUBBLE} b " +
+                "INNER JOIN ${RoomConstant.Table.LINKED_BUBBLE} lb ON b.id = lb.link_bubble_id " +
+                "WHERE lb.curr_bubble_id IN (:bubbleIds) AND lb.is_back = 1 " +
+                "AND b.is_deleted = 0 AND b.is_trashed = 0"
+    )
+    suspend fun getActiveBackLinksByBubbleIds(bubbleIds: List<String>): List<BubbleWithParentId>
 
     // DELETE
     @Query("DELETE FROM ${RoomConstant.Table.LINKED_BUBBLE} WHERE curr_bubble_id = :currId AND is_back = :isBack")
