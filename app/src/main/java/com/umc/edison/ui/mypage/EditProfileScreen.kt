@@ -69,13 +69,12 @@ fun EditProfileScreen(
 
         if (showGallery) {
             ImageGallery(
-                onConfirmed = { selectedImages ->
-                    selectedImages.firstOrNull()?.let { uri ->
-                        viewModel.updateUserProfileImage(uri)
-                    }
-                    true
+                selectedImages = uiState.selectedImages,
+                onImageSelected = { uri ->
+                    viewModel.updateUserProfileImage(uri)
                 },
                 onClose = { showGallery = false },
+                multiSelectMode = false,
             )
         }
     }
@@ -181,9 +180,7 @@ private fun EditProfileNameInput(
                 disabledContainerColor = Color.Transparent,
                 cursorColor = Gray800,
                 focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                focusedTextColor = Gray800,
-                unfocusedTextColor = Gray800
+                unfocusedIndicatorColor = Color.Transparent
             )
         )
     }
