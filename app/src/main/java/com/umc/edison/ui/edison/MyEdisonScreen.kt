@@ -26,11 +26,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionOnScreen
-import androidx.navigation.NavHostController
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
@@ -79,7 +79,7 @@ fun MyEdisonScreen(
     }
 
     LaunchedEffect(uiState.bubbles) {
-        if (uiState.bubbles.isNotEmpty()) {
+        if (pagerState.currentPage == 0 && uiState.bubbles.isNotEmpty()) {
             pagerState.scrollToPage(1)
         }
     }
@@ -145,7 +145,6 @@ fun MyEdisonScreen(
                         )
                     }
                 }
-
 
 
                 2 -> {
