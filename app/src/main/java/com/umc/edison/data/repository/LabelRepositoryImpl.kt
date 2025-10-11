@@ -20,7 +20,10 @@ class LabelRepositoryImpl @Inject constructor(
     override fun addLabel(label: Label): Flow<DataResource<Unit>> =
         resourceFactory.sync(
             localAction = { labelLocalDataSource.addLabel(label.toData()) },
-            remoteSync = { labelRemoteDataSource.addLabel(label.toData()) },
+            remoteSync = {
+                val newLabel = labelLocalDataSource.getLabel(label.id)
+                labelRemoteDataSource.syncLabel(newLabel)
+            },
             onRemoteSuccess = { remoteData -> labelLocalDataSource.markAsSynced(remoteData) }
         )
 
@@ -39,7 +42,10 @@ class LabelRepositoryImpl @Inject constructor(
     override fun updateLabel(label: Label): Flow<DataResource<Unit>> =
         resourceFactory.sync(
             localAction = { labelLocalDataSource.updateLabel(label.toData()) },
-            remoteSync = { labelRemoteDataSource.updateLabel(label.toData()) },
+            remoteSync = {
+                val updatedLabel = labelLocalDataSource.getLabel(label.id)
+                labelRemoteDataSource.syncLabel(updatedLabel)
+            },
             onRemoteSuccess = { remoteData -> labelLocalDataSource.markAsSynced(remoteData) }
         )
 
@@ -57,7 +63,10 @@ class LabelRepositoryImpl @Inject constructor(
                     labelLocalDataSource.updateLabel(label)
                 }
             },
-            remoteSync = { labelRemoteDataSource.deleteLabel(id) },
-            onRemoteSuccess = { remoteData -> labelLocalDataSource.deleteLabel(remoteData) }
+            remoteSync = {
+                val label = labelLocalDataSource.getLabel(id)
+                labelRemoteDataSource.syncLabel(label)
+            },
+            onRemoteSuccess = { remoteData -> labelLocalDataSource.deleteLabel(remoteData.id) }
         )
 }
