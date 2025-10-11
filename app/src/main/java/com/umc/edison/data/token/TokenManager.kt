@@ -3,21 +3,20 @@ package com.umc.edison.data.token
 import javax.inject.Inject
 import javax.inject.Singleton
 import com.umc.edison.data.datasources.PrefDataSource
+import com.umc.edison.data.di.ApplicationScope
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Singleton
 class TokenManager @Inject constructor(
-    private val prefDataSource: PrefDataSource
+    private val prefDataSource: PrefDataSource,
+    @ApplicationScope private val applicationScope: CoroutineScope
 ) : AccessTokenProvider {
 
     init {
-        CoroutineScope(Dispatchers.IO).apply {
-            launch {
-                loadAccessToken()
-                loadRefreshToken()
-            }
+        applicationScope.launch {
+            loadAccessToken()
+            loadRefreshToken()
         }
     }
 
