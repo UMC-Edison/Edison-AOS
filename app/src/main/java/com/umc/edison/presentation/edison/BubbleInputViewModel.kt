@@ -113,12 +113,12 @@ class BubbleInputViewModel @Inject constructor(
     /** 빈 단락에서 Backspace → 삭제 후 이전 텍스트로 포커스 */
     fun onBackspaceEmptyAt(textIndex: Int) {
         val result = contentBlockManager.onBackspaceEmptyAt(textIndex)
-        result?.let { 
-            _uiState.update { 
+        result?.let {
+            _uiState.update {
                 it.copy(
                     focusedTextIndex = result.focusIndex,
                     cursorPosition = result.cursorPosition
-                ) 
+                )
             }
             setInsertionTarget(InsertionTarget.AfterText(result.focusIndex))
             lastFocusedTextIndex = result.focusIndex
@@ -128,12 +128,12 @@ class BubbleInputViewModel @Inject constructor(
     /** 커서가 맨 앞에서 Backspace → 이전 단락과 병합 */
     fun onBackspaceAtStart(textIndex: Int) {
         val result = contentBlockManager.onBackspaceAtStart(textIndex)
-        result?.let { 
-            _uiState.update { 
+        result?.let {
+            _uiState.update {
                 it.copy(
                     focusedTextIndex = result.focusIndex,
                     cursorPosition = result.cursorPosition
-                ) 
+                )
             }
             setInsertionTarget(InsertionTarget.AfterText(result.focusIndex))
             lastFocusedTextIndex = result.focusIndex
@@ -276,6 +276,35 @@ class BubbleInputViewModel @Inject constructor(
         }
     }
 
+    fun addImagesToContentBlocks(uris: List<Uri>) {
+        val newImageBlocks = mutableListOf<ContentBlockModel>()
+
+        uris.forEachIndexed { idx, imagePath ->
+            val newImageBlock = ContentBlockModel(
+                type = ContentType.IMAGE,
+                content = imagePath.toString(),
+                position = _uiState.value.bubble.contentBlocks.size + idx
+            )
+
+            newImageBlocks.add(newImageBlock)
+        }
+
+        val newTextBlock = ContentBlockModel(
+            type = ContentType.TEXT,
+            content = "",
+            position = _uiState.value.bubble.contentBlocks.size + uris.size
+        )
+
+        _uiState.update {
+            it.copy(
+                bubble = it.bubble.copy(
+                    contentBlocks = it.bubble.contentBlocks + newImageBlocks + newTextBlock
+                ),
+                isGalleryOpen = false,
+                selectedIcon = IconType.NONE
+            )
+        }
+    }
 
     fun closeGallery() {
         _uiState.update { it.copy(isGalleryOpen = false, selectedIcon = IconType.NONE) }
@@ -319,12 +348,12 @@ class BubbleInputViewModel @Inject constructor(
 
     fun onGapTapped(leftIndex: Int?, rightIndex: Int?) {
         val result = contentBlockManager.onGapTapped(leftIndex, rightIndex)
-        result?.let { 
-            _uiState.update { 
+        result?.let {
+            _uiState.update {
                 it.copy(
                     focusedTextIndex = result.focusIndex,
                     cursorPosition = result.cursorPosition
-                ) 
+                )
             }
             setInsertionTarget(InsertionTarget.AfterText(result.focusIndex))
             lastFocusedTextIndex = result.focusIndex
@@ -382,17 +411,12 @@ class BubbleInputViewModel @Inject constructor(
     }
 
     fun openGallery() {
-        if (_currentInsertionTarget is InsertionTarget.None) {
-            lastFocusedTextIndex?.let { setInsertionTarget(InsertionTarget.AfterText(it)) }
-                ?: run {
-                    val ordered = chain.toLinear()
-                    val lastTextIdx = ordered.indexOfLast { it.block.type == ContentType.TEXT }
-                    setInsertionTarget(InsertionTarget.AfterText(if (lastTextIdx >= 0) lastTextIdx else 0))
-                }
+        if (!checkCanAddImage()) {
+            return
         }
+
         _uiState.update { it.copy(isGalleryOpen = true) }
     }
-
 
     fun saveCameraImage(uri: Uri) {
         _uiState.update { it.copy(cameraImagePath = uri) }
@@ -404,13 +428,18 @@ class BubbleInputViewModel @Inject constructor(
             it.copy(
                 cameraImagePath = null,
                 isCameraOpen = false,
-                selectedImages = it.selectedImages + savedUri
             )
         }
-        addContentBlocks()
+        addImagesToContentBlocks(
+            uris = listOf(savedUri)
+        )
     }
 
     fun updateCameraOpen(isOpen: Boolean) {
+        if (isOpen && !checkCanAddImage()) {
+            return
+        }
+
         _uiState.update { it.copy(isCameraOpen = isOpen) }
     }
 
@@ -438,6 +467,37 @@ class BubbleInputViewModel @Inject constructor(
             currentImageCount
         )
         _uiState.update { it.copy(selectedImages = updatedImages) }
+    }
+
+    fun updateSelectedImages(uris: List<Uri>): List<Uri> {
+        val currImageSize =
+            _uiState.value.bubble.contentBlocks.filter { it.type == ContentType.IMAGE }.size
+
+        val availableSize = MAX_TOTAL_IMAGES - currImageSize
+        return if (uris.size > availableSize) {
+            showToast(MAX_TOTAL_IMAGES_LIMIT_MESSAGE)
+            uris.take(availableSize)
+        } else {
+            uris
+        }
+    }
+
+    private fun checkCanAddImage(): Boolean {
+        val currImageSize =
+            _uiState.value.bubble.contentBlocks.filter { it.type == ContentType.IMAGE }.size
+        if (currImageSize >= MAX_TOTAL_IMAGES) {
+            showToast(MAX_TOTAL_IMAGES_LIMIT_MESSAGE)
+            return false
+        }
+
+        return true
+    }
+
+    companion object {
+        const val MAX_IMAGE_SELECTION = 10
+        const val MAX_TOTAL_IMAGES = 30
+
+        const val MAX_TOTAL_IMAGES_LIMIT_MESSAGE = "이미지는 최대 ${MAX_TOTAL_IMAGES}개까지 첨부할 수 있습니다."
     }
 }
 
