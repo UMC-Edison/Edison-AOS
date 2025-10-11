@@ -405,13 +405,18 @@ class BubbleInputViewModel @Inject constructor(
             it.copy(
                 cameraImagePath = null,
                 isCameraOpen = false,
-                selectedImages = it.selectedImages + savedUri
             )
         }
-        addContentBlocks()
+        addImagesToContentBlocks(
+            uris = listOf(savedUri)
+        )
     }
 
     fun updateCameraOpen(isOpen: Boolean) {
+        if (isOpen && !checkCanAddImage()) {
+            return
+        }
+
         _uiState.update { it.copy(isCameraOpen = isOpen) }
     }
 

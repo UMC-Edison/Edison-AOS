@@ -234,7 +234,7 @@ fun BubbleInputContent(
                 viewModel.addContentBlocks()
             },
             onClose = { viewModel.closeGallery() },
-            multiSelectMode = true,
+            maxImageSize = BubbleInputViewModel.MAX_IMAGE_SELECTION,
         )
     }
 
