@@ -10,6 +10,7 @@ import com.umc.edison.local.room.dao.BubbleDao
 import com.umc.edison.local.room.dao.BubbleLabelDao
 import com.umc.edison.local.room.dao.LabelDao
 import com.umc.edison.local.room.dao.LinkedBubbleDao
+import java.util.Date
 import javax.inject.Inject
 
 class BubbleLocalDataSourceImpl @Inject constructor(
@@ -125,6 +126,20 @@ class BubbleLocalDataSourceImpl @Inject constructor(
         addLinkedBubble(bubble)
 
         return getActiveBubble(bubble.id)
+    }
+
+    override suspend fun trashBubbles(bubbles: List<BubbleEntity>) {
+        val trashedBubbles = bubbles.map { bubble ->
+            bubble.copy(
+                isTrashed = true,
+                isDeleted = false,
+                deletedAt = Date()
+            )
+        }
+
+        trashedBubbles.map {
+            update(it.toLocal(), tableName)
+        }
     }
 
     override suspend fun markAsSynced(bubble: BubbleEntity) {

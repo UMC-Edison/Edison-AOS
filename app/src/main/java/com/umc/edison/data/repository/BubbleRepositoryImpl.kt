@@ -220,14 +220,7 @@ class BubbleRepositoryImpl @Inject constructor(
     override fun trashBubbles(bubbles: List<Bubble>): Flow<DataResource<Unit>> =
         resourceFactory.sync(
             localAction = {
-                val updatedBubbles = bubbles.toData().map { bubble ->
-                    bubble.copy(
-                        isTrashed = true,
-                        isDeleted = false,
-                        deletedAt = Date(),
-                    )
-                }
-                bubbleLocalDataSource.updateBubbles(updatedBubbles)
+                bubbleLocalDataSource.trashBubbles(bubbles.toData())
             },
             remoteSync = {
                 bubbles.map { bubble ->
@@ -237,7 +230,7 @@ class BubbleRepositoryImpl @Inject constructor(
             },
             onRemoteSuccess = { remoteData ->
                 remoteData.map { remote ->
-                    val bubble = bubbleLocalDataSource.getActiveBubble(remote.id)
+                    val bubble = bubbleLocalDataSource.getRawBubble(remote.id)
                     bubbleLocalDataSource.markAsSynced(bubble)
                 }
             }
