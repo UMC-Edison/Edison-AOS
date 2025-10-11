@@ -31,6 +31,7 @@ class LabelListViewModel @Inject constructor(
     private val addLabelUseCase: AddLabelUseCase,
     private val updateLabelUseCase: UpdateLabelUseCase,
     private val deleteLabelUseCase: DeleteLabelUseCase,
+    private val getAllBubblesUseCase: GetAllBubblesUseCase,
     private val getHasSeenOnboardingUseCase: GetHasSeenOnboardingUseCase,
     private val setHasSeenOnboardingUseCase: SetHasSeenOnboardingUseCase
 ) : BaseViewModel(toastManager) {
@@ -62,6 +63,15 @@ class LabelListViewModel @Inject constructor(
             },
             onComplete = {
                 fetchBubblesWithoutLabel()
+            }
+        )
+    }
+
+    fun fetchTotalBubbleCount() {
+        collectDataResource(
+            flow = getAllBubblesUseCase(),
+            onSuccess = { bubbles ->
+                _uiState.update { it.copy(bubbleCount = bubbles.size) }
             }
         )
     }
