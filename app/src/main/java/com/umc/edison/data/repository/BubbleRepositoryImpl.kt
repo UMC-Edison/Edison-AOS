@@ -195,7 +195,7 @@ class BubbleRepositoryImpl @Inject constructor(
             },
             remoteSync = {
                 bubbles.map { bubble ->
-                    val deletedBubble = bubbleLocalDataSource.getActiveBubble(bubble.id)
+                    val deletedBubble = bubbleLocalDataSource.getRawBubble(bubble.id)
                     bubbleRemoteDataSource.syncBubble(deletedBubble)
                 }
             },
