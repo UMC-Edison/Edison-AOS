@@ -3,10 +3,11 @@ package com.umc.edison.presentation.edison
 import android.content.Context
 import android.net.Uri
 import android.text.Html
-import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import com.umc.edison.presentation.ToastManager
 import com.umc.edison.presentation.base.BaseViewModel
+import com.umc.edison.presentation.edison.ImageHandler.Companion.MAX_TOTAL_IMAGES
+import com.umc.edison.presentation.edison.ImageHandler.Companion.MAX_TOTAL_IMAGES_LIMIT_MESSAGE
 import com.umc.edison.presentation.label.LabelEditMode
 import com.umc.edison.presentation.model.BubbleModel
 import com.umc.edison.presentation.model.ContentBlockModel
@@ -101,6 +102,7 @@ class BubbleInputViewModel @Inject constructor(
             onComplete = { ensureInitialText(); publish() }
         )
     }
+
 
     /** 빈 단락에서 Backspace → 삭제 후 이전 텍스트로 포커스 */
     fun onBackspaceEmptyAt(textIndex: Int) {
@@ -244,8 +246,8 @@ class BubbleInputViewModel @Inject constructor(
         }
     }
 
-    fun addImagesToContentBlocks(uris: List<Uri>) {
-        if (uris.isEmpty()) {
+    fun addImagesToContentBlocks(imageUris: List<Uri>) {
+        if (imageUris.isEmpty()) {
             closeGallery()
             return
         }
@@ -253,22 +255,22 @@ class BubbleInputViewModel @Inject constructor(
         when (val target = _currentInsertionTarget) {
             is InsertionTarget.AfterText -> imageHandler.addImagesAfterText(
                 target.textIndex,
-                uris
+                imageUris
             )
 
             is InsertionTarget.Between -> imageHandler.addImagesAtGap(
                 target.leftIndex,
                 target.rightIndex,
-                uris
+                imageUris
             )
 
-            else -> imageHandler.addImagesDefault(uris)
+            else -> imageHandler.addImagesDefault(imageUris)
         }
 
         _uiState.update {
             it.copy(
                 isGalleryOpen = false,
-                selectedIcon = IconType.NONE
+                selectedIcon = IconType.NONE,
             )
         }
     }
@@ -292,28 +294,19 @@ class BubbleInputViewModel @Inject constructor(
         checkCanSave()
     }
 
-    // BackLink 삭제
     fun deleteBackLink(targetBackLink: BubbleModel) {
         val updatedBubble = bubbleDataManager.removeBackLink(_uiState.value.bubble, targetBackLink)
         _uiState.update { it.copy(bubble = updatedBubble) }
     }
 
-    // Linked Bubble 삭제
     fun deleteLinkBubble(targetLinkBubble: BubbleModel) {
         val updatedBubble =
             bubbleDataManager.removeLinkBubble(_uiState.value.bubble, targetLinkBubble)
         _uiState.update { it.copy(bubble = updatedBubble) }
     }
 
-    // Content Block 삭제
     fun deleteContentBlock(contentBlock: ContentBlockModel) {
-        val success = contentBlockManager.deleteContentBlock(contentBlock)
-        if (success) {
-            val uri = contentBlock.content.toUri()
-            if (_uiState.value.selectedImages.contains(uri)) {
-                _uiState.update { it.copy(selectedImages = it.selectedImages - uri) }
-            }
-        }
+        contentBlockManager.deleteContentBlock(contentBlock)
     }
 
     fun onGapTapped(leftIndex: Int?, rightIndex: Int?) {
@@ -342,7 +335,7 @@ class BubbleInputViewModel @Inject constructor(
         trimBlankBlock()
         checkCanSave()
 
-        if (!_uiState.value.canSave) {
+        if (!uiState.value.canSave) {
             showToast("내용을 입력해주세요.")
             addTextBlockToFront()
             return
@@ -361,9 +354,7 @@ class BubbleInputViewModel @Inject constructor(
                 if (isLinked) {
                     _uiState.update {
                         BubbleInputState.DEFAULT.copy(
-                            bubble = BubbleModel.DEFAULT.copy(
-                                linkedBubble = savedBubble.toPresentation()
-                            ),
+                            bubble = BubbleModel.DEFAULT.copy(linkedBubble = savedBubble.toPresentation()),
                             bubbles = it.bubbles + savedBubble.toPresentation()
                         )
                     }
@@ -386,6 +377,12 @@ class BubbleInputViewModel @Inject constructor(
     }
 
     fun openGallery() {
+        val currImageSize = imageHandler.getCurrentImageCount(_uiState.value.bubble.contentBlocks)
+        if (!imageHandler.checkCanAddImage(currImageSize)) {
+            showToast(MAX_TOTAL_IMAGES_LIMIT_MESSAGE)
+            return
+        }
+
         if (_currentInsertionTarget is InsertionTarget.None) {
             lastFocusedTextIndex?.let { setInsertionTarget(InsertionTarget.AfterText(it)) }
                 ?: run {
@@ -399,9 +396,7 @@ class BubbleInputViewModel @Inject constructor(
     }
 
     fun saveCameraImage(uri: Uri) {
-        _uiState.update {
-            it.copy(cameraImagePath = uri)
-        }
+        _uiState.update { it.copy(cameraImagePath = uri) }
     }
 
     fun saveCameraImage(context: Context) {
@@ -413,12 +408,14 @@ class BubbleInputViewModel @Inject constructor(
             )
         }
         addImagesToContentBlocks(
-            uris = listOf(savedUri)
+            imageUris = listOf(savedUri)
         )
     }
 
     fun updateCameraOpen(isOpen: Boolean) {
-        if (isOpen && !checkCanAddImage()) {
+        val currImageSize = imageHandler.getCurrentImageCount(_uiState.value.bubble.contentBlocks)
+        if (isOpen && !imageHandler.checkCanAddImage(currImageSize)) {
+            showToast(MAX_TOTAL_IMAGES_LIMIT_MESSAGE)
             return
         }
 
@@ -436,14 +433,13 @@ class BubbleInputViewModel @Inject constructor(
     }
 
     fun updateToastMessage(message: String) {
-        if (!message.isEmpty()) {
+        if (message.isNotEmpty()) {
             showToast(message)
         }
     }
 
     fun updateSelectedImages(uris: List<Uri>): List<Uri> {
-        val currImageSize =
-            _uiState.value.bubble.contentBlocks.filter { it.type == ContentType.IMAGE }.size
+        val currImageSize = imageHandler.getCurrentImageCount(_uiState.value.bubble.contentBlocks)
 
         val availableSize = MAX_TOTAL_IMAGES - currImageSize
         return if (uris.size > availableSize) {
@@ -453,25 +449,6 @@ class BubbleInputViewModel @Inject constructor(
             uris
         }
     }
-
-    private fun checkCanAddImage(): Boolean {
-        val currImageSize =
-            _uiState.value.bubble.contentBlocks.filter { it.type == ContentType.IMAGE }.size
-        if (currImageSize >= MAX_TOTAL_IMAGES) {
-            showToast(MAX_TOTAL_IMAGES_LIMIT_MESSAGE)
-            return false
-        }
-
-        return true
-    }
-
-    companion object {
-        const val MAX_IMAGE_SELECTION = 10
-        const val MAX_TOTAL_IMAGES = 30
-
-        const val MAX_TOTAL_IMAGES_LIMIT_MESSAGE = "이미지는 최대 ${MAX_TOTAL_IMAGES}개까지 첨부할 수 있습니다."
-    }
-
 }
 
 fun String.parseHtml(): String {
