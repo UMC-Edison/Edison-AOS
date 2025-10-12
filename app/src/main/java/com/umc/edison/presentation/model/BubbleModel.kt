@@ -82,8 +82,8 @@ fun BubbleModel.getDisplayTitle(): String {
             .firstOrNull { it.content.parseHtml().isNotBlank() }
             ?.content
             ?.parseHtml()
-            ?.take(20)
-        ?: "제목 없음"
+            ?.take(10)
+        ?: "내용 없음"
 
     return selectedTitle.split("\n").first()
 }
