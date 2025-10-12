@@ -22,9 +22,11 @@ class ImageHandler @Inject constructor() {
         this.onPublish = onPublish
         this.onShowToast = onShowToast
     }
-    
+
     companion object {
-        private const val MAX_IMAGES = 10
+        const val MAX_IMAGE_SELECTION = 10
+        const val MAX_TOTAL_IMAGES = 30
+        const val MAX_TOTAL_IMAGES_LIMIT_MESSAGE = "이미지는 최대 ${MAX_TOTAL_IMAGES}개까지 첨부할 수 있습니다."
         private const val IMAGE_FILE_PREFIX = "image_"
         private const val IMAGE_FILE_EXTENSION = ".jpg"
         private const val DEFAULT_TEXT_CONTENT = ""
@@ -50,27 +52,27 @@ class ImageHandler @Inject constructor() {
         val ordered = chain.toLinear()
         val textNode = ordered.getOrNull(textIndex) ?: return
         require(textNode.block.type == ContentType.TEXT)
-        
+
         val textContent = textNode.block.content.parseHtml().trim()
         val isEmpty = textContent.isEmpty()
-        
+
         if (isEmpty) {
             if (uris.isNotEmpty()) {
                 // 기존 빈 텍스트 블록을 첫 번째 이미지로 교체
                 val prevId = textNode.prev
                 val nextId = textNode.next
-                
+
                 // 기존 텍스트 블록 제거
                 chain.remove(textNode.id)
-                
+
                 // 첫 번째 이미지 블록 추가
                 var anchorId = chain.insertBetween(prevId, nextId, ContentBlockModel(ContentType.IMAGE, uris.first().toString(), 0))
-                
+
                 // 나머지 이미지들 추가
                 uris.drop(1).forEach { uri ->
                     anchorId = chain.insertAfter(anchorId, ContentBlockModel(ContentType.IMAGE, uri.toString(), 0))
                 }
-                
+
                 // 마지막에 새 텍스트 블록 추가
                 chain.insertAfter(anchorId, ContentBlockModel(ContentType.TEXT, DEFAULT_TEXT_CONTENT, 0))
             }
@@ -82,7 +84,7 @@ class ImageHandler @Inject constructor() {
             // 마지막에 새 텍스트 블록 추가
             chain.insertAfter(anchorId, ContentBlockModel(ContentType.TEXT, DEFAULT_TEXT_CONTENT, 0))
         }
-        
+
         ensureTrailingText()
         onPublish()
     }
@@ -119,7 +121,7 @@ class ImageHandler @Inject constructor() {
     fun saveCameraImage(context: Context, uri: Uri): Uri {
         val fileName = "${IMAGE_FILE_PREFIX}${System.currentTimeMillis()}$IMAGE_FILE_EXTENSION"
         val file = File(context.filesDir, fileName)
-        
+
         context.contentResolver.openInputStream(uri)?.use { inputStream ->
             FileOutputStream(file).use { outputStream ->
                 inputStream.copyTo(outputStream)
@@ -129,28 +131,14 @@ class ImageHandler @Inject constructor() {
     }
 
     /**
-     * 이미지 선택 토글
-     */
-    fun toggleImageSelection(
-        imageUri: Uri, 
-        selectedImages: List<Uri>, 
-        currentImageCount: Int
-    ): List<Uri> {
-        return if (selectedImages.contains(imageUri)) {
-            selectedImages - imageUri
-        } else if (selectedImages.size < MAX_IMAGES - currentImageCount) {
-            selectedImages + imageUri
-        } else {
-            onShowToast("이미지는 최대 ${MAX_IMAGES}개까지 첨부할 수 있습니다.")
-            selectedImages
-        }
-    }
-
-    /**
      * 현재 콘텐츠 블록에서 이미지 개수 계산
      */
     fun getCurrentImageCount(contentBlocks: List<ContentBlockModel>): Int {
         return contentBlocks.count { it.type == ContentType.IMAGE }
+    }
+
+    fun checkCanAddImage(currImageSize: Int): Boolean {
+        return currImageSize < MAX_TOTAL_IMAGES
     }
 
     // Private helper methods

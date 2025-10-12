@@ -31,6 +31,7 @@ import androidx.navigation.NavHostController
 import com.umc.edison.R
 import com.umc.edison.presentation.label.LabelEditMode
 import com.umc.edison.presentation.edison.BubbleInputViewModel
+import com.umc.edison.presentation.edison.ImageHandler.Companion.MAX_IMAGE_SELECTION
 import com.umc.edison.presentation.model.LabelModel
 import com.umc.edison.ui.BaseContent
 import com.umc.edison.ui.components.BottomSheet
@@ -231,7 +232,7 @@ fun BubbleInputContent(
                 true
             },
             onClose = { viewModel.closeGallery() },
-            maxImageSize = BubbleInputViewModel.MAX_IMAGE_SELECTION,
+            maxImageSize = MAX_IMAGE_SELECTION,
         )
     }
 

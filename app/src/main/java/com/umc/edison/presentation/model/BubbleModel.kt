@@ -19,7 +19,7 @@ data class BubbleModel(
         return Bubble(
             id = id ?: UUID.randomUUID().toString(),
             title = title,
-            content = contentBlocks.joinToString("") { it.toDomain() }, // ContentBlock 리스트를 String으로 변환
+            content = contentBlocks.joinToString { it.toDomain() },
             mainImage = mainImage,
             labels = labels.map { it.toDomain() },
             backLinks = backLinks.map { it.toDomain() },
