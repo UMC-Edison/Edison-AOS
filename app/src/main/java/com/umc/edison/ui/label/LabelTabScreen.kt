@@ -1,6 +1,5 @@
 package com.umc.edison.ui.label
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
@@ -42,7 +41,6 @@ import com.umc.edison.ui.navigation.NavRoute
 import com.umc.edison.ui.onboarding.LabelListOnboardingScreen
 import com.umc.edison.ui.theme.Aqua100
 import com.umc.edison.ui.theme.Gray600
-import com.umc.edison.ui.theme.Gray800
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -203,7 +201,6 @@ fun LabelList(
                 Modifier
             }
 
-            Log.i("LabelList", "index: $index, draggedIndex: $draggedIndex, label: ${label.name}")
             LabelListItem(
                 labelColor = label.color,
                 labelText = label.name,

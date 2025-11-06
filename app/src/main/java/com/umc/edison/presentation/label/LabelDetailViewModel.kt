@@ -1,6 +1,5 @@
 package com.umc.edison.presentation.label
 
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import com.umc.edison.domain.usecase.bubble.GetBubblesByLabelUseCase
 import com.umc.edison.domain.usecase.bubble.GetBubblesWithoutLabelUseCase
@@ -33,11 +32,7 @@ class LabelDetailViewModel @Inject constructor(
     override val _uiState = MutableStateFlow(LabelDetailState.DEFAULT)
     override val uiState = _uiState.asStateFlow()
 
-    init {
-        val id: String? = savedStateHandle["labelId"]
-        Log.i("LabelDetailViewModel", "labelId: $id")
-        fetchLabelDetail(id)
-    }
+    private val labelId: String? = savedStateHandle["labelId"]
 
     fun fetchLabelDetail(id: String?) {
         _uiState.update { LabelDetailState.DEFAULT }
@@ -50,7 +45,7 @@ class LabelDetailViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             bubbles = shuffledBubbles,
-                            label = it.label.copy(bubbleCnt = shuffledBubbles.size),
+                            label = LabelModel.DEFAULT.copy(bubbleCnt = shuffledBubbles.size),
                         )
                     }
                 }
@@ -122,7 +117,11 @@ class LabelDetailViewModel @Inject constructor(
         )
     }
 
+    fun refreshData() {
+        fetchLabelDetail(labelId)
+    }
+
     override fun refreshDataAfterDeletion() {
-        fetchLabelDetail(_uiState.value.label.id)
+        refreshData()
     }
 }

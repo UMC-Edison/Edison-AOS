@@ -9,7 +9,7 @@ import javax.inject.Inject
 class GetAllRecentBubblesUseCase @Inject constructor(
     private val bubbleRepository: BubbleRepository
 ) {
-    private val dayBefore = 7
+    private val dayBefore = 30
     operator fun invoke(): Flow<DataResource<List<Bubble>>> =
         bubbleRepository.getAllRecentBubbles(dayBefore)
 }

@@ -31,3 +31,9 @@ data class BubbleLabelLocal(
     @ColumnInfo(name = "created_at") override var createdAt: Date = Date(),
     @ColumnInfo(name = "updated_at") override var updatedAt: Date = Date(),
 ) : BaseLocal
+
+// 배치 조회를 위한 데이터 클래스
+data class BubbleLabelRelation(
+    @ColumnInfo(name = "bubble_id") val bubbleId: String,
+    @ColumnInfo(name = "label_id") val labelId: String
+)

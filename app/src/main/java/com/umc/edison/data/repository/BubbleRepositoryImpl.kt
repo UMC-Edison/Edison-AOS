@@ -1,5 +1,6 @@
 package com.umc.edison.data.repository
 
+import android.util.Log
 import com.umc.edison.data.bound.FlowBoundResourceFactory
 import com.umc.edison.data.datasources.BubbleLocalDataSource
 import com.umc.edison.data.datasources.BubbleRemoteDataSource
@@ -24,9 +25,15 @@ class BubbleRepositoryImpl @Inject constructor(
     override fun addBubbles(bubbles: List<Bubble>): Flow<DataResource<Unit>> =
         resourceFactory.sync(
             localAction = { bubbleLocalDataSource.addBubbles(bubbles.toData()) },
-            remoteSync = { bubbleRemoteDataSource.addBubbles(bubbles.toData()) },
+            remoteSync = {
+                bubbles.map { bubble ->
+                    val newBubble = bubbleLocalDataSource.getActiveBubble(bubble.id)
+                    bubbleRemoteDataSource.syncBubble(newBubble)
+                }
+            },
             onRemoteSuccess = { remoteData ->
-                for (bubble in remoteData) {
+                remoteData.map {
+                    val bubble = bubbleLocalDataSource.getActiveBubble(it.id)
                     bubbleLocalDataSource.markAsSynced(bubble)
                 }
             }
@@ -35,14 +42,20 @@ class BubbleRepositoryImpl @Inject constructor(
     override fun addBubble(bubble: Bubble): Flow<DataResource<Bubble>> =
         resourceFactory.sync(
             localAction = { bubbleLocalDataSource.addBubble(bubble.toData()) },
-            remoteSync = { bubbleRemoteDataSource.addBubble(bubble.toData()) },
-            onRemoteSuccess = { remoteData -> bubbleLocalDataSource.markAsSynced(remoteData) }
+            remoteSync = {
+                val newBubble = bubbleLocalDataSource.getActiveBubble(bubble.id)
+                bubbleRemoteDataSource.syncBubble(newBubble)
+            },
+            onRemoteSuccess = { remoteData ->
+                val bubble = bubbleLocalDataSource.getActiveBubble(remoteData.id)
+                bubbleLocalDataSource.markAsSynced(bubble)
+            }
         )
 
     // READ
-    override fun getAllBubbles(): Flow<DataResource<List<Bubble>>> =
+    override fun getAllActiveBubbles(): Flow<DataResource<List<Bubble>>> =
         resourceFactory.local(
-            dataAction = { bubbleLocalDataSource.getAllBubbles() }
+            dataAction = { bubbleLocalDataSource.getAllActiveBubbles() }
         )
 
     override fun getAllClusteredBubbles(): Flow<DataResource<List<ClusteredBubble>>> =
@@ -52,15 +65,20 @@ class BubbleRepositoryImpl @Inject constructor(
 
                 val clusteredBubbles = mutableListOf<ClusteredBubbleEntity>()
                 remoteResponse.map {
-                    val bubble = bubbleLocalDataSource.getBubble(it.id)
-                    clusteredBubbles.add(
-                        ClusteredBubbleEntity(
-                            bubble = bubble,
-                            x = it.x,
-                            y = it.y,
-                            group = it.group
+                    try {
+                        val bubble = bubbleLocalDataSource.getActiveBubble(it.id)
+                        clusteredBubbles.add(
+                            ClusteredBubbleEntity(
+                                bubble = bubble,
+                                x = it.x,
+                                y = it.y,
+                                group = it.group
+                            )
                         )
-                    )
+                    } catch (e: Exception) {
+                        // 로컬에 없는 버블은 무시
+                        Log.d("BubbleRepositoryImpl", "getAllClusteredBubbles: ${e.message}")
+                    }
                 }
 
                 clusteredBubbles
@@ -73,17 +91,20 @@ class BubbleRepositoryImpl @Inject constructor(
                 val remoteResponse = bubbleRemoteDataSource.getKeywordBubbles(keyword)
 
                 remoteResponse.map { responseItem ->
-                    val bubble = bubbleLocalDataSource.getBubble(responseItem.id)
-                    KeywordBubbleEntity(
-                        bubble = bubble,
-                        similarity = responseItem.similarity
-                    )
+                    try {
+                        val bubble = bubbleLocalDataSource.getActiveBubble(responseItem.id)
+                        KeywordBubbleEntity(
+                            bubble = bubble,
+                            similarity = responseItem.similarity
+                        )
+                    } catch (e: Exception) {
+                        // 로컬에 없는 버블은 무시
+                        Log.d("BubbleRepositoryImpl", "getKeywordBubbles: ${e.message}")
+                        null
+                    }
                 }
             }
         )
-
-
-
 
     override fun getAllRecentBubbles(dayBefore: Int): Flow<DataResource<List<Bubble>>> =
         resourceFactory.local(
@@ -95,9 +116,9 @@ class BubbleRepositoryImpl @Inject constructor(
             dataAction = { bubbleLocalDataSource.getAllTrashedBubbles() }
         )
 
-    override fun getBubble(id: String): Flow<DataResource<Bubble>> =
+    override fun getActiveBubble(id: String): Flow<DataResource<Bubble>> =
         resourceFactory.local(
-            dataAction = { bubbleLocalDataSource.getBubble(id) }
+            dataAction = { bubbleLocalDataSource.getActiveBubble(id) }
         )
 
     override fun getBubblesByLabel(labelId: String): Flow<DataResource<List<Bubble>>> =
@@ -115,8 +136,6 @@ class BubbleRepositoryImpl @Inject constructor(
             dataAction = { bubbleLocalDataSource.getSearchBubbleResults(query) }
         )
 
-
-
     // UPDATE
     override fun recoverBubbles(bubbles: List<Bubble>): Flow<DataResource<Unit>> =
         resourceFactory.sync(
@@ -130,9 +149,15 @@ class BubbleRepositoryImpl @Inject constructor(
                 }
                 bubbleLocalDataSource.updateBubbles(updatedBubbles)
             },
-            remoteSync = { bubbleRemoteDataSource.recoverBubbles(bubbles.toData()) },
+            remoteSync = {
+                bubbles.map { bubble ->
+                    val updatedBubble = bubbleLocalDataSource.getActiveBubble(bubble.id)
+                    bubbleRemoteDataSource.syncBubble(updatedBubble)
+                }
+            },
             onRemoteSuccess = { remoteData ->
-                for (bubble in remoteData) {
+                remoteData.map { remote ->
+                    val bubble = bubbleLocalDataSource.getActiveBubble(remote.id)
                     bubbleLocalDataSource.markAsSynced(bubble)
                 }
             }
@@ -141,9 +166,15 @@ class BubbleRepositoryImpl @Inject constructor(
     override fun updateBubbles(bubbles: List<Bubble>): Flow<DataResource<Unit>> =
         resourceFactory.sync(
             localAction = { bubbleLocalDataSource.updateBubbles(bubbles.toData()) },
-            remoteSync = { bubbleRemoteDataSource.updateBubbles(bubbles.toData()) },
+            remoteSync = {
+                bubbles.map { bubble ->
+                    val updatedBubble = bubbleLocalDataSource.getActiveBubble(bubble.id)
+                    bubbleRemoteDataSource.syncBubble(updatedBubble)
+                }
+            },
             onRemoteSuccess = { remoteData ->
-                for (bubble in remoteData) {
+                remoteData.map { remote ->
+                    val bubble = bubbleLocalDataSource.getActiveBubble(remote.id)
                     bubbleLocalDataSource.markAsSynced(bubble)
                 }
             }
@@ -152,8 +183,14 @@ class BubbleRepositoryImpl @Inject constructor(
     override fun updateBubble(bubble: Bubble): Flow<DataResource<Bubble>> =
         resourceFactory.sync(
             localAction = { bubbleLocalDataSource.updateBubble(bubble.toData()) },
-            remoteSync = { bubbleRemoteDataSource.updateBubble(bubble.toData()) },
-            onRemoteSuccess = { remoteData -> bubbleLocalDataSource.markAsSynced(remoteData) }
+            remoteSync = {
+                val updatedBubble = bubbleLocalDataSource.getActiveBubble(bubble.id)
+                bubbleRemoteDataSource.syncBubble(updatedBubble)
+            },
+            onRemoteSuccess = { remoteData ->
+                val bubble = bubbleLocalDataSource.getActiveBubble(remoteData.id)
+                bubbleLocalDataSource.markAsSynced(bubble)
+            }
         )
 
     // DELETE
@@ -168,25 +205,32 @@ class BubbleRepositoryImpl @Inject constructor(
                 }
                 bubbleLocalDataSource.updateBubbles(updatedBubbles)
             },
-            remoteSync = { bubbleRemoteDataSource.deleteBubbles(bubbles.toData()) },
-            onRemoteSuccess = { remoteData -> bubbleLocalDataSource.deleteBubbles(remoteData) }
+            remoteSync = {
+                bubbles.map { bubble ->
+                    val deletedBubble = bubbleLocalDataSource.getRawBubble(bubble.id)
+                    bubbleRemoteDataSource.syncBubble(deletedBubble)
+                }
+            },
+            onRemoteSuccess = { deletedBubbles ->
+               val localBubbles = deletedBubbles.map { remote -> bubbleLocalDataSource.getRawBubble(remote.id) }
+                bubbleLocalDataSource.deleteBubbles(localBubbles)
+            }
         )
 
     override fun trashBubbles(bubbles: List<Bubble>): Flow<DataResource<Unit>> =
         resourceFactory.sync(
             localAction = {
-                val updatedBubbles = bubbles.toData().map { bubble ->
-                    bubble.copy(
-                        isTrashed = true,
-                        isDeleted = false,
-                        deletedAt = Date(),
-                    )
-                }
-                bubbleLocalDataSource.updateBubbles(updatedBubbles)
+                bubbleLocalDataSource.trashBubbles(bubbles.toData())
             },
-            remoteSync = { bubbleRemoteDataSource.trashBubbles(bubbles.toData()) },
+            remoteSync = {
+                bubbles.map { bubble ->
+                    val trashedBubble = bubbleLocalDataSource.getRawBubble(bubble.id)
+                    bubbleRemoteDataSource.syncBubble(trashedBubble)
+                }
+            },
             onRemoteSuccess = { remoteData ->
-                for (bubble in remoteData) {
+                remoteData.map { remote ->
+                    val bubble = bubbleLocalDataSource.getRawBubble(remote.id)
                     bubbleLocalDataSource.markAsSynced(bubble)
                 }
             }

@@ -9,5 +9,5 @@ import javax.inject.Inject
 class GetAllLabelsUseCase @Inject constructor(
     private val labelRepository: LabelRepository
 ) {
-    operator fun invoke(): Flow<DataResource<List<Label>>> = labelRepository.getAllLabels()
+    operator fun invoke(): Flow<DataResource<List<Label>>> = labelRepository.getAllActiveLabels()
 }

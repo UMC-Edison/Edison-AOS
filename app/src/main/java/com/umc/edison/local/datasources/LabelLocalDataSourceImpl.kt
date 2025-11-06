@@ -1,6 +1,5 @@
 package com.umc.edison.local.datasources
 
-import android.util.Log
 import com.umc.edison.data.datasources.LabelLocalDataSource
 import com.umc.edison.data.model.label.LabelEntity
 import com.umc.edison.local.model.LabelLocal
@@ -21,11 +20,8 @@ class LabelLocalDataSourceImpl @Inject constructor(
     }
 
     // READ
-    override suspend fun getAllLabels(): List<LabelEntity> {
-        labelDao.getAllLabels().forEach {
-            Log.i("LabelLocalDataSourceImpl", "Label: ${it.uuid}, ${it.name}, ${it.color}")
-        }
-        return labelDao.getAllLabels().map { it.toData() }
+    override suspend fun getAllActiveLabels(): List<LabelEntity> {
+        return labelDao.getAllActiveLabels().map { it.toData() }
     }
 
     override suspend fun getLabel(id: String): LabelEntity {

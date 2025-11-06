@@ -12,11 +12,11 @@ interface BubbleRepository {
     fun addBubble(bubble: Bubble): Flow<DataResource<Bubble>>
 
     // READ
-    fun getAllBubbles(): Flow<DataResource<List<Bubble>>>
+    fun getAllActiveBubbles(): Flow<DataResource<List<Bubble>>>
     fun getAllClusteredBubbles(): Flow<DataResource<List<ClusteredBubble>>>
     fun getAllRecentBubbles(dayBefore: Int): Flow<DataResource<List<Bubble>>>
     fun getAllTrashedBubbles(): Flow<DataResource<List<Bubble>>>
-    fun getBubble(id: String): Flow<DataResource<Bubble>>
+    fun getActiveBubble(id: String): Flow<DataResource<Bubble>>
     fun getBubblesByLabel(labelId: String): Flow<DataResource<List<Bubble>>>
     fun getBubblesWithoutLabel(): Flow<DataResource<List<Bubble>>>
     fun searchBubbles(query: String): Flow<DataResource<List<Bubble>>>

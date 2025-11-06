@@ -1,12 +1,12 @@
 package com.umc.edison.domain.model.artLetter
 
-data class ArtLetter (
+data class ArtLetter(
     val artLetterId: Int,
     val title: String,
     val content: String,
     val category: String,
     val readTime: Int,
-    val writer: String,
+    val writerSummary: WriterSummary,
     val tags: List<String>,
     val thumbnail: String,
     val likesCnt: Int,
@@ -20,7 +20,7 @@ data class ArtLetter (
             content = "",
             category = "",
             readTime = 0,
-            writer = "",
+            writerSummary = WriterSummary.DEFAULT,
             tags = emptyList(),
             thumbnail = "",
             likesCnt = 0,
