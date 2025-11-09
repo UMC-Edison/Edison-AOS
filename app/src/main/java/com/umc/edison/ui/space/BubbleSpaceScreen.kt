@@ -1,49 +1,34 @@
 package com.umc.edison.ui.space
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.umc.edison.R
+import com.umc.edison.presentation.model.BubbleModel
 import com.umc.edison.presentation.space.BubbleSpaceMode
 import com.umc.edison.presentation.space.BubbleSpaceViewModel
 import com.umc.edison.ui.BaseContent
@@ -54,11 +39,8 @@ import com.umc.edison.ui.components.BubblesLayout
 import com.umc.edison.ui.components.LabelTagList
 import com.umc.edison.ui.components.SearchBar
 import com.umc.edison.ui.components.calculateBubbleSize
-import com.umc.edison.ui.label.LabelTabScreen
 import com.umc.edison.ui.navigation.NavRoute
-import com.umc.edison.ui.theme.Gray300
 import com.umc.edison.ui.theme.Gray800
-import kotlinx.coroutines.launch
 
 @Composable
 fun BubbleSpaceScreen(
@@ -74,30 +56,14 @@ fun BubbleSpaceScreen(
         updateShowBottomNav(true)
     }
 
-    // 탭 & 페이지 관련
-    val pagerState = rememberPagerState(
-        pageCount = { uiState.tabs.size },
-        initialPageOffsetFraction = 0f,
-        initialPage = 0,
-    )
-    val coroutineScope = rememberCoroutineScope()
-    val indicatorOffset by animateDpAsState(
-        targetValue = (192.dp / uiState.tabs.size) * uiState.selectedTabIndex,
-        label = "Indicator Animation"
-    )
 
     BackHandler {
         if (uiState.selectedBubble != null) {
             viewModel.selectBubble(null)
             updateShowBottomNav(true)
         } else if (uiState.mode == BubbleSpaceMode.SEARCH) {
-            viewModel.updateBubbleSpaceMode(BubbleSpaceMode.DEFAULT)
+            viewModel.updateBubbleSpaceMode(BubbleSpaceMode.GRAPH)
             viewModel.updateQuery("")
-        } else if (uiState.selectedTabIndex == 1) {
-            viewModel.updateSelectedTabIndex(0)
-            coroutineScope.launch {
-                pagerState.animateScrollToPage(0)
-            }
         } else {
             navHostController.navigate(NavRoute.MyEdison.route)
         }
@@ -107,45 +73,35 @@ fun BubbleSpaceScreen(
     BaseContent(
         baseState = baseState,
     ) {
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier
-                .fillMaxSize()
-                .zIndex(0f)
-        ) { page ->
-            viewModel.updateSelectedTabIndex(pagerState.currentPage)
-            when (page) {
-                0 -> {
-                    if (uiState.isLoggedIn) {
-                        SpaceTabScreen(showBubble = { bubble ->
-                            viewModel.selectBubble(bubble)
-
-                            val bubbleSize = calculateBubbleSize(bubble)
-
-                            if (bubbleSize == BubbleType.BubbleDoor) {
-                                updateShowBottomNav(false)
-                            }
-                        })
-                    } else {
-                        NeedLoginScreen(
-                            navHostController = navHostController,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(start = 18.dp, top = 66.dp, end = 18.dp),
-                        )
-                    }
-                }
-
-                1 -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(top = 66.dp)
-                    ) {
-                        LabelTabScreen(navHostController)
-                    }
+        if (uiState.isLoggedIn) {
+            val onShowBubble: (BubbleModel) -> Unit = { bubble ->
+                viewModel.selectBubble(bubble)
+                val bubbleSize = calculateBubbleSize(bubble)
+                if (bubbleSize == BubbleType.BubbleDoor) {
+                    updateShowBottomNav(false)
                 }
             }
+
+            if (uiState.mode == BubbleSpaceMode.GRAPH) {
+                BubbleGraphScreen(
+                    showBubble = onShowBubble,
+                    onShowKeywordMap = {
+                        viewModel.switchToKeywordMap()
+                    }
+                )
+            } else if (uiState.mode == BubbleSpaceMode.KEYWORD) {
+                KeywordMapScreen(
+                    showBubble = onShowBubble,
+                    onShowGraph = { viewModel.switchToGraph() }
+                )
+            }
+        } else {
+            NeedLoginScreen(
+                navHostController = navHostController,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 18.dp, top = 66.dp, end = 18.dp),
+            )
         }
 
         Column(
@@ -160,72 +116,21 @@ fun BubbleSpaceScreen(
                     .align(Alignment.CenterHorizontally)
                     .zIndex(1f),
             ) {
-                Icon(
-                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_topbar_search),
-                    contentDescription = "Search",
-                    tint = Gray800,
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clickable {
-                            viewModel.updateBubbleSpaceMode(BubbleSpaceMode.SEARCH)
-                        }
-                )
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                uiState.tabs.forEachIndexed { index, text ->
-                    Box(
+                if (uiState.mode == BubbleSpaceMode.GRAPH) {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id = R.drawable.ic_topbar_search),
+                        contentDescription = "Search",
+                        tint = Gray800,
                         modifier = Modifier
-                            .width(192.dp / uiState.tabs.size)
-                            .clip(RoundedCornerShape(100.dp))
-                            .clickable(
-                                indication = null,
-                                interactionSource = remember { MutableInteractionSource() }
-                            ) {
-                                coroutineScope.launch {
-                                    pagerState.animateScrollToPage(index)
-                                    viewModel.updateSelectedTabIndex(index)
-                                }
+                            .size(32.dp)
+                            .clickable {
+                                viewModel.updateBubbleSpaceMode(BubbleSpaceMode.SEARCH)
                             }
-                            .padding(4.dp)
-                            .wrapContentSize(Alignment.Center)
-                    ) {
-                        Text(
-                            text = text,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Gray800,
-                            textAlign = TextAlign.Center
-                        )
-                    }
+                    )
                 }
-
                 Spacer(modifier = Modifier.weight(1f))
 
                 Spacer(modifier = Modifier.size(32.dp))
-            }
-
-            Box(
-                modifier = Modifier
-                    .height(4.dp)
-                    .width(192.dp)
-                    .align(Alignment.CenterHorizontally)
-                    .clip(RoundedCornerShape(100.dp))
-                    .background(Gray300)
-                    .zIndex(1f)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(width = 192.dp / uiState.tabs.size, height = 4.dp)
-                        .align(Alignment.CenterStart)
-                        .offset {
-                            IntOffset(
-                                x = indicatorOffset.roundToPx(),
-                                y = 0
-                            )
-                        }
-                        .clip(RoundedCornerShape(100.dp))
-                        .background(Gray800)
-                )
             }
         }
 
@@ -257,7 +162,7 @@ fun BubbleSpaceScreen(
                         onSearch = {
                             viewModel.searchBubbles()
                         },
-                        placeholder = "찰나의 영감을 검색해보세요"
+                        placeholder = "찰나의 영감을 검색해보세요",
                     )
                 }
 
@@ -270,6 +175,8 @@ fun BubbleSpaceScreen(
                     searchKeyword = uiState.query
                 )
             }
+
+
         }
 
         if (uiState.selectedBubble != null) {

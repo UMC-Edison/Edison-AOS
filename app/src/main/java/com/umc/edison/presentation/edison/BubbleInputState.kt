@@ -7,7 +7,6 @@ import com.umc.edison.presentation.model.LabelModel
 import com.umc.edison.ui.components.IconType
 import com.umc.edison.ui.components.ListStyle
 import com.umc.edison.ui.components.TextStyle
-import java.util.LinkedList
 
 data class BubbleInputState(
     val bubble: BubbleModel,
@@ -15,7 +14,6 @@ data class BubbleInputState(
     val labelEditMode: LabelEditMode,
     val labels: List<LabelModel>,
     val selectedLabels: List<LabelModel>,
-    val selectedImages: List<Uri>,
     val selectedIcon: IconType,
     val selectedTextStyles: List<TextStyle>,
     val selectedListStyle: ListStyle,
@@ -28,14 +26,11 @@ data class BubbleInputState(
 ) {
     companion object {
         val DEFAULT = BubbleInputState(
-            bubble = BubbleModel.DEFAULT.copy(
-                contentBlocks = LinkedList()
-            ),
+            bubble = BubbleModel.DEFAULT,
             bubbles = emptyList(),
             labelEditMode = LabelEditMode.NONE,
             labels = emptyList(),
             selectedLabels = emptyList(),
-            selectedImages = emptyList(),
             selectedIcon = IconType.NONE,
             selectedTextStyles = emptyList(),
             selectedListStyle = ListStyle.NONE,

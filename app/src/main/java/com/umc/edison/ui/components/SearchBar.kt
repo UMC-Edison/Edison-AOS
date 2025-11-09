@@ -15,6 +15,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -31,7 +32,7 @@ fun SearchBar(
     value: String,
     onValueChange: (String) -> Unit,
     onSearch: () -> Unit,
-    placeholder: String = "",
+    placeholder: String = ""
 ) {
     BasicTextField(
         value = value,
@@ -50,7 +51,7 @@ fun SearchBar(
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight(),
-                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_topbar_search),
@@ -62,7 +63,7 @@ fun SearchBar(
                     modifier = Modifier
                         .weight(1f)
                         .padding(start = 8.dp)
-                ){
+                ) {
                     if (value.isEmpty()) {
                         Text(
                             text = placeholder,
@@ -73,6 +74,8 @@ fun SearchBar(
 
                     innerTextField()
                 }
+
+
             }
         }
     )

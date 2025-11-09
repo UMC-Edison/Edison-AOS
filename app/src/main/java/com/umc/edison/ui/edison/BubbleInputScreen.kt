@@ -31,6 +31,7 @@ import androidx.navigation.NavHostController
 import com.umc.edison.R
 import com.umc.edison.presentation.label.LabelEditMode
 import com.umc.edison.presentation.edison.BubbleInputViewModel
+import com.umc.edison.presentation.edison.ImageHandler.Companion.MAX_IMAGE_SELECTION
 import com.umc.edison.presentation.model.LabelModel
 import com.umc.edison.ui.BaseContent
 import com.umc.edison.ui.components.BottomSheet
@@ -50,7 +51,7 @@ import java.io.File
 @Composable
 fun BubbleInputScreen(
     navHostController: NavHostController,
-    updateShowBottomNav: (Boolean) -> Unit = { _ -> true },
+    updateShowBottomNav: (Boolean) -> Unit,
     viewModel: BubbleInputViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -69,10 +70,8 @@ fun BubbleInputScreen(
         } else if (uiState.isCameraOpen) {
             viewModel.updateCameraOpen(false)
             viewModel.updateIcon(IconType.NONE)
-        } else if (
-            uiState.selectedIcon == IconType.CAMERA ||
-            uiState.selectedIcon == IconType.LINK ||
-            uiState.selectedIcon == IconType.BACK_LINK
+        } else if (uiState.selectedIcon == IconType.CAMERA || uiState.selectedIcon == IconType.LINK
+            || uiState.selectedIcon == IconType.BACK_LINK
         ) {
             viewModel.updateIcon(IconType.NONE)
         } else {
@@ -152,7 +151,8 @@ fun BubbleInputScreen(
 
             LabelTagList(
                 labels = uiState.bubble.labels,
-                modifier = Modifier.align(Alignment.BottomStart)
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
             )
         }
     }
@@ -225,16 +225,13 @@ fun BubbleInputContent(
 
     if (uiState.isGalleryOpen) {
         ImageGallery(
-            selectedImages = uiState.selectedImages,
-            onImageSelected = { uri ->
-                viewModel.toggleImageSelection(uri)
-            },
-            onConfirmed = {
-                // 선택된 이미지들을 현재 삽입 타깃 규칙에 맞춰 추가
-                viewModel.addContentBlocks()
+            onConfirmed = { selectedImages ->
+                val updatedImages = viewModel.updateSelectedImages(selectedImages)
+                viewModel.addImagesToContentBlocks(updatedImages)
+                true
             },
             onClose = { viewModel.closeGallery() },
-            multiSelectMode = true,
+            maxImageSize = MAX_IMAGE_SELECTION,
         )
     }
 
@@ -297,13 +294,20 @@ fun BubbleInputContent(
         }
     }
 
-    // BubbleDoor에 선택 콜백(onTextFocused/onEnterPressed)을 선택사항으로 넘김
     BubbleDoor(
         bubble = uiState.bubble,
         isEditable = true,
-        onBubbleUpdate = { bubble ->
-            viewModel.updateBubbleContent(bubble)
+
+        // [수정] onBubbleUpdate를 두 개의 구체적인 콜백으로 분리합니다.
+        // 1. 제목 변경 시
+        onTitleChange = { newTitle ->
+            viewModel.updateTitle(newTitle)
         },
+        // 2. 텍스트 블록(본문) 변경 시
+        onTextContentChange = { blockId, newContent ->
+            viewModel.updateBlockContent(blockId, newContent)
+        },
+
         onImageDeleted = { contentBlock ->
             viewModel.deleteContentBlock(contentBlock)
         },

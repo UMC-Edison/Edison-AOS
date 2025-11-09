@@ -117,18 +117,9 @@ class BubbleDataManager @Inject constructor(
     }
 
     /**
-     * 버블 콘텐츠 업데이트 (제목, 메인 이미지, 라벨, 백링크, 링크 버블)
+     * 버블 제목 업데이트
      */
-    fun updateBubbleContent(
-        currentBubble: BubbleModel, 
-        updatedBubble: BubbleModel
-    ): BubbleModel {
-        return currentBubble.copy(
-            title = updatedBubble.title,
-            mainImage = updatedBubble.mainImage,
-            labels = updatedBubble.labels,
-            backLinks = updatedBubble.backLinks,
-            linkedBubble = updatedBubble.linkedBubble
-        )
+    fun updateTitle(currentBubble: BubbleModel, title: String): BubbleModel {
+        return currentBubble.copy(title = title)
     }
 }

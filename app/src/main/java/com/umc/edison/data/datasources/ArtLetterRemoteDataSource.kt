@@ -9,7 +9,8 @@ interface ArtLetterRemoteDataSource {
     suspend fun getAllArtLetterCategories(): List<String>
     suspend fun getAllArtLetters(): List<ArtLetterPreviewEntity>
     suspend fun getAllEditorPickArtLetters(): List<ArtLetterPreviewEntity>
-    suspend fun getAllRandomArtLetters(): List<ArtLetterPreviewEntity>
+    suspend fun getSearchMoreArtLetters(): List<ArtLetterPreviewEntity>
+    suspend fun getMoreArtLetters(id: Int): List<ArtLetterPreviewEntity>
     suspend fun getAllRecommendArtLetterKeyWords(): List<ArtLetterKeyWordEntity>
     suspend fun getAllScrappedArtLetters(): List<ArtLetterPreviewEntity>
     suspend fun getArtLetter(id: Int): ArtLetterEntity

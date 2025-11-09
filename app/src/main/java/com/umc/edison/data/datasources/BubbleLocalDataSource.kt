@@ -8,10 +8,11 @@ interface BubbleLocalDataSource {
     suspend fun addBubble(bubble: BubbleEntity) : BubbleEntity
 
     // READ
-    suspend fun getAllBubbles(): List<BubbleEntity>
+    suspend fun getAllActiveBubbles(): List<BubbleEntity>
     suspend fun getAllRecentBubbles(dayBefore: Int): List<BubbleEntity>
     suspend fun getAllTrashedBubbles(): List<BubbleEntity>
-    suspend fun getBubble(id: String): BubbleEntity
+    suspend fun getActiveBubble(id: String): BubbleEntity
+    suspend fun getRawBubble(id: String): BubbleEntity
     suspend fun getBubblesByLabelId(labelId: String): List<BubbleEntity>
     suspend fun getBubblesWithoutLabel(): List<BubbleEntity>
     suspend fun getSearchBubbleResults(query: String): List<BubbleEntity>
@@ -20,6 +21,7 @@ interface BubbleLocalDataSource {
     // UPDATE
     suspend fun updateBubbles(bubbles: List<BubbleEntity>)
     suspend fun updateBubble(bubble: BubbleEntity, isSynced: Boolean = false) : BubbleEntity
+    suspend fun trashBubbles(bubbles: List<BubbleEntity>)
     suspend fun markAsSynced(bubble: BubbleEntity)
     suspend fun syncBubbles(bubbles: List<BubbleEntity>)
 

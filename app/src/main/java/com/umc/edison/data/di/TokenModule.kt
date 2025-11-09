@@ -10,6 +10,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
 import javax.inject.Singleton
 
 @Module
@@ -22,8 +23,10 @@ object TokenModule {
 
     @Provides
     @Singleton
-    fun provideTokenManager(prefDataSource: PrefDataSource): TokenManager =
-        TokenManager(prefDataSource)
+    fun provideTokenManager(
+        prefDataSource: PrefDataSource,
+        @ApplicationScope applicationScope: CoroutineScope
+    ): TokenManager = TokenManager(prefDataSource, applicationScope)
 
     @Provides
     @Singleton

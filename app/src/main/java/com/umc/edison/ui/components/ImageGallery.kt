@@ -32,23 +32,26 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.umc.edison.ui.rememberToastManager
 import com.umc.edison.ui.theme.Gray500
 import com.umc.edison.ui.theme.Gray800
+import kotlin.collections.plus
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImageGallery(
-    selectedImages: List<Uri>,
-    onImageSelected: (Uri) -> Unit,
-    onConfirmed: () -> Unit = {},
-    multiSelectMode: Boolean,
+    onConfirmed: (List<Uri>) -> Boolean,
     onClose: () -> Unit,
+    maxImageSize: Int = 1,
 ) {
+    val multiSelectMode = maxImageSize > 1
     val context = LocalContext.current
+    val toastManager = rememberToastManager()
     var imageList by remember { mutableStateOf(loadGalleryImages(context, "Recent")) }
     var folderList by remember { mutableStateOf(loadGalleryFolders(context)) } // 폴더 리스트
     var selectedFolder by remember { mutableStateOf("Recent") } // 선택된 폴더
     var isExpand by remember { mutableStateOf(false) } // 폴더 리스트 다이얼로그 상태
+    var selectedImages by remember { mutableStateOf(listOf<Uri>()) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -128,20 +131,20 @@ fun ImageGallery(
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                if (multiSelectMode) {
-                    Text(
-                        text = "선택",
-                        modifier = Modifier.clickable(
-                            onClick = {
-                                onConfirmed()
+                Text(
+                    text = "선택",
+                    modifier = Modifier.clickable(
+                        onClick = {
+                            if (onConfirmed(selectedImages)) {
+                                selectedImages = listOf()
                                 onClose()
-                            },
-                            enabled = selectedImages.isNotEmpty()
-                        ),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = if (selectedImages.isEmpty()) Gray500 else Gray800
-                    )
-                }
+                            }
+                        },
+                        enabled = selectedImages.isNotEmpty()
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (selectedImages.isEmpty()) Gray500 else Gray800
+                )
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -159,7 +162,11 @@ fun ImageGallery(
                         modifier = Modifier
                             .aspectRatio(1f)
                             .clickable {
-                                onImageSelected(uri)
+                                if (multiSelectMode && !isSelected && selectedImages.size >= maxImageSize) {
+                                    toastManager.showToast("이미지는 최대 ${maxImageSize}개까지 선택할 수 있습니다.")
+                                    return@clickable
+                                }
+                                selectedImages = onSelectImage(uri, multiSelectMode, selectedImages)
                             }, contentAlignment = Alignment.Center
                     ) {
                         AsyncImage(
@@ -179,25 +186,39 @@ fun ImageGallery(
                             RadioButton(
                                 selected = isSelected,
                                 onClick = {
-                                    onImageSelected(uri)
+                                    if (multiSelectMode && !isSelected && selectedImages.size >= maxImageSize) {
+                                        toastManager.showToast("이미지는 최대 ${maxImageSize}개까지 선택할 수 있습니다.")
+                                        return@RadioButton
+                                    }
+                                    selectedImages = onSelectImage(uri, multiSelectMode, selectedImages)
                                 },
                             )
 
-                            if (multiSelectMode) {
-                                if (isSelected) {
-                                    Text(
-                                        text = selectedIndex.toString(),
-                                        color = Color.White,
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        modifier = Modifier.align(Alignment.Center)
-                                    )
-                                }
+                            if (multiSelectMode && isSelected) {
+                                Text(
+                                    text = selectedIndex.toString(),
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    modifier = Modifier.align(Alignment.Center)
+                                )
                             }
                         }
                     }
                 }
             }
         }
+    }
+}
+
+fun onSelectImage(uri: Uri, multiSelectMode: Boolean = true, selectedImages: List<Uri> = listOf()): List<Uri> {
+    return if (multiSelectMode) {
+        if (selectedImages.contains(uri)) {
+            selectedImages - uri
+        } else {
+            selectedImages + uri
+        }
+    } else {
+        listOf(uri)
     }
 }
 

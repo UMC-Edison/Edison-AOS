@@ -15,7 +15,7 @@ data class LabelDetailState(
 ) : BaseBubbleState<LabelDetailMode>(selectedBubbles, mode) {
     companion object {
         val DEFAULT = LabelDetailState(
-            label = LabelModel.DEFAULT,
+            label = LabelModel.INIT,
             bubbles = emptyList(),
             movableLabels = emptyList(),
             selectedBubbles = emptyList(),

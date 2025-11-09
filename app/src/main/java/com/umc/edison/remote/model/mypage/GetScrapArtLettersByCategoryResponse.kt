@@ -14,7 +14,6 @@ data class GetScrapArtLettersByCategoryResponse(
 ) : RemoteMapper<ArtLetterPreviewEntity> {
     override fun toData(): ArtLetterPreviewEntity = ArtLetterPreviewEntity(
         artLetterId = id,
-        category = "",
         title = title,
         thumbnail = thumbnail,
         scraped = true,

@@ -5,56 +5,37 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionOnScreen
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.umc.edison.R
 import com.umc.edison.ui.theme.Gray300
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionOnScreen
-import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.unit.IntSize
-import com.umc.edison.ui.theme.Gray600
-import com.umc.edison.ui.theme.Gray800
 import com.umc.edison.ui.theme.White000
 
 @Composable
 fun MyEdisonNavBar(
-    onSearchClick: () -> Unit,
+    onLabelClick: () -> Unit,
     onBubbleClick: () -> Unit,
     onStorageClick: () -> Unit,
-    onSearchQuerySubmit: (String) -> Unit,
     currentPage: Int,
-    query: String,
     isViewMode: Boolean,
     setNavBarPosition: (Int, Offset, IntSize) -> Unit,
 ) {
-    var searchActive by remember { mutableStateOf(query.isNotEmpty()) }
-    var text by remember { mutableStateOf(query) }
+
 
     if (!isViewMode) {
         Box(
@@ -68,80 +49,13 @@ fun MyEdisonNavBar(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (searchActive) {
-                    BasicTextField(
-                        value = text,
-                        onValueChange = { text = it },
-                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Search),
-                        keyboardActions = KeyboardActions(
-                            onSearch = {
-                                onSearchQuerySubmit(text)
-                            }
-                        ),
-                        maxLines = 1,
-                        textStyle = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier
-                            .weight(1f)
-                            .wrapContentHeight()
-                            .clip(RoundedCornerShape(30.dp))
-                            .background(White000)
-                            .padding(horizontal = 10.dp, vertical = 2.dp),
-                        decorationBox = { innerTextField ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .wrapContentHeight(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_topbar_search),
-                                    contentDescription = "Search",
-                                    tint = Gray800,
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .clickable {
-                                            onSearchQuerySubmit(text)
-                                        }
-                                )
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(start = 6.dp)
-                                ) {
-                                    if (text.isEmpty()) {
-                                        Text(
-                                            text = "검색",
-                                            color = Gray600,
-                                            style = MaterialTheme.typography.bodySmall,
-                                        )
-                                    }
 
-                                    innerTextField()
-                                }
-                            }
-                        }
-                    )
-                } else {
-                    IconButton(
-                        onClick = {
-                            onSearchClick()
-                            searchActive = true
-                        },
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_topbar_search),
-                            contentDescription = "Search Icon",
-                            tint = Color.Unspecified
-                        )
-                    }
-                }
 
                 Box(
                     modifier = Modifier.wrapContentSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (currentPage == 0 && !searchActive) {
+                    if (currentPage == 0) {
                         Box(
                             modifier = Modifier
                                 .size(36.dp)
@@ -150,12 +64,8 @@ fun MyEdisonNavBar(
                         )
                     }
 
-                    IconButton(
-                        onClick = {
-                            onBubbleClick()
-                            searchActive = false
-                            text = ""
-                        },
+                    Box(
+                        contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .size(36.dp)
                             .onGloballyPositioned { coordinates ->
@@ -165,6 +75,10 @@ fun MyEdisonNavBar(
                                     coordinates.size
                                 )
                             }
+                            .clip(CircleShape)
+                            .clickable(
+                                onClick = { onBubbleClick() }
+                            )
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_topbar_bubble),
@@ -178,7 +92,7 @@ fun MyEdisonNavBar(
                     modifier = Modifier.wrapContentSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (currentPage == 1 && !searchActive) {
+                    if (currentPage == 1) {
                         Box(
                             modifier = Modifier
                                 .size(36.dp)
@@ -187,14 +101,10 @@ fun MyEdisonNavBar(
                         )
                     }
 
-                    IconButton(
-                        onClick = {
-                            onStorageClick()
-                            searchActive = false
-                            text = ""
-                        },
+                    Box(
+                        contentAlignment = Alignment.Center,
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(36.dp)
                             .onGloballyPositioned { coordinates ->
                                 setNavBarPosition(
                                     1,
@@ -202,6 +112,10 @@ fun MyEdisonNavBar(
                                     coordinates.size
                                 )
                             }
+                            .clip(CircleShape)
+                            .clickable(
+                                onClick = { onStorageClick() }
+                            )
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_topbar_storage),
@@ -209,6 +123,47 @@ fun MyEdisonNavBar(
                             tint = Color.Unspecified
                         )
                     }
+
+
+                }
+
+                Box(
+                    modifier = Modifier.wrapContentSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+
+                    if (currentPage == 2) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(RoundedCornerShape(30.dp))
+                                .background(White000)
+                        )
+                    }
+
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(36.dp)
+                            .onGloballyPositioned { coordinates ->
+                                setNavBarPosition(
+                                    2,
+                                    coordinates.positionOnScreen(),
+                                    coordinates.size
+                                )
+                            }
+                            .clip(CircleShape)
+                            .clickable(
+                                onClick = { onLabelClick() }
+                            )
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_label),
+                            contentDescription = "Label Icon",
+                            tint = Color.Unspecified
+                        )
+                    }
+
                 }
             }
         }
