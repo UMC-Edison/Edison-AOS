@@ -941,4 +941,3 @@ private fun DrawScope.drawBlurredInnerGradientBubbleDoor(
         canvas.drawPath(path, paint)
     }
 }
-

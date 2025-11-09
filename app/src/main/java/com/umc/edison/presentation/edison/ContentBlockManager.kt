@@ -34,7 +34,7 @@ class ContentBlockManager @Inject constructor() {
         this.onPublish = onPublish
         this.onShowToast = onShowToast
     }
-    
+
     companion object {
         private const val DEFAULT_TEXT_CONTENT = ""
         private const val BR_TAG = "<br>"
@@ -57,14 +57,14 @@ class ContentBlockManager @Inject constructor() {
         val node = ordered.getOrNull(textIndex) ?: return null
         if (node.block.type != ContentType.TEXT) return null
 
-        val prevIdx = (textIndex - 1 downTo 0).firstOrNull { 
-            ordered[it].block.type == ContentType.TEXT 
+        val prevIdx = (textIndex - 1 downTo 0).firstOrNull {
+            ordered[it].block.type == ContentType.TEXT
         } ?: return null
         val prevNode = ordered[prevIdx]
 
         // 이전 블록의 현재 길이를 저장 (커서 위치로 사용)
         val cursorPosition = prevNode.block.content.parseHtml().length
-        
+
         prevNode.block.content += node.block.content
         chain.remove(node.id)
 

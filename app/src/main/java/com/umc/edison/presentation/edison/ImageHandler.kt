@@ -22,7 +22,7 @@ class ImageHandler @Inject constructor() {
         this.onPublish = onPublish
         this.onShowToast = onShowToast
     }
-    
+
     companion object {
         const val MAX_IMAGE_SELECTION = 10
         const val MAX_TOTAL_IMAGES = 30
@@ -52,27 +52,27 @@ class ImageHandler @Inject constructor() {
         val ordered = chain.toLinear()
         val textNode = ordered.getOrNull(textIndex) ?: return
         require(textNode.block.type == ContentType.TEXT)
-        
+
         val textContent = textNode.block.content.parseHtml().trim()
         val isEmpty = textContent.isEmpty()
-        
+
         if (isEmpty) {
             if (uris.isNotEmpty()) {
                 // 기존 빈 텍스트 블록을 첫 번째 이미지로 교체
                 val prevId = textNode.prev
                 val nextId = textNode.next
-                
+
                 // 기존 텍스트 블록 제거
                 chain.remove(textNode.id)
-                
+
                 // 첫 번째 이미지 블록 추가
                 var anchorId = chain.insertBetween(prevId, nextId, ContentBlockModel(ContentType.IMAGE, uris.first().toString(), 0))
-                
+
                 // 나머지 이미지들 추가
                 uris.drop(1).forEach { uri ->
                     anchorId = chain.insertAfter(anchorId, ContentBlockModel(ContentType.IMAGE, uri.toString(), 0))
                 }
-                
+
                 // 마지막에 새 텍스트 블록 추가
                 chain.insertAfter(anchorId, ContentBlockModel(ContentType.TEXT, DEFAULT_TEXT_CONTENT, 0))
             }
@@ -84,7 +84,7 @@ class ImageHandler @Inject constructor() {
             // 마지막에 새 텍스트 블록 추가
             chain.insertAfter(anchorId, ContentBlockModel(ContentType.TEXT, DEFAULT_TEXT_CONTENT, 0))
         }
-        
+
         ensureTrailingText()
         onPublish()
     }
@@ -121,7 +121,7 @@ class ImageHandler @Inject constructor() {
     fun saveCameraImage(context: Context, uri: Uri): Uri {
         val fileName = "${IMAGE_FILE_PREFIX}${System.currentTimeMillis()}$IMAGE_FILE_EXTENSION"
         val file = File(context.filesDir, fileName)
-        
+
         context.contentResolver.openInputStream(uri)?.use { inputStream ->
             FileOutputStream(file).use { outputStream ->
                 inputStream.copyTo(outputStream)
@@ -138,11 +138,7 @@ class ImageHandler @Inject constructor() {
     }
 
     fun checkCanAddImage(currImageSize: Int): Boolean {
-        if (currImageSize >= MAX_TOTAL_IMAGES) {
-            return false
-        }
-
-        return true
+        return currImageSize < MAX_TOTAL_IMAGES
     }
 
     // Private helper methods
