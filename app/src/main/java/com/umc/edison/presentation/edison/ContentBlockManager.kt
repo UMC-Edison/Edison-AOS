@@ -84,10 +84,8 @@ class ContentBlockManager @Inject constructor() {
     fun deleteContentBlock(contentBlock: ContentBlockModel): Boolean {
         if (contentBlock.type != ContentType.IMAGE) return false
 
-        val targetId = chain.toLinear()
-            .firstOrNull { it.block.id == contentBlock.id }?.id ?: return false
-
         val orderedBefore = chain.toLinear()
+        val targetId = orderedBefore.firstOrNull { it.block.id == contentBlock.id }?.id ?: return false
         val idx = orderedBefore.indexOfFirst { it.id == targetId }
         val left = orderedBefore.getOrNull(idx - 1)?.id
         val right = orderedBefore.getOrNull(idx + 1)?.id

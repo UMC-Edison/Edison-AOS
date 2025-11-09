@@ -151,7 +151,8 @@ fun BubbleInputScreen(
 
             LabelTagList(
                 labels = uiState.bubble.labels,
-                modifier = Modifier.align(Alignment.BottomStart)
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
             )
         }
     }
@@ -296,9 +297,17 @@ fun BubbleInputContent(
     BubbleDoor(
         bubble = uiState.bubble,
         isEditable = true,
-        onBubbleUpdate = { bubble ->
-            viewModel.updateBubbleContent(bubble)
+
+        // [수정] onBubbleUpdate를 두 개의 구체적인 콜백으로 분리합니다.
+        // 1. 제목 변경 시
+        onTitleChange = { newTitle ->
+            viewModel.updateTitle(newTitle)
         },
+        // 2. 텍스트 블록(본문) 변경 시
+        onTextContentChange = { blockId, newContent ->
+            viewModel.updateBlockContent(blockId, newContent)
+        },
+
         onImageDeleted = { contentBlock ->
             viewModel.deleteContentBlock(contentBlock)
         },

@@ -286,18 +286,23 @@ class BubbleInputViewModel @Inject constructor(
         _uiState.update { it.copy(isGalleryOpen = false, selectedIcon = IconType.NONE) }
     }
 
-    fun updateBubbleContent(bubble: BubbleModel) {
-        val ordered = chain.toLinear()
-        bubble.contentBlocks.forEach { incoming ->
-            if (incoming.type == ContentType.TEXT) {
-                val node = ordered.find { it.id == incoming.id }
-                if (node?.block?.type == ContentType.TEXT) {
-                    node.block.content = incoming.content
-                }
-            }
+    fun updateBlockContent(blockId: String, newContent: String) {
+        val node = chain.toLinear().find { it.id == blockId }
+
+        if (node != null && node.block.type == ContentType.TEXT) {
+            node.block.content = newContent
+        } else {
+            return
         }
-        val updatedBubble = bubbleDataManager.updateBubbleContent(_uiState.value.bubble, bubble)
+
+        publish()
+    }
+
+    fun updateTitle(newTitle: String) {
+        val updatedBubble = bubbleDataManager.updateTitle(_uiState.value.bubble, newTitle)
+
         _uiState.update { it.copy(bubble = updatedBubble) }
+
         checkCanSave()
     }
 
@@ -359,16 +364,29 @@ class BubbleInputViewModel @Inject constructor(
                 showToast("저장되었습니다.")
 
                 if (isLinked) {
+                    val savedBubblePres = savedBubble.toPresentation()
+
+                    val newBubbleState = BubbleInputState.DEFAULT.copy(
+                        bubble = BubbleModel.DEFAULT.copy(linkedBubble = savedBubblePres),
+                        bubbles = _uiState.value.bubbles + savedBubblePres // 방금 저장한 버블을 목록에 추가
+                    )
+                    chain.fromLinear(newBubbleState.bubble.contentBlocks)
+
+                    ensureInitialText()
+
+                    val initialBlocks = chain.toLinear().map { it.block }
+
                     _uiState.update {
-                        BubbleInputState.DEFAULT.copy(
-                            bubble = BubbleModel.DEFAULT.copy(linkedBubble = savedBubble.toPresentation()),
-                            bubbles = it.bubbles + savedBubble.toPresentation()
+                        newBubbleState.copy(
+                            bubble = newBubbleState.bubble.copy(contentBlocks = initialBlocks)
                         )
                     }
 
-                    addTextBlock()
                 } else {
-                    _uiState.update { it.copy(bubble = savedBubble.toPresentation()) }
+                    val newBubble = savedBubble.toPresentation()
+
+                    chain.fromLinear(newBubble.contentBlocks)
+                    _uiState.update { it.copy(bubble = newBubble) }
                 }
             },
         )

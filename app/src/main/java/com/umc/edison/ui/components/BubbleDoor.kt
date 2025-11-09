@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -106,7 +107,8 @@ fun BubbleDoor(
     bubble: BubbleModel,
     onClick: (() -> Unit)? = null,
     isEditable: Boolean = false,
-    onBubbleUpdate: (BubbleModel) -> Unit = {},
+    onTitleChange: (String) -> Unit = {},
+    onTextContentChange: (blockId: String, newContent: String) -> Unit = { _, _ -> }, // [수정됨]
     onImageDeleted: (ContentBlockModel) -> Unit = {},
     onMainSelected: (String?) -> Unit = {},
     bubbleInputState: BubbleInputState = BubbleInputState.DEFAULT,
@@ -160,7 +162,8 @@ fun BubbleDoor(
             BubbleContent(
                 isEditable = isEditable,
                 bubble = bubble,
-                onBubbleChange = onBubbleUpdate,
+                onTitleChange = onTitleChange,
+                onTextContentChange = onTextContentChange,
                 uiState = bubbleInputState,
                 deleteClicked = onImageDeleted,
                 mainClicked = onMainSelected,
@@ -202,7 +205,8 @@ private fun Gap(
 private fun BubbleContent(
     isEditable: Boolean,
     bubble: BubbleModel,
-    onBubbleChange: (BubbleModel) -> Unit,
+    onTitleChange: (String) -> Unit,
+    onTextContentChange: (blockId: String, newContent: String) -> Unit,
     uiState: BubbleInputState,
     deleteClicked: (ContentBlockModel) -> Unit,
     mainClicked: (String?) -> Unit,
@@ -221,13 +225,14 @@ private fun BubbleContent(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(0.dp)
+        verticalArrangement = Arrangement.spacedBy(0.dp),
+        contentPadding = PaddingValues(bottom = 48.dp)
     ) {
         item(key = "title") {
             if (isEditable) {
                 BasicTextField(
                     value = bubble.title ?: "",
-                    onValueChange = { newTitle -> onBubbleChange(bubble.copy(title = newTitle)) },
+                    onValueChange = { newTitle -> onTitleChange(newTitle) },
                     textStyle = MaterialTheme.typography.displayMedium.copy(color = Gray800),
                     modifier = Modifier.fillMaxWidth(),
                     decorationBox = { inner ->
@@ -273,7 +278,8 @@ private fun BubbleContent(
                 when (contentBlock.type) {
                     ContentType.TEXT -> {
                         val focusRequester = remember(contentBlock.id) { FocusRequester() }
-                        val bringIntoViewRequester = remember(contentBlock.id) { BringIntoViewRequester() }
+                        val bringIntoViewRequester =
+                            remember(contentBlock.id) { BringIntoViewRequester() }
 
                         val richTextState = rememberSaveable(
                             key = "richTextState_${contentBlock.id}",
@@ -297,13 +303,12 @@ private fun BubbleContent(
                         }
 
                         LaunchedEffect(contentBlock.id, richTextState.toHtml()) {
-                            if (blockedByDelete) { blockedByDelete = false; return@LaunchedEffect }
-                            onBubbleChange(
-                                bubble.copy(
-                                    contentBlocks = bubble.contentBlocks.map { b ->
-                                        if (b.id == contentBlock.id) b.copy(content = richTextState.toHtml()) else b
-                                    }
-                                )
+                            if (blockedByDelete) {
+                                blockedByDelete = false; return@LaunchedEffect
+                            }
+                            onTextContentChange(
+                                contentBlock.id,
+                                richTextState.toHtml()
                             )
                         }
 
@@ -328,9 +333,17 @@ private fun BubbleContent(
                             richTextState.removeSpanStyle(SpanStyle(background = Yellow100))
 
                         when (uiState.selectedListStyle) {
-                            ListStyle.UNORDERED -> { richTextState.addUnorderedList(); richTextState.removeOrderedList() }
-                            ListStyle.ORDERED -> { richTextState.addOrderedList(); richTextState.removeUnorderedList() }
-                            else -> { richTextState.removeUnorderedList(); richTextState.removeOrderedList() }
+                            ListStyle.UNORDERED -> {
+                                richTextState.addUnorderedList(); richTextState.removeOrderedList()
+                            }
+
+                            ListStyle.ORDERED -> {
+                                richTextState.addOrderedList(); richTextState.removeUnorderedList()
+                            }
+
+                            else -> {
+                                richTextState.removeUnorderedList(); richTextState.removeOrderedList()
+                            }
                         }
 
                         if (isEditable) {
@@ -376,6 +389,7 @@ private fun BubbleContent(
                                                     true
                                                 } else false
                                             }
+
                                             else -> false
                                         }
                                     },
@@ -387,7 +401,9 @@ private fun BubbleContent(
                                         if (richTextState.toHtml() == "<br>" && bubble.contentBlocks.size == 1) {
                                             Text(
                                                 text = "내용을 입력해주세요.",
-                                                style = MaterialTheme.typography.bodyMedium.copy(color = Gray500),
+                                                style = MaterialTheme.typography.bodyMedium.copy(
+                                                    color = Gray500
+                                                ),
                                                 modifier = Modifier.fillMaxWidth()
                                             )
                                         }
@@ -397,7 +413,11 @@ private fun BubbleContent(
                             )
 
                             // 포커스/커서 이동 안정화
-                            LaunchedEffect(uiState.focusedTextIndex, uiState.cursorPosition, contentBlock.id) {
+                            LaunchedEffect(
+                                uiState.focusedTextIndex,
+                                uiState.cursorPosition,
+                                contentBlock.id
+                            ) {
                                 if (uiState.focusedTextIndex == pos) {
                                     // 1) 화면에 보이도록 스크롤
                                     bringIntoViewRequester.bringIntoView()
@@ -410,8 +430,14 @@ private fun BubbleContent(
                                     // 3) 커서 위치 설정
                                     val textLength = richTextState.annotatedString.length
                                     val targetPosition = when {
-                                        uiState.cursorPosition > 0 -> minOf(uiState.cursorPosition, textLength)
-                                        richTextState.toHtml().equals("<br>", true) || textLength == 0 -> 0
+                                        uiState.cursorPosition > 0 -> minOf(
+                                            uiState.cursorPosition,
+                                            textLength
+                                        )
+
+                                        richTextState.toHtml()
+                                            .equals("<br>", true) || textLength == 0 -> 0
+
                                         else -> textLength
                                     }
                                     richTextState.selection = TextRange(targetPosition)
@@ -441,8 +467,9 @@ private fun BubbleContent(
                         Column {
                             // 이미지 블록 위에 Gap (조건부 표시)
                             val prevBlock = bubble.contentBlocks.getOrNull(idx - 1)
-                            val shouldShowTopGap = isEditable && (prevBlock == null || prevBlock.type == ContentType.IMAGE)
-                            
+                            val shouldShowTopGap =
+                                isEditable && (prevBlock == null || prevBlock.type == ContentType.IMAGE)
+
                             if (shouldShowTopGap) {
                                 Gap(
                                     leftIndex = prevBlock?.position,
@@ -455,9 +482,9 @@ private fun BubbleContent(
                             val aspectRatio = calculateAspectRatio(contentBlock.content)
                             var isLongPressed by remember(contentBlock.id) { mutableStateOf(false) }
                             val isMainImage = bubble.mainImage == contentBlock.content &&
-                                    bubble.contentBlocks.indexOfFirst {
+                                    bubble.contentBlocks.firstOrNull {
                                         it.type == ContentType.IMAGE && it.content == bubble.mainImage
-                                    } == pos
+                                    }?.id == contentBlock.id
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -522,7 +549,9 @@ private fun BubbleContent(
                                         ) {
                                             Text(
                                                 text = "삭제하기",
-                                                style = MaterialTheme.typography.bodyMedium.copy(color = Red100),
+                                                style = MaterialTheme.typography.bodyMedium.copy(
+                                                    color = Red100
+                                                ),
                                                 fontSize = 14.sp
                                             )
                                         }
@@ -532,8 +561,9 @@ private fun BubbleContent(
 
                             // 이미지 블록 아래에 Gap (조건부 표시)
                             val nextBlock = bubble.contentBlocks.getOrNull(idx + 1)
-                            val shouldShowBottomGap = isEditable && (nextBlock == null || nextBlock.type == ContentType.IMAGE)
-                            
+                            val shouldShowBottomGap =
+                                isEditable && (nextBlock == null || nextBlock.type == ContentType.IMAGE)
+
                             if (shouldShowBottomGap) {
                                 Gap(
                                     leftIndex = pos,
@@ -544,28 +574,6 @@ private fun BubbleContent(
                         }
                     }
                 }
-            }
-        }
-
-        item(key = "gap_tail") {
-            if (isEditable) {
-                val cfg = LocalConfiguration.current
-                val minTailHeight = cfg.screenHeightDp.dp
-
-                val lastTextIndex = bubble.contentBlocks
-                    .indexOfLast { it.type == ContentType.TEXT }
-                    .takeIf { it >= 0 }
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = minTailHeight)
-                        .pointerInput(Unit) {
-                            detectTapGestures {
-                                onGapTapped(lastTextIndex, null)
-                            }
-                        }
-                )
             }
         }
 
@@ -706,9 +714,12 @@ private fun BubbleContent(
                                             }
                                     }
                                 }
+
                             )
                         }
-                ) {
+
+                )
+                {
                     BasicText(
                         text = annotatedString,
                         onTextLayout = { layoutResult = it },
@@ -755,6 +766,7 @@ private fun BubbleContent(
                 }
             }
         }
+
     }
 }
 
