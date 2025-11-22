@@ -39,7 +39,6 @@ import com.umc.edison.ui.components.LabelListItem
 import com.umc.edison.ui.components.LabelModalContent
 import com.umc.edison.ui.navigation.NavRoute
 import com.umc.edison.ui.onboarding.LabelListOnboardingScreen
-import com.umc.edison.ui.theme.Aqua100
 import com.umc.edison.ui.theme.Gray600
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -125,15 +124,14 @@ fun LabelTabScreen(
                     viewModel.updateEditMode(LabelEditMode.ADD)
                 }
             )
-            val labels = if (uiState.labels.isEmpty() && onboardingState.show) {
-                listOf(LabelModel(id = "", name = "감상", color = Aqua100, bubbleCnt = 7))
-            } else {
-                uiState.labels
-            }
 
             LabelList(
-                labels = labels,
-                draggedIndex = draggedIndex.intValue,
+                labels = uiState.labels,
+                draggedIndex = if (onboardingState.show) {
+                    onboardingState.draggedIndex
+                } else {
+                    draggedIndex.intValue
+                },
                 onLabelClick = { labelId ->
                     navHostController.navigate(NavRoute.LabelDetail.createRoute(labelId))
                 },
@@ -146,10 +144,14 @@ fun LabelTabScreen(
                     viewModel.updateSelectedLabel(uiState.labels[index])
                 },
                 onDrag = { index ->
-                    draggedIndex.intValue = index
+                    if (!onboardingState.show) {
+                        draggedIndex.intValue = index
+                    }
                 },
                 resetDrag = {
-                    draggedIndex.intValue = -1
+                    if (!onboardingState.show) {
+                        draggedIndex.intValue = -1
+                    }
                 },
                 setLabelItemPosition = { offset, size ->
                     viewModel.setLabelListItemBound(offset, size)
@@ -159,12 +161,6 @@ fun LabelTabScreen(
         }
 
         if (onboardingState.show) {
-            if (uiState.labels.isNotEmpty()) {
-                draggedIndex.intValue = 1
-            } else {
-                draggedIndex.intValue = 0
-            }
-
             LabelListOnboardingScreen(
                 onDismiss = {
                     viewModel.setHasSeenOnboarding()
@@ -190,7 +186,7 @@ fun LabelList(
 ) {
     Column {
         labels.forEachIndexed { index, label ->
-            val modifier = if ((labels.size > 1 && index == 1) || index == 0) {
+            val modifier = if (showOnboarding && index == draggedIndex) {
                 Modifier.onGloballyPositioned { coordinates ->
                     setLabelItemPosition(
                         coordinates.positionOnScreen(),

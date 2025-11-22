@@ -16,6 +16,7 @@ import com.umc.edison.presentation.base.BaseViewModel
 import com.umc.edison.presentation.model.LabelModel
 import com.umc.edison.presentation.model.toPresentation
 import com.umc.edison.presentation.onboarding.OnboardingPositionState
+import com.umc.edison.ui.theme.Aqua100
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -43,6 +44,7 @@ class LabelListViewModel @Inject constructor(
 
     companion object {
         const val SCREEN_NAME = "label_list"
+        const val TEMP_LABEL_ID = "-1"
     }
 
     init {
@@ -82,6 +84,11 @@ class LabelListViewModel @Inject constructor(
         val labelsWithId = _uiState.value.labels.filter { !it.id.isNullOrEmpty() }
         var completedCount = 0
         
+        if (labelsWithId.isEmpty()) {
+            handleOnboardingState()
+            return
+        }
+        
         labelsWithId.forEach { label ->
             collectDataResource(
                 flow = getBubblesByLabelUseCase(label.id!!),
@@ -110,6 +117,7 @@ class LabelListViewModel @Inject constructor(
                                 )
                             )
                         }
+                        handleOnboardingState()
                     }
                 }
             )
@@ -130,6 +138,9 @@ class LabelListViewModel @Inject constructor(
                     )
                 }
                 fetchBubblesByLabel()
+            },
+            onComplete = {
+                handleOnboardingState()
             }
         )
     }
@@ -193,12 +204,36 @@ class LabelListViewModel @Inject constructor(
         collectDataResource(
             flow = setHasSeenOnboardingUseCase(SCREEN_NAME),
             onSuccess = {
-                _onboardingState.update { it.copy(show = false) }
+                _onboardingState.update { it.copy(show = false, draggedIndex = -1) }
+                
+                // 온보딩 종료 시 temp label만 제거 (default label은 유지)
+                if (_uiState.value.labels.any { it.id == TEMP_LABEL_ID }) {
+                    _uiState.update { uiState ->
+                        uiState.copy(
+                            labels = uiState.labels.filter { it.id != TEMP_LABEL_ID }
+                        )
+                    }
+                }
             }
         )
     }
 
     fun setLabelListItemBound(offset: Offset, size: IntSize) {
         _onboardingState.update { it.copy(labelBound = OnboardingPositionState(offset, size)) }
+    }
+
+    private fun handleOnboardingState() {
+        if (_onboardingState.value.show) {
+            val currentLabels = _uiState.value.labels
+
+            val hasAdditionalLabels = currentLabels.any { !it.id.isNullOrEmpty() }
+            
+            if (!hasAdditionalLabels) {
+                val tempLabel = LabelModel(id = TEMP_LABEL_ID, name = "감상", color = Aqua100, bubbleCnt = 7)
+                _uiState.update { it.copy(labels = it.labels + listOf(tempLabel)) }
+            }
+
+            _onboardingState.update { it.copy(draggedIndex = 1) }
+        }
     }
 }
