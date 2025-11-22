@@ -39,7 +39,8 @@ import com.umc.edison.ui.theme.White000
 import kotlin.math.roundToInt
 
 internal enum class MyEdisonOnboardingPage {
-    MY_EDISON_BOTTOM_TAB, BUBBLE_INPUT, BUBBLE_STORAGE, SPACE_BOTTOM_TAB, BUBBLE_BOTTOM_TAB, ART_LETTER_BOTTOM_TAB, MY_PAGE_BOTTOM_TAB,
+    MY_EDISON_BOTTOM_TAB, BUBBLE_INPUT, BUBBLE_STORAGE, BUBBLE_LABEL,
+    SPACE_BOTTOM_TAB, BUBBLE_BOTTOM_TAB, ART_LETTER_BOTTOM_TAB, MY_PAGE_BOTTOM_TAB,
 }
 
 @Composable
@@ -47,6 +48,7 @@ fun MyEdisonOnboarding(
     onboardingState: MyEdisonOnboardingState,
     bottomNavBarBounds: List<OnboardingPositionState>,
     changeToStorageMode: () -> Unit,
+    changeToLabelMode: () -> Unit,
     changeToBubbleInputMode: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -78,20 +80,33 @@ fun MyEdisonOnboarding(
             }
 
             MyEdisonOnboardingPage.BUBBLE_STORAGE -> {
-                BubbleStorageOnboarding(
+                EdisonNavBarOnboarding(
                     edisonNavBarComponent = onboardingState.myEdisonNavBarBounds[1],
+                    onNextPage = {
+                        currentPage = MyEdisonOnboardingPage.BUBBLE_LABEL
+                        changeToLabelMode()
+                    },
+                    statusBarHeightPx = statusBarHeightPx,
+                    text = "일주일 간 작성한 버블을 모아볼 수 있어요."
+                )
+            }
+
+            MyEdisonOnboardingPage.BUBBLE_LABEL -> {
+                EdisonNavBarOnboarding(
+                    edisonNavBarComponent = onboardingState.myEdisonNavBarBounds[2],
                     onNextPage = {
                         currentPage = MyEdisonOnboardingPage.SPACE_BOTTOM_TAB
                         changeToBubbleInputMode()
                     },
-                    statusBarHeightPx = statusBarHeightPx
+                    statusBarHeightPx = statusBarHeightPx,
+                    text = "라벨별로 버블을 모아볼 수 있어요."
                 )
             }
 
             MyEdisonOnboardingPage.SPACE_BOTTOM_TAB -> {
                 BottomTabOnboarding(
                     bottomTabComponent = bottomNavBarBounds[1],
-                    description = "작성한 모든 버블들을 맵 형태로 확인해요.\n" + "라벨별 모아보기도 가능해요.",
+                    description = "모든 버블을 맵 형태로 확인해요.\n" + "키워드 맵핑으로 지금 필요한 아이디어를 찾아보세요.",
                     onNextPage = { currentPage = MyEdisonOnboardingPage.BUBBLE_BOTTOM_TAB },
                     statusBarHeightPx = statusBarHeightPx
                 )
@@ -297,10 +312,11 @@ fun BubbleInputOnboarding(
 }
 
 @Composable
-fun BubbleStorageOnboarding(
+fun EdisonNavBarOnboarding(
     edisonNavBarComponent: OnboardingPositionState,
     onNextPage: () -> Unit,
     statusBarHeightPx: Int,
+    text: String,
 ) {
     val density = LocalDensity.current
 
@@ -363,7 +379,7 @@ fun BubbleStorageOnboarding(
                 .background(color = White000, shape = RoundedCornerShape(16))
         ) {
             Text(
-                text = "작성한 버블은 이렇게 저장돼요!",
+                text = text,
                 modifier = Modifier
                     .padding(16.dp)
                     .align(Alignment.Center),
