@@ -113,12 +113,16 @@ fun LabelListOnboardingScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
-                val context = LocalContext.current
+                val imageRequest = ImageRequest.Builder(LocalContext.current)
+                    .data(R.drawable.ic_up_slide)
+                    .build()
 
                 AsyncImage(
-                    model = ImageRequest.Builder(context).data(R.drawable.ic_up_slide).build(),
+                    model = imageRequest,
                     contentDescription = "Slide Up Icon",
-                    modifier = Modifier.rotate(-90f).size(44.dp)
+                    modifier = Modifier
+                        .rotate(-90f)
+                        .size(44.dp)
                 )
 
                 Spacer(modifier = Modifier.width(12.dp))

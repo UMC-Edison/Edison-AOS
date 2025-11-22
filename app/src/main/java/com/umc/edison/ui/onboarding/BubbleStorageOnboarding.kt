@@ -36,7 +36,7 @@ import com.umc.edison.ui.theme.White000
 import kotlin.math.roundToInt
 
 @Composable
-fun BubbleStorageOnboarding(
+fun EdisonNavBarOnboarding(
     onboardingState: BubbleStorageOnboardingState,
     onDismiss: () -> Unit,
 ) {

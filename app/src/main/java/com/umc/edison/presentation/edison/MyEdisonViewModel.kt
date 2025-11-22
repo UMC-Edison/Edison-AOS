@@ -3,7 +3,6 @@ package com.umc.edison.presentation.edison
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntSize
 import com.umc.edison.domain.usecase.bubble.GetAllRecentBubblesUseCase
-import com.umc.edison.domain.usecase.bubble.SearchBubblesUseCase
 import com.umc.edison.domain.usecase.onboarding.GetHasSeenOnboardingUseCase
 import com.umc.edison.domain.usecase.onboarding.SetHasSeenOnboardingUseCase
 import com.umc.edison.presentation.ToastManager
