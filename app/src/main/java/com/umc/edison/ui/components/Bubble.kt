@@ -48,7 +48,7 @@ import coil3.compose.AsyncImage
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichText
-import com.umc.edison.presentation.edison.parseHtml
+import com.umc.edison.presentation.edison.util.parseHtml
 import com.umc.edison.presentation.model.BubbleModel
 import com.umc.edison.presentation.model.ContentType
 import com.umc.edison.ui.theme.EdisonTypography

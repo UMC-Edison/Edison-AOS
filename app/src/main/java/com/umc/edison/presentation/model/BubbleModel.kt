@@ -1,7 +1,7 @@
 package com.umc.edison.presentation.model
 
 import com.umc.edison.domain.model.bubble.Bubble
-import com.umc.edison.presentation.edison.parseHtml
+import com.umc.edison.presentation.edison.util.parseHtml
 import java.util.Date
 import java.util.LinkedList
 import java.util.UUID

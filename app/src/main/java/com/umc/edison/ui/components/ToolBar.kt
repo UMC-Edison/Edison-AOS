@@ -23,7 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.res.painterResource
 import com.umc.edison.R
 import com.umc.edison.presentation.edison.BubbleInputState
-import com.umc.edison.presentation.edison.parseHtml
+import com.umc.edison.presentation.edison.util.parseHtml
 import com.umc.edison.presentation.model.BubbleModel
 import com.umc.edison.presentation.model.ContentType
 import com.umc.edison.ui.theme.Gray300

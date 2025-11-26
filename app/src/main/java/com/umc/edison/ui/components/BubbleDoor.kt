@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -88,7 +87,7 @@ import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.ui.BasicRichText
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
 import com.umc.edison.presentation.edison.BubbleInputState
-import com.umc.edison.presentation.edison.parseHtml
+import com.umc.edison.presentation.edison.util.parseHtml
 import com.umc.edison.presentation.model.BubbleModel
 import com.umc.edison.presentation.model.ContentBlockModel
 import com.umc.edison.presentation.model.ContentType

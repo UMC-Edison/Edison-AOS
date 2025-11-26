@@ -2,7 +2,6 @@ package com.umc.edison.presentation.edison
 
 import android.content.Context
 import android.net.Uri
-import android.text.Html
 import androidx.lifecycle.SavedStateHandle
 import com.umc.edison.presentation.ToastManager
 import com.umc.edison.presentation.base.BaseViewModel
@@ -22,6 +21,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
+
 
 private sealed class InsertionTarget {
     data object None : InsertionTarget()
@@ -466,8 +466,4 @@ class BubbleInputViewModel @Inject constructor(
         }
     }
 
-}
-
-fun String.parseHtml(): String {
-    return Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY).toString()
 }
