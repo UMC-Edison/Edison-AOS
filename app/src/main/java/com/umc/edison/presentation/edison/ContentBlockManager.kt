@@ -2,8 +2,8 @@ package com.umc.edison.presentation.edison
 
 import com.umc.edison.presentation.model.ContentBlockModel
 import com.umc.edison.presentation.model.ContentType
-import android.text.Html
 import javax.inject.Inject
+import com.umc.edison.presentation.edison.util.parseHtml
 
 /**
  * 백스페이스 처리 결과
@@ -164,9 +164,5 @@ class ContentBlockManager @Inject constructor() {
         if (chain.tailId() != null && chain.isImage(chain.tailId())) {
             chain.insertAfter(chain.tailId(), ContentBlockModel(ContentType.TEXT, DEFAULT_TEXT_CONTENT, 0))
         }
-    }
-
-    private fun String.parseHtml(): String {
-        return Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY).toString()
     }
 }

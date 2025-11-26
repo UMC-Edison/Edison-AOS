@@ -7,6 +7,7 @@ import com.umc.edison.presentation.model.ContentType
 import java.io.File
 import java.io.FileOutputStream
 import javax.inject.Inject
+import com.umc.edison.presentation.edison.util.parseHtml
 
 /**
  * 이미지 관련 처리를 담당하는 핸들러 클래스
@@ -152,9 +153,5 @@ class ImageHandler @Inject constructor() {
         if (chain.tailId() != null && chain.isImage(chain.tailId())) {
             chain.insertAfter(chain.tailId(), ContentBlockModel(ContentType.TEXT, DEFAULT_TEXT_CONTENT, 0))
         }
-    }
-
-    private fun String.parseHtml(): String {
-        return android.text.Html.fromHtml(this, android.text.Html.FROM_HTML_MODE_LEGACY).toString()
     }
 }
