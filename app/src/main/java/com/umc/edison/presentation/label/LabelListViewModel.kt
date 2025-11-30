@@ -45,6 +45,8 @@ class LabelListViewModel @Inject constructor(
     companion object {
         const val SCREEN_NAME = "label_list"
         const val TEMP_LABEL_ID = "-1"
+        private const val ONBOARDING_TEMP_LABEL_NAME = "감상"
+        private const val ONBOARDING_TEMP_LABEL_BUBBLE_COUNT = 7
     }
 
     init {
@@ -229,7 +231,12 @@ class LabelListViewModel @Inject constructor(
             val hasAdditionalLabels = currentLabels.any { !it.id.isNullOrEmpty() }
             
             if (!hasAdditionalLabels) {
-                val tempLabel = LabelModel(id = TEMP_LABEL_ID, name = "감상", color = Aqua100, bubbleCnt = 7)
+                val tempLabel = LabelModel(
+                    id = TEMP_LABEL_ID,
+                    name = ONBOARDING_TEMP_LABEL_NAME,
+                    color = Aqua100,
+                    bubbleCnt = ONBOARDING_TEMP_LABEL_BUBBLE_COUNT
+                )
                 _uiState.update { it.copy(labels = it.labels + listOf(tempLabel)) }
             }
 
