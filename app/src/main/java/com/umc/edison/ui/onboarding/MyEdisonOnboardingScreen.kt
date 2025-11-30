@@ -106,7 +106,7 @@ fun MyEdisonOnboarding(
             MyEdisonOnboardingPage.SPACE_BOTTOM_TAB -> {
                 BottomTabOnboarding(
                     bottomTabComponent = bottomNavBarBounds[1],
-                    description = "모든 버블을 맵 형태로 확인해요.\n" + "키워드 맵핑으로 지금 필요한 아이디어를 찾아보세요.",
+                    description = "모든 버블을 맵 형태로 확인해요.\n키워드 맵핑으로 지금 필요한 아이디어를 찾아보세요.",
                     onNextPage = { currentPage = MyEdisonOnboardingPage.BUBBLE_BOTTOM_TAB },
                     statusBarHeightPx = statusBarHeightPx
                 )
