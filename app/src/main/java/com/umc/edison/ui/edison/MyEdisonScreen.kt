@@ -119,19 +119,9 @@ fun MyEdisonScreen(
 
                 1 -> {
                     if (onboardingState.show) {
-                        val imageRequest = ImageRequest.Builder(LocalContext.current)
-                            .data(R.drawable.bubble_ex)
-                            .crossfade(true)
-                            .build()
-
-                        AsyncImage(
-                            model = imageRequest,
+                        OnboardingImagePlaceholder(
                             contentDescription = "Bubble Example",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .wrapContentHeight(),
-                            alignment = Alignment.Center,
-                            contentScale = ContentScale.Crop,
+                            data = R.drawable.bubble_ex,
                         )
                     } else {
                         BubbleStorageScreen(
@@ -147,21 +137,10 @@ fun MyEdisonScreen(
 
                 2 -> {
                     if (onboardingState.show) {
-                        val imageRequest = ImageRequest.Builder(LocalContext.current)
-                            .data(R.drawable.bubble_ex)
-                            .crossfade(true)
-                            .build()
-
-                        AsyncImage(
-                            model = imageRequest,
+                        OnboardingImagePlaceholder(
                             contentDescription = "Label Example",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .wrapContentHeight(),
-                            alignment = Alignment.Center,
-                            contentScale = ContentScale.Crop,
+                            data = R.drawable.bubble_ex,
                         )
-                    } else {
                         LabelTabScreen(
                             navHostController = navController,
                         )
@@ -233,4 +212,25 @@ fun MyEdisonScreen(
             },
         )
     }
+}
+
+@Composable
+private fun OnboardingImagePlaceholder(
+    contentDescription: String,
+    data: Any,
+) {
+    val imageRequest = ImageRequest.Builder(LocalContext.current)
+        .data(data)
+        .crossfade(true)
+        .build()
+
+    AsyncImage(
+        model = imageRequest,
+        contentDescription = contentDescription,
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight(),
+        alignment = Alignment.Center,
+        contentScale = ContentScale.Crop,
+    )
 }
