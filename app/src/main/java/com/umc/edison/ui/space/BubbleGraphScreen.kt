@@ -43,7 +43,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import kotlin.math.sqrt
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.umc.edison.R
 import com.umc.edison.presentation.model.BubbleModel
@@ -117,12 +116,11 @@ fun BubbleGraphScreen(
 
                         val radius = 12f
                         uiState.bubbles.forEach { positionedBubble ->
-                            val distance = sqrt(
-                                (transformedOffset.x - positionedBubble.position.x) * (transformedOffset.x - positionedBubble.position.x) +
-                                (transformedOffset.y - positionedBubble.position.y) * (transformedOffset.y - positionedBubble.position.y)
-                            )
+                            val dx = transformedOffset.x - positionedBubble.position.x
+                            val dy = transformedOffset.y - positionedBubble.position.y
+                            val distanceSquared = dx * dx + dy * dy
 
-                            if (distance <= radius) {
+                            if (distanceSquared <= radius * radius) {
                                 showBubble(positionedBubble.bubble)
                                 return@detectTapGestures
                             }
