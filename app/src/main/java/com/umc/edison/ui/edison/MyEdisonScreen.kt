@@ -141,6 +141,7 @@ fun MyEdisonScreen(
                             contentDescription = "Label Example",
                             data = R.drawable.bubble_ex,
                         )
+                    } else {
                         LabelTabScreen(
                             navHostController = navController,
                         )
