@@ -312,7 +312,7 @@ fun BubbleInputOnboarding(
 }
 
 @Composable
-fun EdisonNavBarOnboarding(
+private fun EdisonNavBarOnboarding(
     edisonNavBarComponent: OnboardingPositionState,
     onNextPage: () -> Unit,
     statusBarHeightPx: Int,
