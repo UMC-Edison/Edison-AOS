@@ -123,3 +123,4 @@ class BubbleDataManager @Inject constructor(
         return currentBubble.copy(title = title)
     }
 }
+

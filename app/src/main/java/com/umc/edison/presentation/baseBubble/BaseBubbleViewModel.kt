@@ -62,3 +62,4 @@ abstract class BaseBubbleViewModel<M : BaseBubbleMode, S : BaseBubbleState<M>>(
 
     protected abstract fun refreshDataAfterDeletion()
 }
+

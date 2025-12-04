@@ -74,13 +74,6 @@ class BubbleInputViewModel @Inject constructor(
         }
     }
 
-    init {
-        val id: String? = savedStateHandle["bubbleId"]
-        fetchBubble(id)
-        fetchLabels()
-        fetchBubbles()
-    }
-
     private fun fetchBubble(bubbleId: String?) {
         if (bubbleId.isNullOrEmpty()) {
             chain.fromLinear(emptyList())
@@ -429,12 +422,11 @@ class BubbleInputViewModel @Inject constructor(
     }
 
     fun updateCameraOpen(isOpen: Boolean) {
-        val currImageSize = imageHandler.getCurrentImageCount(_uiState.value.bubble.contentBlocks)
         if (isOpen) {
-            return
-        } else if (!imageHandler.checkCanAddImage(currImageSize)) {
-            showToast(MAX_TOTAL_IMAGES_LIMIT_MESSAGE)
-            return
+            val currImageSize = imageHandler.getCurrentImageCount(_uiState.value.bubble.contentBlocks)
+            if (!imageHandler.checkCanAddImage(currImageSize)) {
+                showToast(MAX_TOTAL_IMAGES_LIMIT_MESSAGE)
+            }
         }
 
         _uiState.update { it.copy(isCameraOpen = isOpen) }

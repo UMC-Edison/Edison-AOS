@@ -1,9 +1,7 @@
 package com.umc.edison.domain.model.bubble
 
 import com.umc.edison.domain.model.label.Label
-import com.umc.edison.presentation.model.ContentBlockModel
 import java.util.Date
-import java.util.LinkedList
 
 data class Bubble(
     val id: String,
