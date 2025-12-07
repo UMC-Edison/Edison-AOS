@@ -13,6 +13,5 @@ data class GetProfileInfoResponse(
         email = email,
         nickname = nickname,
         profileImage = profileImg,
-        isNewMember = false
     )
 }

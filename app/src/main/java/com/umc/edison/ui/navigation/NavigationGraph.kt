@@ -102,17 +102,47 @@ fun NavigationGraph(
             SplashScreen(navHostController, updateShowBottomNav)
         }
 
-        composable(NavRoute.MakeNickName.route) {
+        composable(
+            route = NavRoute.MakeNickName.route + "?idToken={idToken}",
+            arguments = listOf(
+                navArgument("idToken") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                }
+            )
+        ) {
             MakeNickNameScreen(navHostController, updateShowBottomNav)
         }
 
-        composable(NavRoute.IdentityTest.route) {
+
+
+        composable(
+            route = NavRoute.IdentityTest.route + "?idToken={idToken}&nickname={nickname}",
+            arguments = listOf(
+                navArgument("idToken") { type = NavType.StringType },
+                navArgument("nickname") { type = NavType.StringType },
+            )
+        ) {
             IdentityTestScreen(navHostController, updateShowBottomNav)
         }
 
-        composable(NavRoute.TermsOfUse.route) {
+        composable(
+            route = NavRoute.TermsOfUse.route + "?fromSignUp={fromSignUp}&idToken={idToken}",
+            arguments = listOf(
+                navArgument("fromSignUp") {
+                    type = NavType.BoolType
+                    defaultValue = false
+                },
+                navArgument("idToken"){
+                    type = NavType.StringType
+                    defaultValue = ""
+                }
+            )
+        ) {
             TermsOfUseScreen(navHostController, updateShowBottomNav)
         }
+
+
 
         composable(
             route = "${NavRoute.IdentityEdit.route}?identityId={identityId}",

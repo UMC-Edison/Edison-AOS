@@ -18,6 +18,8 @@ import com.umc.edison.presentation.model.UserModel
 import com.umc.edison.presentation.model.toPresentation
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import org.json.JSONObject
+import retrofit2.HttpException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -32,6 +34,7 @@ class GoogleLoginHelper @Inject constructor(
     fun signInWithGoogle(
         context: Context,
         onSuccess: (UserModel) -> Unit,
+        onMemberNotFound: (String) -> Unit,
         onFailure: (String) -> Unit,
         onLoading: (Boolean) -> Unit
     ) {
@@ -52,7 +55,7 @@ class GoogleLoginHelper @Inject constructor(
                 onLoading(true)
                 val response: GetCredentialResponse =
                     credentialManager.getCredential(context, request)
-                handleSignIn(response, onSuccess, onFailure, onLoading)
+                handleSignIn(response, onSuccess, onMemberNotFound, onFailure, onLoading)
             } catch (e: GetCredentialException) {
                 onLoading(false)
                 Log.e("Google SignIn", "로그인 실패: ${e.message}", e)
@@ -73,6 +76,7 @@ class GoogleLoginHelper @Inject constructor(
     private fun handleSignIn(
         response: GetCredentialResponse,
         onSuccess: (UserModel) -> Unit,
+        onMemberNotFound: (String) -> Unit,
         onFailure: (String) -> Unit,
         onLoading: (Boolean) -> Unit
     ) {
@@ -83,7 +87,7 @@ class GoogleLoginHelper @Inject constructor(
                 val idToken = credential.idToken
                 Log.d("Google SignIn", "ID Token: $idToken")
 
-                sendIdTokenToServer(idToken, onSuccess, onFailure, onLoading)
+                sendIdTokenToServer(idToken, onSuccess, onMemberNotFound, onFailure, onLoading)
             }
 
             is CustomCredential -> {
@@ -94,7 +98,7 @@ class GoogleLoginHelper @Inject constructor(
                         val idToken = googleIdTokenCredential.idToken
                         Log.d("Google SignIn", "ID Token (CustomCredential): $idToken")
 
-                        sendIdTokenToServer(idToken, onSuccess, onFailure, onLoading)
+                        sendIdTokenToServer(idToken, onSuccess, onMemberNotFound, onFailure, onLoading)
                     } catch (e: Exception) {
                         Log.e("Google SignIn", "Received an invalid Google ID token response", e)
                         onFailure("잘못된 ID Token 응답을 받았습니다.")
@@ -113,6 +117,7 @@ class GoogleLoginHelper @Inject constructor(
     private fun sendIdTokenToServer(
         idToken: String,
         onSuccess: (UserModel) -> Unit,
+        onMemberNotFound: (String) -> Unit,
         onFailure: (String) -> Unit,
         onLoading: (Boolean) -> Unit
     ) {
@@ -138,9 +143,32 @@ class GoogleLoginHelper @Inject constructor(
                     }
 
                     is DataResource.Error -> {
-                        Log.e("Google SignIn", "서버 로그인 실패: ${result.throwable.message}")
                         onLoading(false)
-                        onFailure("로그인 실패: ${result.throwable.message}")
+
+                        val t = result.throwable
+                        Log.e("Google SignIn", "로그인 실패", t)
+
+                        var code: String? = null
+                        if (t is HttpException) {
+                            val errorBody = t.response()?.errorBody()?.string()
+                            Log.e("Google SignIn", "errorBody: $errorBody")
+
+                            try {
+                                val json = JSONObject(errorBody ?: "")
+                                code = json.optString("code", null)
+                            } catch (e: Exception) {
+                                Log.e("Google SignIn", "에러 바디 파싱 실패", e)
+                            }
+                        }
+
+                        when (code) {
+                            "MEMBER4001" -> {
+                                onMemberNotFound(idToken)
+                            }
+                            else -> {
+                                onFailure("LOGIN_ERROR")
+                            }
+                        }
                     }
 
                     is DataResource.Loading -> {
