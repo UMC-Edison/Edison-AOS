@@ -6,15 +6,13 @@ import com.umc.edison.domain.model.user.User
 data class UserEntity(
     val nickname: String?,
     val profileImage: String?,
-    val email: String,
-    val isNewMember: Boolean
+    val email: String
 ) : DataMapper<User> {
     override fun toDomain(): User {
         return User(
             nickname = nickname,
             profileImage = profileImage,
-            email = email,
-            isNewMember = isNewMember
+            email = email
         )
     }
 }
@@ -23,7 +21,6 @@ fun User.toData(): UserEntity {
     return UserEntity(
         nickname = nickname,
         profileImage = profileImage,
-        email = email,
-        isNewMember = isNewMember
+        email = email
     )
 }

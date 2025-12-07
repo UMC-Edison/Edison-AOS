@@ -164,7 +164,7 @@ fun LoginScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 24.dp),
-                    onClick = { navHostController.navigate(NavRoute.TermsOfUse.route) },
+                    onClick = { navHostController.navigate(NavRoute.TermsOfUse.createRoute(fromSignUp = false, idToken = "")) },
                 )
             }
         }

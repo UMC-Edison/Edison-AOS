@@ -128,7 +128,6 @@ fun IdentityTestScreen(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun IdentityTest1(
     pagerState: PagerState,
@@ -148,7 +147,7 @@ fun IdentityTest1(
             verticalArrangement = Arrangement.Top,
         ) {
             Text(
-                text = uiState.identity.question,
+                text = uiState.currentIdentity.question,
                 color = Gray800,
                 style = MaterialTheme.typography.displayLarge,
                 modifier = Modifier.padding(top = 30.dp, bottom = 48.dp)
@@ -160,10 +159,10 @@ fun IdentityTest1(
                 modifier = Modifier.padding(bottom = 48.dp)
 
             ) {
-                uiState.identity.options.forEach { keyword ->
+                uiState.currentIdentity.options.forEach { keyword ->
                     KeywordChip(
                         keyword = keyword.name,
-                        isSelected = uiState.identity.selectedKeywords.contains(keyword),
+                        isSelected = uiState.currentIdentity.selectedKeywords.contains(keyword),
                         onClick = { viewModel.toggleIdentityKeyword(keyword) }
                     )
                 }
@@ -182,7 +181,6 @@ fun IdentityTest1(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun IdentityTest2(
     pagerState: PagerState,
@@ -198,14 +196,14 @@ fun IdentityTest2(
         verticalArrangement = Arrangement.Top,
     ) {
         Text(
-            text = uiState.identity.question,
+            text = uiState.currentIdentity.question,
             color = Gray800,
             style = MaterialTheme.typography.displayLarge,
             modifier = Modifier.padding(top = 30.dp, bottom = 12.dp)
         )
 
         Text(
-            text = uiState.identity.questionTip ?: "",
+            text = uiState.currentIdentity.questionTip ?: "",
             color = Gray500,
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = 48.dp)
@@ -216,10 +214,10 @@ fun IdentityTest2(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(bottom = 48.dp)
         ) {
-            uiState.identity.options.forEach { keyword ->
+            uiState.currentIdentity.options.forEach { keyword ->
                 KeywordChip(
                     keyword = keyword.name,
-                    isSelected = uiState.identity.selectedKeywords.contains(keyword),
+                    isSelected = uiState.currentIdentity.selectedKeywords.contains(keyword),
                     onClick = { viewModel.toggleIdentityKeyword(keyword) }
                 )
             }
@@ -237,7 +235,6 @@ fun IdentityTest2(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun IdentityTest3(
     pagerState: PagerState,
@@ -253,7 +250,7 @@ fun IdentityTest3(
         verticalArrangement = Arrangement.Top,
     ) {
         Text(
-            text = uiState.identity.question,
+            text = uiState.currentIdentity.question,
             color = Gray800,
             style = MaterialTheme.typography.displayLarge,
             modifier = Modifier.padding(top = 30.dp, bottom = 48.dp)
@@ -264,10 +261,10 @@ fun IdentityTest3(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(bottom = 48.dp)
         ) {
-            uiState.identity.options.forEach { keyword ->
+            uiState.currentIdentity.options.forEach { keyword ->
                 KeywordChip(
                     keyword = keyword.name,
-                    isSelected = uiState.identity.selectedKeywords.contains(keyword),
+                    isSelected = uiState.currentIdentity.selectedKeywords.contains(keyword),
                     onClick = { viewModel.toggleIdentityKeyword(keyword) }
                 )
             }
@@ -284,16 +281,15 @@ fun IdentityTest3(
         )
     }
 }
-
-
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun IdentityTest4(
-    navHostController: NavHostController, pagerState: PagerState,
+    navHostController: NavHostController,
+    pagerState: PagerState,
     coroutineScope: CoroutineScope,
     viewModel: IdentityTestViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val currentIdentity = uiState.currentIdentity
 
     Column(
         modifier = Modifier
@@ -302,29 +298,31 @@ fun IdentityTest4(
         verticalArrangement = Arrangement.Top,
     ) {
         Text(
-            text = uiState.identity.question,
+            text = currentIdentity.question,
             color = Gray800,
             style = MaterialTheme.typography.displayLarge,
             modifier = Modifier.padding(top = 30.dp, bottom = 12.dp)
         )
 
-        Text(
-            text = uiState.identity.questionTip!!,
-            color = Gray500,
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 48.dp)
-        )
+        currentIdentity.questionTip?.let { tip ->
+            Text(
+                text = tip,
+                color = Gray500,
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(bottom = 48.dp)
+            )
+        }
 
         FlowRow(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(bottom = 48.dp)
         ) {
-            uiState.identity.options.forEach { keyword ->
+            currentIdentity.options.forEach { keyword ->
                 KeywordChip(
                     keyword = keyword.name,
-                    isSelected = uiState.identity.selectedKeywords.contains(keyword),
-                    onClick = { viewModel.toggleInterestKeyword(keyword) }
+                    isSelected = currentIdentity.selectedKeywords.contains(keyword),
+                    onClick = { viewModel.toggleIdentityKeyword(keyword) }
                 )
             }
         }
@@ -345,3 +343,5 @@ fun IdentityTest4(
         )
     }
 }
+
+

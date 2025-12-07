@@ -29,17 +29,22 @@ class LoginViewModel @Inject constructor(
                 CoroutineScope(Dispatchers.Main).launch {
                     showToast("로그인 성공!")
                     _uiState.update { it.copy(user = user) }
+                    navController.navigate(NavRoute.MyEdison.route)
+                }
+            },
+            onMemberNotFound = { idToken ->
+                CoroutineScope(Dispatchers.Main).launch {
+                    _uiState.update { it.copy(pendingGoogleIdToken = idToken) }
 
-                    if (user.isNewMember) {
-                        navController.navigate(NavRoute.TermsOfUse.route)
-                    } else {
-                        navController.navigate(NavRoute.MyEdison.route)
+                    navController.navigate(NavRoute.TermsOfUse.createRoute(fromSignUp = true, idToken = idToken )) {
+                        popUpTo(NavRoute.Login.route) { inclusive = true }
                     }
                 }
             },
-            onFailure = { message ->
-                showToast(message)
-            },
+            onFailure = {
+                showToast("로그인 중 오류가 발생했습니다.")
+            }
+            ,
             onLoading = { isLoading ->
                 _baseState.update { it.copy(isLoading = isLoading) }
             }

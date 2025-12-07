@@ -1,5 +1,6 @@
 package com.umc.edison.presentation.login
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.NavHostController
 import com.umc.edison.domain.usecase.user.GetMyProfileInfoUseCase
 import com.umc.edison.presentation.ToastManager
@@ -15,32 +16,36 @@ import javax.inject.Inject
 @HiltViewModel
 class TermsOfUseViewModel @Inject constructor(
     toastManager: ToastManager,
-    private val getMyProfileInfoUseCase: GetMyProfileInfoUseCase
+    savedStateHandle: SavedStateHandle,
 ) : BaseViewModel(toastManager) {
     private val _uiState = MutableStateFlow(TermsOfUseState.DEFAULT)
     val uiState = _uiState.asStateFlow()
 
     init {
-        checkUserLoginStatus()
+        val fromSignUp: Boolean = savedStateHandle.get<Boolean>("fromSignUp") ?: false
+        val idToken: String = savedStateHandle.get<String>("idToken") ?: ""
+
+        _uiState.update {
+            it.copy(
+                fromSignUp = fromSignUp,
+                idToken = idToken
+            )
+        }
     }
 
-    private fun checkUserLoginStatus() {
-        collectDataResource(
-            flow = getMyProfileInfoUseCase(),
-            onSuccess = { user ->
-                _uiState.update { it.copy(user = user.toPresentation()) }
-            },
-        )
-    }
 
     fun buttonClicked(navController: NavHostController) {
-        val isLoggedIn = uiState.value.user.email.isNotEmpty()
+        val state = uiState.value
 
-        if (isLoggedIn) {
-            navController.navigate(NavRoute.MakeNickName.route) {
+        if (state.fromSignUp) {
+            navController.navigate(
+                NavRoute.MakeNickName.createRoute(
+                    idToken = state.idToken
+                )
+            ) {
                 popUpTo(NavRoute.TermsOfUse.route) { inclusive = true }
             }
-        } else {
+        }  else {
             navController.navigate(NavRoute.MyEdison.route) {
                 popUpTo(NavRoute.TermsOfUse.route) { inclusive = true }
             }
