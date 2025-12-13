@@ -41,20 +41,18 @@ import com.umc.edison.ui.components.calculateBubbleSize
 import com.umc.edison.ui.navigation.NavRoute
 import com.umc.edison.ui.onboarding.BubbleSpaceOnboarding
 import com.umc.edison.ui.theme.Gray300
+import com.umc.edison.ui.theme.Gray500
+import com.umc.edison.ui.theme.Gray700
 import com.umc.edison.ui.theme.Gray800
 import com.umc.edison.ui.theme.Gray900
 import com.umc.edison.ui.theme.White000
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.umc.edison.R
 import com.umc.edison.ui.theme.EdisonTypography
-import com.umc.edison.ui.theme.Gray500
-import com.umc.edison.ui.theme.Gray700
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -110,18 +108,14 @@ fun BubbleStorageScreen(
             }
         },
     ) {
-
-        // ====== (추가) 버블이 없을 때 Empty 화면 출력 ======
         if (uiState.bubbles.isEmpty()) {
             BubbleStorageEmptyView(
                 onCtaClick = {
-                    // TODO: "찰나의 영감을 기록하기" 클릭 시 이동 로직 연결
-                    // (예: navHostController.navigate(...))
+                    navHostController.navigate(NavRoute.BubbleEdit.createRoute(""))
                 }
             )
             return@BaseContent
         }
-        // ===================================================
 
         var onBubbleClick: (BubbleModel) -> Unit = {}
         var onBubbleLongClick: (BubbleModel) -> Unit = {}
