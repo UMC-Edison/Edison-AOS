@@ -422,11 +422,9 @@ class BubbleInputViewModel @Inject constructor(
     }
 
     fun updateCameraOpen(isOpen: Boolean) {
-        if (isOpen) {
-            val currImageSize = imageHandler.getCurrentImageCount(_uiState.value.bubble.contentBlocks)
-            if (!imageHandler.checkCanAddImage(currImageSize)) {
-                showToast(MAX_TOTAL_IMAGES_LIMIT_MESSAGE)
-            }
+        val currImageSize = imageHandler.getCurrentImageCount(_uiState.value.bubble.contentBlocks)
+        if (isOpen && !imageHandler.checkCanAddImage(currImageSize)) {
+            showToast(MAX_TOTAL_IMAGES_LIMIT_MESSAGE)
         }
 
         _uiState.update { it.copy(isCameraOpen = isOpen) }
