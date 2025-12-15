@@ -123,7 +123,7 @@ class IdentityTestViewModel @Inject constructor(
     }
 
 
-    fun setInterestTestResult(navController: NavHostController) {
+    fun submitIdentityTestResult(navController: NavHostController) {
         val state = uiState.value
 
 
@@ -137,8 +137,7 @@ class IdentityTestViewModel @Inject constructor(
             return
         }
 
-        val interest = state.identities[IdentityCategory.INSPIRATION]
-        if (interest == null || interest.selectedKeywords.isEmpty()) {
+        if (state.currentIdentity.selectedKeywords.isEmpty()) {
             showToast("키워드를 한 개 이상 선택해 주세요.")
             return
         }

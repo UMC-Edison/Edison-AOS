@@ -14,7 +14,6 @@ import com.umc.edison.domain.DataResource
 import com.umc.edison.domain.usecase.user.GoogleLoginUseCase
 import com.umc.edison.domain.usecase.sync.SyncServerDataToLocalUseCase
 import com.umc.edison.domain.usecase.sync.SyncLocalDataToServerUseCase
-import com.umc.edison.presentation.model.UserModel
 import com.umc.edison.presentation.model.toPresentation
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -33,10 +32,7 @@ class GoogleLoginHelper @Inject constructor(
 
     fun signInWithGoogle(
         context: Context,
-        onSuccess: (UserModel) -> Unit,
-        onMemberNotFound: (String) -> Unit,
-        onFailure: (String) -> Unit,
-        onLoading: (Boolean) -> Unit
+        onResult: (GoogleLoginState) -> Unit
     ) {
         val signInWithGoogleOption = GetGoogleIdOption.Builder()
             .setFilterByAuthorizedAccounts(false)
@@ -52,33 +48,26 @@ class GoogleLoginHelper @Inject constructor(
 
         coroutineScope.launch {
             try {
-                onLoading(true)
-                val response: GetCredentialResponse =
-                    credentialManager.getCredential(context, request)
-                handleSignIn(response, onSuccess, onMemberNotFound, onFailure, onLoading)
+                onResult(GoogleLoginState.Loading)
+                val response = credentialManager.getCredential(context, request)
+                handleSignIn(response, onResult)
             } catch (e: GetCredentialException) {
-                onLoading(false)
-                Log.e("Google SignIn", "로그인 실패: ${e.message}", e)
+                Log.e("GoogleLoginHelper", "로그인 실패: ${e.message}", e)
 
-                when (e) {
-                    is androidx.credentials.exceptions.GetCredentialCancellationException -> {
-                        onFailure("사용자가 로그인 창을 닫았습니다.")
-                    }
-
-                    else -> {
-                        onFailure("알 수 없는 로그인 오류 발생")
-                    }
+                val errorMessage = when (e) {
+                    is androidx.credentials.exceptions.GetCredentialCancellationException ->
+                        GoogleLoginState.ERROR_MESSAGE_CANCELLED
+                    else ->
+                        GoogleLoginState.ERROR_MESSAGE_UNKNOWN
                 }
+                onResult(GoogleLoginState.Failure(errorMessage))
             }
         }
     }
 
     private fun handleSignIn(
         response: GetCredentialResponse,
-        onSuccess: (UserModel) -> Unit,
-        onMemberNotFound: (String) -> Unit,
-        onFailure: (String) -> Unit,
-        onLoading: (Boolean) -> Unit
+        onResult: (GoogleLoginState) -> Unit
     ) {
         val credential = response.credential
 
@@ -87,7 +76,7 @@ class GoogleLoginHelper @Inject constructor(
                 val idToken = credential.idToken
                 Log.d("Google SignIn", "ID Token: $idToken")
 
-                sendIdTokenToServer(idToken, onSuccess, onMemberNotFound, onFailure, onLoading)
+                sendIdTokenToServer(idToken, onResult)
             }
 
             is CustomCredential -> {
@@ -98,36 +87,31 @@ class GoogleLoginHelper @Inject constructor(
                         val idToken = googleIdTokenCredential.idToken
                         Log.d("Google SignIn", "ID Token (CustomCredential): $idToken")
 
-                        sendIdTokenToServer(idToken, onSuccess, onMemberNotFound, onFailure, onLoading)
+                        sendIdTokenToServer(idToken, onResult)
                     } catch (e: Exception) {
                         Log.e("Google SignIn", "Received an invalid Google ID token response", e)
-                        onFailure("잘못된 ID Token 응답을 받았습니다.")
+                        onResult(GoogleLoginState.Failure(GoogleLoginState.ERROR_MESSAGE_INVALID_TOKEN))
                     }
                 } else {
-                    onFailure("Unexpected type of credential")
+                    onResult(GoogleLoginState.Failure("Unexpected type of credential"))
                 }
             }
 
             else -> {
-                onFailure("Unexpected type of credential")
+                onResult(GoogleLoginState.Failure("Unexpected type of credential"))
             }
         }
     }
 
     private fun sendIdTokenToServer(
         idToken: String,
-        onSuccess: (UserModel) -> Unit,
-        onMemberNotFound: (String) -> Unit,
-        onFailure: (String) -> Unit,
-        onLoading: (Boolean) -> Unit
+        onResult: (GoogleLoginState) -> Unit
     ) {
         coroutineScope.launch {
             googleLoginUseCase(idToken).collect { result ->
                 when (result) {
                     is DataResource.Success -> {
-                        Log.d("Google SignIn", "서버 로그인 성공: ${result.data}")
-                        onLoading(false)
-                        onSuccess(result.data.toPresentation())
+                        onResult(GoogleLoginState.Success(result.data.toPresentation()))
 
                         try {
                             syncLocalDataToServerUseCase()
@@ -143,8 +127,6 @@ class GoogleLoginHelper @Inject constructor(
                     }
 
                     is DataResource.Error -> {
-                        onLoading(false)
-
                         val t = result.throwable
                         Log.e("Google SignIn", "로그인 실패", t)
 
@@ -162,17 +144,17 @@ class GoogleLoginHelper @Inject constructor(
                         }
 
                         when (code) {
-                            "MEMBER4001" -> {
-                                onMemberNotFound(idToken)
+                            GoogleLoginState.ERROR_CODE_MEMBER_NOT_FOUND -> {
+                                onResult(GoogleLoginState.MemberNotFound(idToken))
                             }
                             else -> {
-                                onFailure("LOGIN_ERROR")
+                                onResult(GoogleLoginState.Failure(GoogleLoginState.ERROR_MESSAGE_LOGIN_FAILED))
                             }
                         }
                     }
 
                     is DataResource.Loading -> {
-                        onLoading(true)
+                        onResult(GoogleLoginState.Loading)
                     }
                 }
             }

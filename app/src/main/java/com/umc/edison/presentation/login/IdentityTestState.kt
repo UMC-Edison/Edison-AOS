@@ -7,7 +7,7 @@ data class IdentityTestState(
     val selectedTabIndex: Int,
     val idToken: String,
     val nickname: String,
-    val identities: MutableMap<IdentityCategory, IdentityModel> = mutableMapOf(
+    val identities: Map<IdentityCategory, IdentityModel> = mapOf(
         IdentityCategory.EXPLAIN to IdentityModel.DEFAULT,
         IdentityCategory.FIELD to IdentityModel.DEFAULT,
         IdentityCategory.ENVIRONMENT to IdentityModel.DEFAULT,
