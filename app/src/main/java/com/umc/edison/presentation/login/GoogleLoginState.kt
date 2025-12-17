@@ -7,7 +7,9 @@ sealed interface GoogleLoginState {
     data object Loading : GoogleLoginState
     data class Success(val userModel: UserModel) : GoogleLoginState
     data class MemberNotFound(val idToken: String) : GoogleLoginState
-    data class Failure(val message: String) : GoogleLoginState
+    data class Failure(
+        val message: String = ERROR_MESSAGE_UNKNOWN
+    ) : GoogleLoginState
 
     companion object {
         const val ERROR_CODE_MEMBER_NOT_FOUND = "MEMBER4001"

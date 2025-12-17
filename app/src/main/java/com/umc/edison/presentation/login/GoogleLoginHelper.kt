@@ -9,6 +9,7 @@ import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.umc.edison.BuildConfig
 import com.umc.edison.R
 import com.umc.edison.domain.DataResource
 import com.umc.edison.domain.usecase.user.GoogleLoginUseCase
@@ -52,11 +53,10 @@ class GoogleLoginHelper @Inject constructor(
                 val response = credentialManager.getCredential(context, request)
                 handleSignIn(response, onResult)
             } catch (e: GetCredentialException) {
-                Log.e("GoogleLoginHelper", "로그인 실패: ${e.message}", e)
-
                 val errorMessage = when (e) {
                     is androidx.credentials.exceptions.GetCredentialCancellationException ->
                         GoogleLoginState.ERROR_MESSAGE_CANCELLED
+
                     else ->
                         GoogleLoginState.ERROR_MESSAGE_UNKNOWN
                 }
@@ -74,7 +74,9 @@ class GoogleLoginHelper @Inject constructor(
         when (credential) {
             is GoogleIdTokenCredential -> {
                 val idToken = credential.idToken
-                Log.d("Google SignIn", "ID Token: $idToken")
+                if (BuildConfig.DEBUG){
+                    Log.d("Google SignIn", "ID Token: $idToken")
+                }
 
                 sendIdTokenToServer(idToken, onResult)
             }
@@ -85,20 +87,21 @@ class GoogleLoginHelper @Inject constructor(
                         val googleIdTokenCredential =
                             GoogleIdTokenCredential.createFrom(credential.data)
                         val idToken = googleIdTokenCredential.idToken
-                        Log.d("Google SignIn", "ID Token (CustomCredential): $idToken")
-
+                        if (BuildConfig.DEBUG){
+                            Log.d("Google SignIn", "ID Token (CustomCredential): $idToken")
+                        }
                         sendIdTokenToServer(idToken, onResult)
                     } catch (e: Exception) {
                         Log.e("Google SignIn", "Received an invalid Google ID token response", e)
                         onResult(GoogleLoginState.Failure(GoogleLoginState.ERROR_MESSAGE_INVALID_TOKEN))
                     }
                 } else {
-                    onResult(GoogleLoginState.Failure("Unexpected type of credential"))
+                    onResult(GoogleLoginState.Failure())
                 }
             }
 
             else -> {
-                onResult(GoogleLoginState.Failure("Unexpected type of credential"))
+                onResult(GoogleLoginState.Failure())
             }
         }
     }
@@ -129,24 +132,23 @@ class GoogleLoginHelper @Inject constructor(
                     is DataResource.Error -> {
                         val t = result.throwable
                         Log.e("Google SignIn", "로그인 실패", t)
-
-                        var code: String? = null
-                        if (t is HttpException) {
-                            val errorBody = t.response()?.errorBody()?.string()
-                            Log.e("Google SignIn", "errorBody: $errorBody")
-
-                            try {
-                                val json = JSONObject(errorBody ?: "")
-                                code = json.optString("code", null)
-                            } catch (e: Exception) {
-                                Log.e("Google SignIn", "에러 바디 파싱 실패", e)
+                        val errorCode = (t as? HttpException)?.let { exception ->
+                            exception.response()?.errorBody()?.string()?.also { errorBody ->
+                                Log.e("Google SignIn", "errorBody: $errorBody")
+                            }?.let { errorBody ->
+                                runCatching {
+                                    JSONObject(errorBody).optString("code")
+                                        .takeIf { it.isNotEmpty() }
+                                }
+                                    .onFailure { Log.e("Google SignIn", "에러 바디 파싱 실패", it) }
+                                    .getOrNull()
                             }
                         }
-
-                        when (code) {
+                        when (errorCode) {
                             GoogleLoginState.ERROR_CODE_MEMBER_NOT_FOUND -> {
                                 onResult(GoogleLoginState.MemberNotFound(idToken))
                             }
+
                             else -> {
                                 onResult(GoogleLoginState.Failure(GoogleLoginState.ERROR_MESSAGE_LOGIN_FAILED))
                             }

@@ -37,9 +37,6 @@ class LoginViewModel @Inject constructor(
             is GoogleLoginState.Success -> {
                 _baseState.update { it.copy(isLoading = false) }
                 _uiState.update { it.copy(user = state.userModel) }
-
-                showToast("로그인 성공!")
-
                 navController.navigate(NavRoute.MyEdison.route) {
                     popUpTo(NavRoute.Login.route) { inclusive = true }
                 }
