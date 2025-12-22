@@ -27,14 +27,28 @@ sealed class NavRoute(val route: String) {
     data object MyPage : NavRoute(MY_PAGE_ROUTE)
     data object Splash : NavRoute(SPLASH_ROUTE)
     data object Login : NavRoute(LOGIN_ROUTE)
-    data object MakeNickName : NavRoute(MAKE_NICKNAME_ROUTE)
-    data object IdentityTest : NavRoute(IDENTITY_TEST_ROUTE)
-    data object TermsOfUse : NavRoute(TERMS_OF_USE_ROUTE)
     data object ScrapBoard : NavRoute(SCRAP_BOARD_ROUTE)
 
     /**
      * Dynamic Routes
      */
+
+    data object MakeNickName : NavRoute(MAKE_NICKNAME_ROUTE) {
+        fun createRoute(idToken: String): String =
+            "$route?idToken=$idToken"
+    }
+
+
+    data object IdentityTest : NavRoute(IDENTITY_TEST_ROUTE) {
+        fun createRoute(idToken: String, nickname: String): String =
+            "$route?idToken=$idToken&nickname=$nickname"
+    }
+
+    data object TermsOfUse : NavRoute(TERMS_OF_USE_ROUTE) {
+        fun createRoute(fromSignUp: Boolean, idToken: String): String =
+            "$route?fromSignUp=$fromSignUp&idToken=$idToken"
+    }
+
     data object ArtLetterDetail : NavRoute(ART_LETTER_ROUTE) {
         fun createRoute(id: Int): String = "$route?artLetterId=$id"
     }

@@ -1,5 +1,6 @@
 package com.umc.edison.remote.datasources
 
+import android.util.Log
 import com.umc.edison.data.datasources.UserRemoteDataSource
 import com.umc.edison.data.model.identity.IdentityCategoryEntity
 import com.umc.edison.data.model.identity.IdentityEntity
@@ -13,6 +14,7 @@ import com.umc.edison.remote.model.login.toSetIdentityKeywordRequest
 import com.umc.edison.remote.model.mypage.toUpdateTestRequest
 import com.umc.edison.remote.model.mypage.toUpdateProfileRequest
 import com.umc.edison.remote.api.RefreshTokenApiService
+import com.umc.edison.remote.model.login.SignUpRequest
 import javax.inject.Inject
 
 class UserRemoteDataSourceImpl @Inject constructor(
@@ -31,9 +33,28 @@ class UserRemoteDataSourceImpl @Inject constructor(
         val response = loginApiService.googleLogin(request)
 
         if (!response.isSuccess) {
-            throw Exception("Google 로그인 실패: ${response.message}")
+            throw Exception(response.code)
         }
 
+        return response.data.toData()
+    }
+
+    override suspend fun googleSignup(
+        idToken: String,
+        nickname: String,
+        identity: List<IdentityEntity>
+    ): UserWithTokenEntity {
+        val request = SignUpRequest(
+            idToken = idToken,
+            nickname = nickname,
+            identity = identity.map { it.toSetIdentityKeywordRequest() }
+        )
+
+        val response = loginApiService.googleSignup(request)
+
+        if (!response.isSuccess) {
+            throw Exception(response.code)
+        }
         return response.data.toData()
     }
 

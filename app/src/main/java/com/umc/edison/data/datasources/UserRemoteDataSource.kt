@@ -9,6 +9,11 @@ interface UserRemoteDataSource {
     // CREATE
     suspend fun addIdentity(identity: IdentityEntity)
     suspend fun googleLogin(idToken: String): UserWithTokenEntity
+    suspend fun googleSignup(
+        idToken: String,
+        nickname: String,
+        identity: List<IdentityEntity>
+    ): UserWithTokenEntity
     suspend fun refreshAccessToken(refreshToken: String): String
 
     // READ

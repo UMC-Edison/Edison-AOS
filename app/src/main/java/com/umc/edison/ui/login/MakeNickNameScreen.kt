@@ -24,12 +24,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.umc.edison.presentation.login.IdentityTestState
+import com.umc.edison.presentation.login.LoginViewModel
 import com.umc.edison.presentation.login.MakeNickNameViewModel
 import com.umc.edison.ui.BaseContent
 import com.umc.edison.ui.components.BasicFullButton
 import com.umc.edison.ui.theme.Gray100
 import com.umc.edison.ui.theme.Gray600
 import com.umc.edison.ui.theme.Gray800
+import com.umc.edison.ui.theme.Gray900
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 @Composable
 fun MakeNickNameScreen(
@@ -38,7 +43,9 @@ fun MakeNickNameScreen(
     viewModel: MakeNickNameViewModel = hiltViewModel(),
 ) {
     val baseState by viewModel.baseState.collectAsState()
-    var textState by remember { mutableStateOf("") }
+    val uiState by viewModel.uiState.collectAsState()
+
+    val nickname = uiState.nickname
 
     LaunchedEffect(Unit) {
         updateShowBottomNav(false)
@@ -59,17 +66,16 @@ fun MakeNickNameScreen(
                 style = MaterialTheme.typography.displayLarge,
                 modifier = Modifier.padding(top = 67.dp, bottom = 24.dp)
             )
-
             TextField(
-                value = textState,
-                onValueChange = { if (it.length <= 20) textState = it },
+                value = nickname,
+                onValueChange = { if (it.length <= 20) viewModel.onNicknameChange(it) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
                     .background(Gray100),
                 placeholder = {
                     Text(
-                        text = textState.ifEmpty { "닉네임을 입력해주세요. (최대 20자)" },
+                        text = "닉네임을 입력해주세요. (최대 20자)",
                         style = MaterialTheme.typography.titleMedium,
                         color = Gray600,
                     )
@@ -77,6 +83,8 @@ fun MakeNickNameScreen(
                 textStyle = MaterialTheme.typography.bodyMedium,
                 singleLine = true,
                 colors = TextFieldDefaults.colors(
+                    focusedTextColor = Gray800,
+                    unfocusedTextColor = Gray800,
                     unfocusedContainerColor = Color.Transparent,
                     focusedContainerColor = Color.Transparent,
                     disabledContainerColor = Color.Transparent,
@@ -90,10 +98,12 @@ fun MakeNickNameScreen(
 
             BasicFullButton(
                 text = "다음으로",
-                enabled = textState.isNotEmpty(),
+                enabled = nickname.isNotEmpty(),
                 modifier = Modifier,
                 onClick = {
-                    viewModel.makeNickName(textState, navHostController)
+                    viewModel.makeNickName(
+                        navController = navHostController,
+                    )
                 },
             )
         }

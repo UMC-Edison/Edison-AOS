@@ -2,10 +2,12 @@ package com.umc.edison.data.repository
 
 import com.umc.edison.data.bound.FlowBoundResourceFactory
 import com.umc.edison.data.datasources.UserRemoteDataSource
+import com.umc.edison.data.model.identity.toData
 import com.umc.edison.data.model.user.UserWithTokenEntity
 import com.umc.edison.data.model.user.toData
 import com.umc.edison.data.token.TokenManager
 import com.umc.edison.domain.DataResource
+import com.umc.edison.domain.model.identity.Identity
 import com.umc.edison.domain.model.user.User
 import com.umc.edison.domain.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
@@ -24,6 +26,25 @@ class UserRepositoryImpl @Inject constructor(
             userWithToken
         }
     )
+
+    override fun googleSignUp(
+        idToken: String,
+        nickname: String,
+        identity: List<Identity>
+    ): Flow<DataResource<User>> = resourceFactory.remote(
+        dataAction = {
+            val userWithToken: UserWithTokenEntity =
+                userRemoteDataSource.googleSignup(
+                    idToken = idToken,
+                    nickname = nickname,
+                    identity = identity.map { it.toData() }
+                )
+            tokenManager.setToken(userWithToken.accessToken, userWithToken.refreshToken)
+            userWithToken
+        }
+    )
+
+
 
     // READ
     override fun getLogInState(): Flow<DataResource<Boolean>> = resourceFactory.local(
