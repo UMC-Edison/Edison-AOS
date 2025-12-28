@@ -12,6 +12,7 @@ data class LabelDetailState(
     val movableLabels: List<LabelModel>,
     override val selectedBubbles: List<BubbleModel>,
     override val mode: BaseBubbleMode,
+    val hasTemporaryOnboardingBubbles: Boolean = false,
 ) : BaseBubbleState<LabelDetailMode>(selectedBubbles, mode) {
     companion object {
         val DEFAULT = LabelDetailState(
@@ -20,6 +21,7 @@ data class LabelDetailState(
             movableLabels = emptyList(),
             selectedBubbles = emptyList(),
             mode = LabelDetailMode.NONE,
+            hasTemporaryOnboardingBubbles = false,
         )
     }
 

@@ -34,6 +34,7 @@ import com.umc.edison.ui.components.LabelTagList
 import com.umc.edison.ui.components.LabelTopAppBar
 import com.umc.edison.ui.components.calculateBubbleSize
 import com.umc.edison.ui.navigation.NavRoute
+import com.umc.edison.ui.onboarding.LabelDetailOnboardingScreen
 import com.umc.edison.ui.theme.Gray800
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,6 +46,7 @@ fun LabelDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val baseState by viewModel.baseState.collectAsState()
+    val onboardingState by viewModel.onboardingState.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
 
     LaunchedEffect(Unit) {
@@ -65,11 +67,19 @@ fun LabelDetailScreen(
 
     BackHandler(enabled = true) {
         if (uiState.mode == LabelDetailMode.NONE) {
+            viewModel.dismissOnboarding()
             navHostController.popBackStack()
         } else {
             viewModel.updateEditMode(LabelDetailMode.NONE)
             updateShowBottomNav(true)
         }
+    }
+
+    if (onboardingState.show) {
+        LabelDetailOnboardingScreen(
+            onboardingState = onboardingState,
+            onDismiss = { viewModel.dismissOnboarding() }
+        )
     }
 
     BaseContent(
@@ -141,7 +151,10 @@ fun LabelDetailScreen(
                 onBubbleClick = onBubbleClick,
                 onBubbleLongClick = onBubbleLongClick,
                 isBlur = uiState.mode != LabelDetailMode.NONE,
-                selectedBubble = uiState.selectedBubbles
+                selectedBubble = uiState.selectedBubbles,
+                setGlobalBubblePosition = { offset, size ->
+                    viewModel.setBubbleBounds(offset, size)
+                }
             )
         }
 
