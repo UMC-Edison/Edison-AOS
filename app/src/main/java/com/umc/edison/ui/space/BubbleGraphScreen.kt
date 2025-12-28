@@ -46,6 +46,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.umc.edison.R
 import com.umc.edison.presentation.model.BubbleModel
 import com.umc.edison.presentation.model.getDisplayTitle
+import com.umc.edison.presentation.space.BubbleGraphState.Companion.BUBBLE_DOT_RADIUS
 import com.umc.edison.presentation.space.BubbleGraphViewModel
 import com.umc.edison.ui.onboarding.BubbleGraphOnboardingScreen
 import com.umc.edison.ui.theme.Gray100
@@ -94,7 +95,7 @@ fun BubbleGraphScreen(
             .pointerInput(uiState.bubbles, scale, offset) {
                 detectTapGestures { tapOffset ->
                     val transformedOffset = (tapOffset - offset) / scale
-                    val radius = 12f
+                    val radius = BUBBLE_DOT_RADIUS
                     val touchRadius = radius * 1.5f
                     
                     uiState.bubbles.forEach { positionedBubble ->
@@ -164,7 +165,7 @@ fun BubbleGraphScreen(
             }
 
             // 버블 점 그리기
-            val radius = 12f
+            val radius = BUBBLE_DOT_RADIUS
             uiState.bubbles.forEach { positionedBubble ->
                 val colors: List<Color> = positionedBubble.bubble.labels.map { it.color }
                 if (colors.size <= 1) {
