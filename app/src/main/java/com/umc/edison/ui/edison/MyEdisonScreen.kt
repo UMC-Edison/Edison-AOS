@@ -139,7 +139,7 @@ fun MyEdisonScreen(
                     if (onboardingState.show) {
                         OnboardingImagePlaceholder(
                             contentDescription = "Label Example",
-                            data = R.drawable.bubble_ex,
+                            data = R.drawable.label_ex,
                         )
                     } else {
                         LabelTabScreen(
