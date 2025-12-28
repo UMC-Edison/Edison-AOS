@@ -181,7 +181,7 @@ fun LinkMenuOnboarding(
                 }
                 .background(
                     color = White000,
-                    shape = RoundedCornerShape(OnboardingConstants.TEXT_BOX_CORNER_RADIUS)
+                    shape = RoundedCornerShape(OnboardingConstants.TEXT_BOX_CORNER_RADIUS.dp)
                 )
                 .padding(OnboardingConstants.TEXT_BOX_INNER_PADDING.dp)
         ) {
