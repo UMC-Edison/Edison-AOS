@@ -486,24 +486,18 @@ class BubbleInputViewModel @Inject constructor(
 
     fun goToNextOnboardingPage() {
         val currentPage = _onboardingState.value.currentPage
-        val nextPage = when (currentPage) {
+        when (currentPage) {
             BubbleInputOnboardingPage.LABEL -> {
-                BubbleInputOnboardingPage.LINK
+                _onboardingState.update { it.copy(currentPage = BubbleInputOnboardingPage.LINK) }
             }
             BubbleInputOnboardingPage.LINK -> {
-                _uiState.update {
-                    it.copy(
-                        selectedIcon = IconType.LINK
-                    )
-                }
-
-                BubbleInputOnboardingPage.LINK_MENU
+                _uiState.update { it.copy(selectedIcon = IconType.LINK) }
+                _onboardingState.update { it.copy(currentPage = BubbleInputOnboardingPage.LINK_MENU) }
             }
             BubbleInputOnboardingPage.LINK_MENU -> {
-                BubbleInputOnboardingPage.LINK_MENU
+                // do nothing
             }
         }
-        _onboardingState.update { it.copy(currentPage = nextPage) }
     }
 
     fun dismissOnboarding() {
