@@ -97,13 +97,13 @@ fun KeywordMapButtonOnboarding(
                 }
 
                 clipPath(holePath) {
-                    drawRect(color = Black000.copy(alpha = 0.5f))
+                    drawRect(color = Black000.copy(alpha = OnboardingConstants.OVERLAY_ALPHA))
                 }
 
                 drawContent()
             }
     ) {
-        val offsetY = with(density) { 80.dp.toPx() }
+        val offsetY = with(density) { OnboardingConstants.OFFSET_SMALL.dp.toPx() }
 
         Box(
             modifier = Modifier
@@ -112,14 +112,18 @@ fun KeywordMapButtonOnboarding(
                     IntOffset(
                         x = 0,
                         y = (buttonCenterY - buttonRadius - offsetY).roundToInt()
+                            .coerceAtLeast(OnboardingConstants.TEXT_BOX_MIN_TOP_MARGIN)
                     )
                 }
-                .background(color = White000, shape = RoundedCornerShape(16.dp))
+                .background(
+                    color = White000,
+                    shape = RoundedCornerShape(OnboardingConstants.TEXT_BOX_CORNER_RADIUS)
+                )
         ) {
             Text(
                 text = "모든 버블을 맵 형태로 확인해요.\n키워드 맵핑으로 지금 필요한 아이디어를 찾아보세요.",
                 modifier = Modifier
-                    .padding(16.dp)
+                    .padding(OnboardingConstants.TEXT_BOX_PADDING.dp)
                     .align(Alignment.Center),
                 color = Color.Black,
                 style = MaterialTheme.typography.bodyMedium,

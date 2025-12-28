@@ -2,7 +2,11 @@ package com.umc.edison.presentation.edison
 
 import android.content.Context
 import android.net.Uri
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.IntSize
 import androidx.lifecycle.SavedStateHandle
+import com.umc.edison.domain.usecase.onboarding.GetHasSeenOnboardingUseCase
+import com.umc.edison.domain.usecase.onboarding.SetHasSeenOnboardingUseCase
 import com.umc.edison.presentation.ToastManager
 import com.umc.edison.presentation.base.BaseViewModel
 import com.umc.edison.presentation.edison.ImageHandler.Companion.MAX_TOTAL_IMAGES
@@ -13,6 +17,7 @@ import com.umc.edison.presentation.model.ContentBlockModel
 import com.umc.edison.presentation.model.ContentType
 import com.umc.edison.presentation.model.LabelModel
 import com.umc.edison.presentation.model.toPresentation
+import com.umc.edison.presentation.onboarding.OnboardingPositionState
 import com.umc.edison.ui.components.IconType
 import com.umc.edison.ui.components.ListStyle
 import com.umc.edison.ui.components.TextStyle
@@ -21,7 +26,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
-
 
 private sealed class InsertionTarget {
     data object None : InsertionTarget()
@@ -35,7 +39,9 @@ class BubbleInputViewModel @Inject constructor(
     toastManager: ToastManager,
     private val bubbleDataManager: BubbleDataManager,
     private val contentBlockManager: ContentBlockManager,
-    private val imageHandler: ImageHandler
+    private val imageHandler: ImageHandler,
+    getHasSeenOnboardingUseCase: GetHasSeenOnboardingUseCase,
+    private val setHasSeenOnboardingUseCase: SetHasSeenOnboardingUseCase,
 ) : BaseViewModel(toastManager) {
 
     private val chain = EditorChain()
@@ -46,7 +52,14 @@ class BubbleInputViewModel @Inject constructor(
     )
     val uiState = _uiState.asStateFlow()
 
+    private val _onboardingState = MutableStateFlow(BubbleInputOnboardingState.DEFAULT)
+    val onboardingState = _onboardingState.asStateFlow()
+
     private var _currentInsertionTarget: InsertionTarget = InsertionTarget.None
+
+    companion object {
+        const val SCREEN_NAME = "bubble_input"
+    }
 
     init {
         contentBlockManager.initialize(chain, ::publish, ::showToast)
@@ -56,6 +69,13 @@ class BubbleInputViewModel @Inject constructor(
         fetchBubble(id)
         fetchLabels()
         fetchBubbles()
+
+        collectDataResource(
+            flow = getHasSeenOnboardingUseCase(SCREEN_NAME),
+            onSuccess = { hasSeen ->
+                _onboardingState.update { it.copy(show = !hasSeen) }
+            },
+        )
     }
 
     private fun setInsertionTarget(target: InsertionTarget) {
@@ -223,16 +243,6 @@ class BubbleInputViewModel @Inject constructor(
 
     fun updateLabelEditMode(labelEditMode: LabelEditMode) {
         _uiState.update { it.copy(labelEditMode = labelEditMode) }
-    }
-
-    private fun addTextBlock() {
-        val tailId = chain.tailId()
-        if (tailId == null) return
-        val tailBlockType = chain.node(tailId)?.block?.type
-        if (tailBlockType != ContentType.TEXT) {
-            chain.insertAfter(tailId, ContentBlockModel(ContentType.TEXT, "", 0))
-            publish()
-        }
     }
 
     private fun addTextBlockToFront() {
@@ -456,4 +466,57 @@ class BubbleInputViewModel @Inject constructor(
         }
     }
 
+    fun setLabelButtonBounds(offset: Offset, size: IntSize) {
+        _onboardingState.update {
+            it.copy(labelButtonBound = OnboardingPositionState(offset, size))
+        }
+    }
+
+    fun setLinkButtonBounds(offset: Offset, size: IntSize) {
+        _onboardingState.update {
+            it.copy(linkButtonBound = OnboardingPositionState(offset, size))
+        }
+    }
+
+    fun setLinkMenuBounds(offset: Offset, size: IntSize) {
+        _onboardingState.update {
+            it.copy(linkMenuBound = OnboardingPositionState(offset, size))
+        }
+    }
+
+    fun goToNextOnboardingPage() {
+        val currentPage = _onboardingState.value.currentPage
+        val nextPage = when (currentPage) {
+            BubbleInputOnboardingPage.LABEL -> {
+                BubbleInputOnboardingPage.LINK
+            }
+            BubbleInputOnboardingPage.LINK -> {
+                _uiState.update {
+                    it.copy(
+                        selectedIcon = IconType.LINK
+                    )
+                }
+
+                BubbleInputOnboardingPage.LINK_MENU
+            }
+            BubbleInputOnboardingPage.LINK_MENU -> {
+                BubbleInputOnboardingPage.LINK_MENU
+            }
+        }
+        _onboardingState.update { it.copy(currentPage = nextPage) }
+    }
+
+    fun dismissOnboarding() {
+        collectDataResource(
+            flow = setHasSeenOnboardingUseCase(SCREEN_NAME),
+            onSuccess = {
+                _onboardingState.update { it.copy(show = false) }
+                _uiState.update {
+                    it.copy(
+                        selectedIcon = IconType.NONE
+                    )
+                }
+            },
+        )
+    }
 }
