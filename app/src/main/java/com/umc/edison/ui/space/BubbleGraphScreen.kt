@@ -35,15 +35,19 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.umc.edison.R
 import com.umc.edison.presentation.model.BubbleModel
 import com.umc.edison.presentation.model.getDisplayTitle
 import com.umc.edison.presentation.space.BubbleGraphViewModel
+import com.umc.edison.ui.onboarding.BubbleGraphOnboardingScreen
 import com.umc.edison.ui.theme.Gray100
 import com.umc.edison.ui.theme.Gray300
 import com.umc.edison.ui.theme.Gray500
@@ -59,6 +63,7 @@ fun BubbleGraphScreen(
     viewModel: BubbleGraphViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val onboardingState by viewModel.onboardingState.collectAsState()
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
 
@@ -67,6 +72,13 @@ fun BubbleGraphScreen(
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
+
+    if (onboardingState.show) {
+        BubbleGraphOnboardingScreen(
+            onboardingState = onboardingState,
+            onDismiss = { viewModel.dismissOnboarding() }
+        )
+    }
 
     BoxWithConstraints(
         modifier = Modifier
@@ -190,7 +202,15 @@ fun BubbleGraphScreen(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)
-                .size(64.dp),
+                .size(64.dp)
+                .onGloballyPositioned { coordinates ->
+                    val position = coordinates.positionInWindow()
+                    val size = coordinates.size
+                    viewModel.setKeywordMapButtonBounds(
+                        offset = Offset(position.x, position.y),
+                        size = IntSize(size.width, size.height)
+                    )
+                },
             shape = CircleShape,
             containerColor = Gray100
         ) {
