@@ -4,7 +4,7 @@ data class ContentBlockModel(
     val type: ContentType,
     var content: String,
     var position: Int,
-) {
+    val id: String = java.util.UUID.randomUUID().toString(),) {
     fun toDomain(): String {
         // Text 타입의 경우 앞에 %<TEXT>와 뒤에 </TEXT>%가 붙어있고
         // Image 타입의 경우 앞에 %<IMAGE>와 뒤에 </IMAGE>%가 붙어있음
@@ -14,6 +14,7 @@ data class ContentBlockModel(
         }
     }
 }
+
 
 enum class ContentType {
     TEXT, IMAGE

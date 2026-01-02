@@ -41,7 +41,7 @@ fun MakeNickNameScreen(
     navHostController: NavHostController,
     updateShowBottomNav: (Boolean) -> Unit,
     viewModel: MakeNickNameViewModel = hiltViewModel(),
-){
+) {
     val baseState by viewModel.baseState.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
 
@@ -60,6 +60,12 @@ fun MakeNickNameScreen(
                 .padding(24.dp),
             verticalArrangement = Arrangement.Top,
         ) {
+            Text(
+                text = "에디슨에서 사용할\n닉네임을 설정해주세요.",
+                color = Gray800,
+                style = MaterialTheme.typography.displayLarge,
+                modifier = Modifier.padding(top = 67.dp, bottom = 24.dp)
+            )
             TextField(
                 value = nickname,
                 onValueChange = { if (it.length <= 20) viewModel.onNicknameChange(it) },

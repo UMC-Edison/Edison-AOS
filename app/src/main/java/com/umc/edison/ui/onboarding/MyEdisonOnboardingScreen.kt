@@ -149,74 +149,14 @@ fun BottomTabOnboarding(
     onNextPage: () -> Unit,
     statusBarHeightPx: Int,
 ) {
-    val density = LocalDensity.current
-
-    val widthPx = bottomTabComponent.size.width.toFloat()
-    val centerX = bottomTabComponent.offset.x + widthPx / 2f
-    val centerY =
-        bottomTabComponent.offset.y - statusBarHeightPx + bottomTabComponent.size.height / 2f
-    val radius = widthPx / 2f
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .pointerInput(Unit) {
-                awaitPointerEventScope {
-                    while (true) {
-                        val event = awaitPointerEvent()
-                        event.changes.forEach { it.consume() }
-                    }
-                }
-            }
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onNextPage
-            )
-            .drawWithContent {
-                val overlayRect = Rect(Offset.Zero, size)
-                val holePath = Path().apply {
-                    addRect(overlayRect)
-                    addOval(
-                        Rect(
-                            left = centerX - radius,
-                            top = centerY - radius,
-                            right = centerX + radius,
-                            bottom = centerY + radius
-                        )
-                    )
-                    fillType = PathFillType.EvenOdd
-                }
-
-                clipPath(holePath) {
-                    drawRect(color = Black000.copy(alpha = 0.5f))
-                }
-
-                drawContent()
-            }) {
-        val offsetY = with(density) { 30.dp.toPx() }
-
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .offset {
-                    IntOffset(
-                        x = 0,
-                        y = (bottomTabComponent.offset.y - statusBarHeightPx - radius * 2 - offsetY).roundToInt()
-                    )
-                }
-                .background(color = White000, shape = RoundedCornerShape(16))) {
-            Text(
-                text = description,
-                modifier = Modifier
-                    .padding(16.dp)
-                    .align(Alignment.Center),
-                color = Color.Black,
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
+    ButtonOnboarding(
+        buttonBound = bottomTabComponent,
+        text = description,
+        offsetDp = OnboardingConstants.OFFSET_SMALL,
+        textPosition = TextPosition.ABOVE_FAR,
+        onDismiss = onNextPage,
+        statusBarHeightPx = statusBarHeightPx
+    )
 }
 
 @Composable
@@ -318,75 +258,12 @@ private fun EdisonNavBarOnboarding(
     statusBarHeightPx: Int,
     text: String,
 ) {
-    val density = LocalDensity.current
-
-    val edisonCenterX = edisonNavBarComponent.offset.x + edisonNavBarComponent.size.width / 2f
-    val edisonCenterY =
-        edisonNavBarComponent.offset.y - statusBarHeightPx + edisonNavBarComponent.size.height / 2f
-    val edisonRadius = edisonNavBarComponent.size.width.toFloat() / 2f
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .pointerInput(Unit) {
-                awaitPointerEventScope {
-                    while (true) {
-                        val event = awaitPointerEvent()
-                        event.changes.forEach { it.consume() }
-                    }
-                }
-            }
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onNextPage
-            )
-            .drawWithContent {
-                val overlayRect = Rect(Offset.Zero, size)
-                val holePath = Path().apply {
-                    addRect(overlayRect)
-
-                    addOval(
-                        Rect(
-                            left = edisonCenterX - edisonRadius,
-                            top = edisonCenterY - edisonRadius,
-                            right = edisonCenterX + edisonRadius,
-                            bottom = edisonCenterY + edisonRadius
-                        )
-                    )
-
-                    fillType = PathFillType.EvenOdd
-                }
-
-                clipPath(holePath) {
-                    drawRect(color = Black000.copy(alpha = 0.5f))
-                }
-
-                drawContent()
-            }
-    ) {
-        val offsetY = with(density) { 20.dp.toPx() }
-
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .offset {
-                    IntOffset(
-                        x = 0,
-                        y = (edisonNavBarComponent.offset.y - statusBarHeightPx + edisonRadius * 2 + offsetY).roundToInt()
-                    )
-                }
-                .background(color = White000, shape = RoundedCornerShape(16))
-        ) {
-            Text(
-                text = text,
-                modifier = Modifier
-                    .padding(16.dp)
-                    .align(Alignment.Center),
-                color = Color.Black,
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
+    ButtonOnboarding(
+        buttonBound = edisonNavBarComponent,
+        text = text,
+        offsetDp = 20,
+        textPosition = TextPosition.BELOW,
+        onDismiss = onNextPage,
+        statusBarHeightPx = statusBarHeightPx
+    )
 }

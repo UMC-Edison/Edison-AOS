@@ -1,8 +1,9 @@
 package com.umc.edison.presentation.model
 
 import com.umc.edison.domain.model.bubble.Bubble
-import com.umc.edison.presentation.edison.parseHtml
+import com.umc.edison.presentation.edison.util.parseHtml
 import java.util.Date
+import java.util.LinkedList
 import java.util.UUID
 
 data class BubbleModel(
@@ -32,7 +33,7 @@ data class BubbleModel(
         val DEFAULT = BubbleModel(
             id = null,
             title = null,
-            contentBlocks = emptyList(),
+            contentBlocks = LinkedList(),
             mainImage = null,
             labels = emptyList(),
             backLinks = emptyList(),

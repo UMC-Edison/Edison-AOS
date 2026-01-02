@@ -333,7 +333,7 @@ fun IdentityTest4(
             text = "다음으로",
             enabled = true,
             onClick = {
-                viewModel.setInterestTestResult(navHostController)
+                viewModel.submitIdentityTestResult(navHostController)
                 coroutineScope.launch {
                     if (pagerState.currentPage < 3) {
                         pagerState.animateScrollToPage(pagerState.currentPage + 1)

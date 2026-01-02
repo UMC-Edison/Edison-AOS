@@ -7,12 +7,7 @@ data class IdentityTestState(
     val selectedTabIndex: Int,
     val idToken: String,
     val nickname: String,
-    val identities: MutableMap<IdentityCategory, IdentityModel> = mutableMapOf(
-        IdentityCategory.EXPLAIN to IdentityModel.DEFAULT,
-        IdentityCategory.FIELD to IdentityModel.DEFAULT,
-        IdentityCategory.ENVIRONMENT to IdentityModel.DEFAULT,
-        IdentityCategory.INSPIRATION to IdentityModel.DEFAULT,
-    )
+    val identities: Map<IdentityCategory, IdentityModel>,
 ) {
     val currentCategory: IdentityCategory
         get() = when (selectedTabIndex) {
@@ -31,6 +26,12 @@ data class IdentityTestState(
             selectedTabIndex = 0,
             idToken = "",
             nickname = "",
+            identities = mapOf(
+                IdentityCategory.EXPLAIN to IdentityModel.DEFAULT,
+                IdentityCategory.FIELD to IdentityModel.DEFAULT,
+                IdentityCategory.ENVIRONMENT to IdentityModel.DEFAULT,
+                IdentityCategory.INSPIRATION to IdentityModel.DEFAULT,
+            )
         )
     }
 }

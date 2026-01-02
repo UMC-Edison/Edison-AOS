@@ -66,10 +66,7 @@ class IdentityTestViewModel @Inject constructor(
                 val model = identity.toPresentation()
                 _uiState.update { state ->
                     state.copy(
-                        identities = state.identities.toMutableMap().apply {
-                            // 카테고리별로 IdentityModel 저장
-                            put(identityCategory, model)
-                        }
+                        identities = state.identities + (identityCategory to model)
                     )
                 }
             },
@@ -95,9 +92,7 @@ class IdentityTestViewModel @Inject constructor(
 
         _uiState.update {
             it.copy(
-                identities = it.identities.toMutableMap().apply {
-                    put(category, currentIdentity.copy(selectedKeywords = updated))
-                }
+                identities = it.identities + (category to currentIdentity.copy(selectedKeywords = updated))
             )
         }
     }
@@ -123,7 +118,7 @@ class IdentityTestViewModel @Inject constructor(
     }
 
 
-    fun setInterestTestResult(navController: NavHostController) {
+    fun submitIdentityTestResult(navController: NavHostController) {
         val state = uiState.value
 
 
@@ -137,8 +132,7 @@ class IdentityTestViewModel @Inject constructor(
             return
         }
 
-        val interest = state.identities[IdentityCategory.INSPIRATION]
-        if (interest == null || interest.selectedKeywords.isEmpty()) {
+        if (state.currentIdentity.selectedKeywords.isEmpty()) {
             showToast("키워드를 한 개 이상 선택해 주세요.")
             return
         }
@@ -152,10 +146,8 @@ class IdentityTestViewModel @Inject constructor(
                 identities = allIdentities
             ),
             onSuccess = {
-                viewModelScope.launch {
-                    navController.navigate(NavRoute.MyEdison.route) {
-                        popUpTo(NavRoute.Login.route) { inclusive = true }
-                    }
+                navController.navigate(NavRoute.MyEdison.route) {
+                    popUpTo(NavRoute.Login.route) { inclusive = true }
                 }
             },
         )

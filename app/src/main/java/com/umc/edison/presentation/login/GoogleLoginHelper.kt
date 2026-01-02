@@ -9,12 +9,12 @@ import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.umc.edison.BuildConfig
 import com.umc.edison.R
 import com.umc.edison.domain.DataResource
 import com.umc.edison.domain.usecase.user.GoogleLoginUseCase
 import com.umc.edison.domain.usecase.sync.SyncServerDataToLocalUseCase
 import com.umc.edison.domain.usecase.sync.SyncLocalDataToServerUseCase
-import com.umc.edison.presentation.model.UserModel
 import com.umc.edison.presentation.model.toPresentation
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -33,10 +33,7 @@ class GoogleLoginHelper @Inject constructor(
 
     fun signInWithGoogle(
         context: Context,
-        onSuccess: (UserModel) -> Unit,
-        onMemberNotFound: (String) -> Unit,
-        onFailure: (String) -> Unit,
-        onLoading: (Boolean) -> Unit
+        onResult: (GoogleLoginState) -> Unit
     ) {
         val signInWithGoogleOption = GetGoogleIdOption.Builder()
             .setFilterByAuthorizedAccounts(false)
@@ -52,42 +49,36 @@ class GoogleLoginHelper @Inject constructor(
 
         coroutineScope.launch {
             try {
-                onLoading(true)
-                val response: GetCredentialResponse =
-                    credentialManager.getCredential(context, request)
-                handleSignIn(response, onSuccess, onMemberNotFound, onFailure, onLoading)
+                onResult(GoogleLoginState.Loading)
+                val response = credentialManager.getCredential(context, request)
+                handleSignIn(response, onResult)
             } catch (e: GetCredentialException) {
-                onLoading(false)
-                Log.e("Google SignIn", "로그인 실패: ${e.message}", e)
+                val errorMessage = when (e) {
+                    is androidx.credentials.exceptions.GetCredentialCancellationException ->
+                        GoogleLoginState.ERROR_MESSAGE_CANCELLED
 
-                when (e) {
-                    is androidx.credentials.exceptions.GetCredentialCancellationException -> {
-                        onFailure("사용자가 로그인 창을 닫았습니다.")
-                    }
-
-                    else -> {
-                        onFailure("알 수 없는 로그인 오류 발생")
-                    }
+                    else ->
+                        GoogleLoginState.ERROR_MESSAGE_UNKNOWN
                 }
+                onResult(GoogleLoginState.Failure(errorMessage))
             }
         }
     }
 
     private fun handleSignIn(
         response: GetCredentialResponse,
-        onSuccess: (UserModel) -> Unit,
-        onMemberNotFound: (String) -> Unit,
-        onFailure: (String) -> Unit,
-        onLoading: (Boolean) -> Unit
+        onResult: (GoogleLoginState) -> Unit
     ) {
         val credential = response.credential
 
         when (credential) {
             is GoogleIdTokenCredential -> {
                 val idToken = credential.idToken
-                Log.d("Google SignIn", "ID Token: $idToken")
+                if (BuildConfig.DEBUG){
+                    Log.d("Google SignIn", "ID Token: $idToken")
+                }
 
-                sendIdTokenToServer(idToken, onSuccess, onMemberNotFound, onFailure, onLoading)
+                sendIdTokenToServer(idToken, onResult)
             }
 
             is CustomCredential -> {
@@ -96,38 +87,34 @@ class GoogleLoginHelper @Inject constructor(
                         val googleIdTokenCredential =
                             GoogleIdTokenCredential.createFrom(credential.data)
                         val idToken = googleIdTokenCredential.idToken
-                        Log.d("Google SignIn", "ID Token (CustomCredential): $idToken")
-
-                        sendIdTokenToServer(idToken, onSuccess, onMemberNotFound, onFailure, onLoading)
+                        if (BuildConfig.DEBUG){
+                            Log.d("Google SignIn", "ID Token (CustomCredential): $idToken")
+                        }
+                        sendIdTokenToServer(idToken, onResult)
                     } catch (e: Exception) {
                         Log.e("Google SignIn", "Received an invalid Google ID token response", e)
-                        onFailure("잘못된 ID Token 응답을 받았습니다.")
+                        onResult(GoogleLoginState.Failure(GoogleLoginState.ERROR_MESSAGE_INVALID_TOKEN))
                     }
                 } else {
-                    onFailure("Unexpected type of credential")
+                    onResult(GoogleLoginState.Failure())
                 }
             }
 
             else -> {
-                onFailure("Unexpected type of credential")
+                onResult(GoogleLoginState.Failure())
             }
         }
     }
 
     private fun sendIdTokenToServer(
         idToken: String,
-        onSuccess: (UserModel) -> Unit,
-        onMemberNotFound: (String) -> Unit,
-        onFailure: (String) -> Unit,
-        onLoading: (Boolean) -> Unit
+        onResult: (GoogleLoginState) -> Unit
     ) {
         coroutineScope.launch {
             googleLoginUseCase(idToken).collect { result ->
                 when (result) {
                     is DataResource.Success -> {
-                        Log.d("Google SignIn", "서버 로그인 성공: ${result.data}")
-                        onLoading(false)
-                        onSuccess(result.data.toPresentation())
+                        onResult(GoogleLoginState.Success(result.data.toPresentation()))
 
                         try {
                             syncLocalDataToServerUseCase()
@@ -143,36 +130,33 @@ class GoogleLoginHelper @Inject constructor(
                     }
 
                     is DataResource.Error -> {
-                        onLoading(false)
-
                         val t = result.throwable
                         Log.e("Google SignIn", "로그인 실패", t)
-
-                        var code: String? = null
-                        if (t is HttpException) {
-                            val errorBody = t.response()?.errorBody()?.string()
-                            Log.e("Google SignIn", "errorBody: $errorBody")
-
-                            try {
-                                val json = JSONObject(errorBody ?: "")
-                                code = json.optString("code", null)
-                            } catch (e: Exception) {
-                                Log.e("Google SignIn", "에러 바디 파싱 실패", e)
+                        val errorCode = (t as? HttpException)?.let { exception ->
+                            exception.response()?.errorBody()?.string()?.also { errorBody ->
+                                Log.e("Google SignIn", "errorBody: $errorBody")
+                            }?.let { errorBody ->
+                                runCatching {
+                                    JSONObject(errorBody).optString("code")
+                                        .takeIf { it.isNotEmpty() }
+                                }
+                                    .onFailure { Log.e("Google SignIn", "에러 바디 파싱 실패", it) }
+                                    .getOrNull()
                             }
                         }
-
-                        when (code) {
-                            "MEMBER4001" -> {
-                                onMemberNotFound(idToken)
+                        when (errorCode) {
+                            GoogleLoginState.ERROR_CODE_MEMBER_NOT_FOUND -> {
+                                onResult(GoogleLoginState.MemberNotFound(idToken))
                             }
+
                             else -> {
-                                onFailure("LOGIN_ERROR")
+                                onResult(GoogleLoginState.Failure(GoogleLoginState.ERROR_MESSAGE_LOGIN_FAILED))
                             }
                         }
                     }
 
                     is DataResource.Loading -> {
-                        onLoading(true)
+                        onResult(GoogleLoginState.Loading)
                     }
                 }
             }

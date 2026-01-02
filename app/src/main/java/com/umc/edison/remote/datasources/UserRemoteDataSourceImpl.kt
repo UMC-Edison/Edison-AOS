@@ -49,8 +49,6 @@ class UserRemoteDataSourceImpl @Inject constructor(
             nickname = nickname,
             identity = identity.map { it.toSetIdentityKeywordRequest() }
         )
-        Log.d("API_REQUEST", "URL: [POST] /users/signup") // 실제 URL은 Retrofit 인터페이스 참고
-        Log.d("API_REQUEST", "Body: $request")
 
         val response = loginApiService.googleSignup(request)
 

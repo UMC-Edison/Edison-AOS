@@ -11,3 +11,4 @@ abstract class BaseBubbleState<M: BaseBubbleMode> (
         mode: BaseBubbleMode = this.mode,
     ): BaseBubbleState<M>
 }
+
