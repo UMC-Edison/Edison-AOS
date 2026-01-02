@@ -365,7 +365,8 @@ private fun BubbleStorageEmptyView(
                 text = stringResource(R.string.bubble_storage_empty_cta),
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 style = MaterialTheme.typography.displaySmall.copy(brush = ctaTextBrush),
-                color = Color.Unspecified,
+
+                
                 textAlign = TextAlign.Center,
             )
         }
