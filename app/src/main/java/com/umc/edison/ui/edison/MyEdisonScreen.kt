@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionOnScreen
 import androidx.compose.ui.platform.LocalContext
@@ -92,8 +93,6 @@ fun MyEdisonScreen(
             modifier = Modifier.fillMaxSize(),
         ) { page ->
             when (page) {
-
-
                 0 -> {
                     Column(
                         modifier = Modifier
@@ -101,7 +100,6 @@ fun MyEdisonScreen(
                             .background(Color.White),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-
                         Spacer(modifier = Modifier.weight(0.6f))
 
                         BubbleInput(
@@ -121,19 +119,9 @@ fun MyEdisonScreen(
 
                 1 -> {
                     if (onboardingState.show) {
-                        val context = LocalContext.current
-                        val imageRequest = ImageRequest.Builder(context)
-                            .data(R.drawable.bubble_ex)
-                            .crossfade(true)
-                            .build()
-                        AsyncImage(
-                            model = imageRequest,
+                        OnboardingImagePlaceholder(
                             contentDescription = "Bubble Example",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .wrapContentHeight(),
-                            alignment = Alignment.Center,
-                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                            data = R.drawable.bubble_ex,
                         )
                     } else {
                         BubbleStorageScreen(
@@ -148,9 +136,16 @@ fun MyEdisonScreen(
 
 
                 2 -> {
-                    LabelTabScreen(
-                        navHostController = navController,
-                    )
+                    if (onboardingState.show) {
+                        OnboardingImagePlaceholder(
+                            contentDescription = "Label Example",
+                            data = R.drawable.label_ex,
+                        )
+                    } else {
+                        LabelTabScreen(
+                            navHostController = navController,
+                        )
+                    }
                 }
             }
         }
@@ -163,7 +158,6 @@ fun MyEdisonScreen(
             contentAlignment = Alignment.TopCenter
         ) {
             MyEdisonNavBar(
-
                 onBubbleClick = {
                     coroutineScope.launch {
                         pagerState.scrollToPage(0)
@@ -182,7 +176,6 @@ fun MyEdisonScreen(
                     }
                     viewModel.resetSearchResults()
                 },
-
                 currentPage = pagerState.currentPage,
                 isViewMode = isViewMode,
                 setNavBarPosition = { idx: Int, offset: Offset, size: IntSize ->
@@ -205,6 +198,11 @@ fun MyEdisonScreen(
                     pagerState.scrollToPage(1)
                 }
             },
+            changeToLabelMode = {
+                coroutineScope.launch {
+                    pagerState.scrollToPage(2)
+                }
+            },
             changeToBubbleInputMode = {
                 coroutineScope.launch {
                     pagerState.scrollToPage(0)
@@ -215,4 +213,25 @@ fun MyEdisonScreen(
             },
         )
     }
+}
+
+@Composable
+private fun OnboardingImagePlaceholder(
+    contentDescription: String,
+    data: Any,
+) {
+    val imageRequest = ImageRequest.Builder(LocalContext.current)
+        .data(data)
+        .crossfade(true)
+        .build()
+
+    AsyncImage(
+        model = imageRequest,
+        contentDescription = contentDescription,
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight(),
+        alignment = Alignment.Center,
+        contentScale = ContentScale.Crop,
+    )
 }

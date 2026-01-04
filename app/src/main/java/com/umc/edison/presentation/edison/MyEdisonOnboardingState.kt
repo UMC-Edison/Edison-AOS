@@ -11,7 +11,7 @@ data class MyEdisonOnboardingState(
         val DEFAULT = MyEdisonOnboardingState(
             show = false,
             bubbleInputBound = OnboardingPositionState.DEFAULT,
-            myEdisonNavBarBounds = List(2) { OnboardingPositionState.DEFAULT },
+            myEdisonNavBarBounds = List(3) { OnboardingPositionState.DEFAULT },
         )
     }
 }

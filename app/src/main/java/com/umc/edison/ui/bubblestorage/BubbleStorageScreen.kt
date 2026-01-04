@@ -39,7 +39,7 @@ import com.umc.edison.ui.components.BubblesLayout
 import com.umc.edison.ui.components.LabelTagList
 import com.umc.edison.ui.components.calculateBubbleSize
 import com.umc.edison.ui.navigation.NavRoute
-import com.umc.edison.ui.onboarding.BubbleStorageOnboarding
+import com.umc.edison.ui.onboarding.BubbleSpaceOnboarding
 import com.umc.edison.ui.theme.Gray300
 import com.umc.edison.ui.theme.Gray800
 import com.umc.edison.ui.theme.Gray900
@@ -284,7 +284,7 @@ fun BubbleStorageScreen(
         }
 
         if (!onboardingState.edisonOnboardingShow && onboardingState.show && uiState.bubbles.isNotEmpty()) {
-            BubbleStorageOnboarding(
+            BubbleSpaceOnboarding(
                 onboardingState = onboardingState,
                 onDismiss = {
                     viewModel.setHasSeenOnboarding()

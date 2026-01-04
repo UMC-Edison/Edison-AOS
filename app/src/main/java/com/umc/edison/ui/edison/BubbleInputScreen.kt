@@ -46,6 +46,7 @@ import com.umc.edison.ui.navigation.NavRoute
 import com.umc.edison.ui.theme.Gray500
 import com.umc.edison.ui.theme.Gray800
 import com.umc.edison.ui.theme.White000
+import com.umc.edison.ui.onboarding.BubbleInputOnboardingScreen
 import java.io.File
 
 @Composable
@@ -56,6 +57,7 @@ fun BubbleInputScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val baseState by viewModel.baseState.collectAsState()
+    val onboardingState by viewModel.onboardingState.collectAsState()
 
     LaunchedEffect(Unit) {
         updateShowBottomNav(false)
@@ -80,6 +82,14 @@ fun BubbleInputScreen(
             }
             navHostController.popBackStack()
         }
+    }
+
+    if (onboardingState.show) {
+        BubbleInputOnboardingScreen(
+            onboardingState = onboardingState,
+            onNextPage = { viewModel.goToNextOnboardingPage() },
+            onDismiss = { viewModel.dismissOnboarding() }
+        )
     }
 
     BaseContent(
@@ -128,6 +138,15 @@ fun BubbleInputScreen(
                     },
                     onLinkBubbleClick = {
                         viewModel.updateBubbleWithLink()
+                    },
+                    onLabelButtonPositioned = { offset, size ->
+                        viewModel.setLabelButtonBounds(offset, size)
+                    },
+                    onLinkButtonPositioned = { offset, size ->
+                        viewModel.setLinkButtonBounds(offset, size)
+                    },
+                    onLinkMenuPositioned = { offset, size ->
+                        viewModel.setLinkMenuBounds(offset, size)
                     }
                 )
             }

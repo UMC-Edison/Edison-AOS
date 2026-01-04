@@ -39,7 +39,8 @@ import com.umc.edison.ui.theme.White000
 import kotlin.math.roundToInt
 
 internal enum class MyEdisonOnboardingPage {
-    MY_EDISON_BOTTOM_TAB, BUBBLE_INPUT, BUBBLE_STORAGE, SPACE_BOTTOM_TAB, BUBBLE_BOTTOM_TAB, ART_LETTER_BOTTOM_TAB, MY_PAGE_BOTTOM_TAB,
+    MY_EDISON_BOTTOM_TAB, BUBBLE_INPUT, BUBBLE_STORAGE, BUBBLE_LABEL,
+    SPACE_BOTTOM_TAB, BUBBLE_BOTTOM_TAB, ART_LETTER_BOTTOM_TAB, MY_PAGE_BOTTOM_TAB,
 }
 
 @Composable
@@ -47,6 +48,7 @@ fun MyEdisonOnboarding(
     onboardingState: MyEdisonOnboardingState,
     bottomNavBarBounds: List<OnboardingPositionState>,
     changeToStorageMode: () -> Unit,
+    changeToLabelMode: () -> Unit,
     changeToBubbleInputMode: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -78,20 +80,33 @@ fun MyEdisonOnboarding(
             }
 
             MyEdisonOnboardingPage.BUBBLE_STORAGE -> {
-                BubbleStorageOnboarding(
+                EdisonNavBarOnboarding(
                     edisonNavBarComponent = onboardingState.myEdisonNavBarBounds[1],
+                    onNextPage = {
+                        currentPage = MyEdisonOnboardingPage.BUBBLE_LABEL
+                        changeToLabelMode()
+                    },
+                    statusBarHeightPx = statusBarHeightPx,
+                    text = "일주일 간 작성한 버블을 모아볼 수 있어요."
+                )
+            }
+
+            MyEdisonOnboardingPage.BUBBLE_LABEL -> {
+                EdisonNavBarOnboarding(
+                    edisonNavBarComponent = onboardingState.myEdisonNavBarBounds[2],
                     onNextPage = {
                         currentPage = MyEdisonOnboardingPage.SPACE_BOTTOM_TAB
                         changeToBubbleInputMode()
                     },
-                    statusBarHeightPx = statusBarHeightPx
+                    statusBarHeightPx = statusBarHeightPx,
+                    text = "라벨별로 버블을 모아볼 수 있어요."
                 )
             }
 
             MyEdisonOnboardingPage.SPACE_BOTTOM_TAB -> {
                 BottomTabOnboarding(
                     bottomTabComponent = bottomNavBarBounds[1],
-                    description = "작성한 모든 버블들을 맵 형태로 확인해요.\n" + "라벨별 모아보기도 가능해요.",
+                    description = "모든 버블을 맵 형태로 확인해요.\n키워드 맵핑으로 지금 필요한 아이디어를 찾아보세요.",
                     onNextPage = { currentPage = MyEdisonOnboardingPage.BUBBLE_BOTTOM_TAB },
                     statusBarHeightPx = statusBarHeightPx
                 )
@@ -134,74 +149,14 @@ fun BottomTabOnboarding(
     onNextPage: () -> Unit,
     statusBarHeightPx: Int,
 ) {
-    val density = LocalDensity.current
-
-    val widthPx = bottomTabComponent.size.width.toFloat()
-    val centerX = bottomTabComponent.offset.x + widthPx / 2f
-    val centerY =
-        bottomTabComponent.offset.y - statusBarHeightPx + bottomTabComponent.size.height / 2f
-    val radius = widthPx / 2f
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .pointerInput(Unit) {
-                awaitPointerEventScope {
-                    while (true) {
-                        val event = awaitPointerEvent()
-                        event.changes.forEach { it.consume() }
-                    }
-                }
-            }
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onNextPage
-            )
-            .drawWithContent {
-                val overlayRect = Rect(Offset.Zero, size)
-                val holePath = Path().apply {
-                    addRect(overlayRect)
-                    addOval(
-                        Rect(
-                            left = centerX - radius,
-                            top = centerY - radius,
-                            right = centerX + radius,
-                            bottom = centerY + radius
-                        )
-                    )
-                    fillType = PathFillType.EvenOdd
-                }
-
-                clipPath(holePath) {
-                    drawRect(color = Black000.copy(alpha = 0.5f))
-                }
-
-                drawContent()
-            }) {
-        val offsetY = with(density) { 30.dp.toPx() }
-
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .offset {
-                    IntOffset(
-                        x = 0,
-                        y = (bottomTabComponent.offset.y - statusBarHeightPx - radius * 2 - offsetY).roundToInt()
-                    )
-                }
-                .background(color = White000, shape = RoundedCornerShape(16))) {
-            Text(
-                text = description,
-                modifier = Modifier
-                    .padding(16.dp)
-                    .align(Alignment.Center),
-                color = Color.Black,
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
+    ButtonOnboarding(
+        buttonBound = bottomTabComponent,
+        text = description,
+        offsetDp = OnboardingConstants.OFFSET_SMALL,
+        textPosition = TextPosition.ABOVE_FAR,
+        onDismiss = onNextPage,
+        statusBarHeightPx = statusBarHeightPx
+    )
 }
 
 @Composable
@@ -297,80 +252,18 @@ fun BubbleInputOnboarding(
 }
 
 @Composable
-fun BubbleStorageOnboarding(
+private fun EdisonNavBarOnboarding(
     edisonNavBarComponent: OnboardingPositionState,
     onNextPage: () -> Unit,
     statusBarHeightPx: Int,
+    text: String,
 ) {
-    val density = LocalDensity.current
-
-    val edisonCenterX = edisonNavBarComponent.offset.x + edisonNavBarComponent.size.width / 2f
-    val edisonCenterY =
-        edisonNavBarComponent.offset.y - statusBarHeightPx + edisonNavBarComponent.size.height / 2f
-    val edisonRadius = edisonNavBarComponent.size.width.toFloat() / 2f
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .pointerInput(Unit) {
-                awaitPointerEventScope {
-                    while (true) {
-                        val event = awaitPointerEvent()
-                        event.changes.forEach { it.consume() }
-                    }
-                }
-            }
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onNextPage
-            )
-            .drawWithContent {
-                val overlayRect = Rect(Offset.Zero, size)
-                val holePath = Path().apply {
-                    addRect(overlayRect)
-
-                    addOval(
-                        Rect(
-                            left = edisonCenterX - edisonRadius,
-                            top = edisonCenterY - edisonRadius,
-                            right = edisonCenterX + edisonRadius,
-                            bottom = edisonCenterY + edisonRadius
-                        )
-                    )
-
-                    fillType = PathFillType.EvenOdd
-                }
-
-                clipPath(holePath) {
-                    drawRect(color = Black000.copy(alpha = 0.5f))
-                }
-
-                drawContent()
-            }
-    ) {
-        val offsetY = with(density) { 20.dp.toPx() }
-
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .offset {
-                    IntOffset(
-                        x = 0,
-                        y = (edisonNavBarComponent.offset.y - statusBarHeightPx + edisonRadius * 2 + offsetY).roundToInt()
-                    )
-                }
-                .background(color = White000, shape = RoundedCornerShape(16))
-        ) {
-            Text(
-                text = "작성한 버블은 이렇게 저장돼요!",
-                modifier = Modifier
-                    .padding(16.dp)
-                    .align(Alignment.Center),
-                color = Color.Black,
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
+    ButtonOnboarding(
+        buttonBound = edisonNavBarComponent,
+        text = text,
+        offsetDp = 20,
+        textPosition = TextPosition.BELOW,
+        onDismiss = onNextPage,
+        statusBarHeightPx = statusBarHeightPx
+    )
 }

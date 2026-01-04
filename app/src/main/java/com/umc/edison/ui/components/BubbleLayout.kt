@@ -33,7 +33,6 @@ import androidx.compose.ui.unit.min
 import com.umc.edison.presentation.model.BubbleModel
 import com.umc.edison.ui.theme.White000
 import kotlinx.coroutines.android.awaitFrame
-import kotlin.math.sqrt
 import kotlin.random.Random
 
 @SuppressLint("ConfigurationScreenWidthHeight")
@@ -182,9 +181,9 @@ fun calculateGridOffset(
 fun isOverlapping(b1: PlacedBubble, b2: PlacedBubble): Boolean {
     val dx = (b1.x.value + b1.size.value / 2) - (b2.x.value + b2.size.value / 2)
     val dy = (b1.y.value + b1.size.value / 2) - (b2.y.value + b2.size.value / 2)
-    val distance = sqrt(dx * dx + dy * dy)
+    val distance = dx * dx + dy * dy
     val threshold = (b1.size.value + b2.size.value) / 2 + 4.dp.value
-    return distance < threshold
+    return distance < threshold * threshold
 }
 
 data class PlacedBubble(val x: Dp, val y: Dp, val size: Dp)

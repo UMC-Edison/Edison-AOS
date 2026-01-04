@@ -13,8 +13,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
@@ -26,6 +30,7 @@ import com.umc.edison.presentation.edison.BubbleInputState
 import com.umc.edison.presentation.edison.util.parseHtml
 import com.umc.edison.presentation.model.BubbleModel
 import com.umc.edison.presentation.model.ContentType
+import com.umc.edison.ui.components.ToolbarPopupConstants.POPUP_OFFSET_Y
 import com.umc.edison.ui.theme.Gray300
 import com.umc.edison.ui.theme.Gray500
 import com.umc.edison.ui.theme.Gray600
@@ -41,7 +46,10 @@ fun Toolbar(
     onGalleryOpen: () -> Unit,
     onCameraOpen: () -> Unit,
     onBackLinkClick: (BubbleModel) -> Unit,
-    onLinkBubbleClick: () -> Unit
+    onLinkBubbleClick: () -> Unit,
+    onLabelButtonPositioned: (Offset, IntSize) -> Unit,
+    onLinkButtonPositioned: (Offset, IntSize) -> Unit,
+    onLinkMenuPositioned: (Offset, IntSize) -> Unit,
 ) {
     when (uiState.selectedIcon) {
         IconType.TEXT -> {
@@ -196,7 +204,17 @@ fun Toolbar(
                     }
                 }
 
-                IconButton(onClick = { onIconClicked(IconType.LINK) }) {
+                IconButton(
+                    onClick = { onIconClicked(IconType.LINK) },
+                    modifier = Modifier.onGloballyPositioned { coordinates ->
+                        val position = coordinates.positionInWindow()
+                        val size = coordinates.size
+                        onLinkButtonPositioned(
+                            Offset(position.x, position.y),
+                            IntSize(size.width, size.height)
+                        )
+                    }
+                ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_link),
                         contentDescription = "Link",
@@ -207,7 +225,8 @@ fun Toolbar(
                         LinkPopUp(
                             backLink = { onIconClicked(IconType.BACK_LINK) },
                             linkBubble = { onLinkBubbleClick() },
-                            onDismiss = { onIconClicked(IconType.NONE) }
+                            onDismiss = { onIconClicked(IconType.NONE) },
+                            onPositioned = onLinkMenuPositioned
                         )
                     }
 
@@ -220,7 +239,17 @@ fun Toolbar(
                     }
                 }
 
-                IconButton(onClick = { onIconClicked(IconType.TAG) }) {
+                IconButton(
+                    onClick = { onIconClicked(IconType.TAG) },
+                    modifier = Modifier.onGloballyPositioned { coordinates ->
+                        val position = coordinates.positionInWindow()
+                        val size = coordinates.size
+                        onLabelButtonPositioned(
+                            Offset(position.x, position.y),
+                            IntSize(size.width, size.height)
+                        )
+                    }
+                ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_tag),
                         contentDescription = "Tag",
@@ -240,7 +269,7 @@ private fun CameraPopup(
 ) {
     Popup(
         alignment = Alignment.BottomCenter,
-        offset = IntOffset(0, -150),
+        offset = IntOffset(0, POPUP_OFFSET_Y),
         properties = PopupProperties(
             dismissOnClickOutside = true,
             focusable = false
@@ -300,11 +329,12 @@ private fun CameraPopup(
 private fun LinkPopUp(
     backLink: () -> Unit,
     linkBubble: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onPositioned: (Offset, IntSize) -> Unit,
 ) {
     Popup(
         alignment = Alignment.BottomCenter,
-        offset = IntOffset(0, -150),
+        offset = IntOffset(0, POPUP_OFFSET_Y),
         properties = PopupProperties(
             dismissOnClickOutside = true,
             focusable = false
@@ -314,6 +344,14 @@ private fun LinkPopUp(
         Box(
             modifier = Modifier
                 .wrapContentSize()
+                .onGloballyPositioned { coordinates ->
+                    val position = coordinates.positionInWindow()
+                    val size = coordinates.size
+                    onPositioned(
+                        Offset(position.x, position.y),
+                        IntSize(size.width, size.height)
+                    )
+                }
                 .clip(RoundedCornerShape(16.dp))
                 .background(
                     brush = Brush.linearGradient(
@@ -368,7 +406,7 @@ private fun BackLinkPopUp(
 ) {
     Popup(
         alignment = Alignment.BottomCenter,
-        offset = IntOffset(0, -150),
+        offset = IntOffset(0, POPUP_OFFSET_Y),
         properties = PopupProperties(
             dismissOnClickOutside = true,
             focusable = false
@@ -444,4 +482,8 @@ enum class TextStyle {
 
 enum class ListStyle {
     NONE, UNORDERED, ORDERED
+}
+
+object ToolbarPopupConstants {
+    const val POPUP_OFFSET_Y = -150
 }

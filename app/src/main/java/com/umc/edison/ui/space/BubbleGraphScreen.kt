@@ -5,13 +5,11 @@ import android.graphics.BlurMaskFilter
 import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Shader
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -37,24 +35,25 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.umc.edison.R
 import com.umc.edison.presentation.model.BubbleModel
 import com.umc.edison.presentation.model.getDisplayTitle
+import com.umc.edison.presentation.space.BubbleGraphState.Companion.BUBBLE_DOT_RADIUS
 import com.umc.edison.presentation.space.BubbleGraphViewModel
-import com.umc.edison.ui.components.BubblePreview
-import com.umc.edison.ui.components.calculateBubblePreviewSize
+import com.umc.edison.ui.onboarding.BubbleGraphOnboardingScreen
 import com.umc.edison.ui.theme.Gray100
 import com.umc.edison.ui.theme.Gray300
 import com.umc.edison.ui.theme.Gray500
 import com.umc.edison.ui.theme.Gray800
 import kotlin.math.cos
-import kotlin.math.roundToInt
 import kotlin.math.sin
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
@@ -65,6 +64,7 @@ fun BubbleGraphScreen(
     viewModel: BubbleGraphViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val onboardingState by viewModel.onboardingState.collectAsState()
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
 
@@ -73,6 +73,13 @@ fun BubbleGraphScreen(
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
+
+    if (onboardingState.show) {
+        BubbleGraphOnboardingScreen(
+            onboardingState = onboardingState,
+            onDismiss = { viewModel.dismissOnboarding() }
+        )
+    }
 
     BoxWithConstraints(
         modifier = Modifier
@@ -83,6 +90,24 @@ fun BubbleGraphScreen(
                     val newScale = (scale * zoom).coerceIn(0.2f, 3f)
                     offset = (offset - centroid) * (newScale / oldScale) + centroid + pan
                     scale = newScale
+                }
+            }
+            .pointerInput(uiState.bubbles, scale, offset) {
+                detectTapGestures { tapOffset ->
+                    val transformedOffset = (tapOffset - offset) / scale
+                    val radius = BUBBLE_DOT_RADIUS
+                    val touchRadius = radius * 1.5f
+                    
+                    uiState.bubbles.forEach { positionedBubble ->
+                        val dx = transformedOffset.x - positionedBubble.position.x
+                        val dy = transformedOffset.y - positionedBubble.position.y
+                        val distanceSquared = dx * dx + dy * dy
+
+                        if (distanceSquared <= touchRadius * touchRadius) {
+                            showBubble(positionedBubble.bubble)
+                            return@detectTapGestures
+                        }
+                    }
                 }
             }
     ) {
@@ -99,152 +124,94 @@ fun BubbleGraphScreen(
             }
         }
 
-        if (scale < 1.6f) {
-            Canvas(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer(
-                        scaleX = scale,
-                        scaleY = scale,
-                        translationX = offset.x,
-                        translationY = offset.y,
-                        transformOrigin = TransformOrigin(0f, 0f)
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer(
+                    scaleX = scale,
+                    scaleY = scale,
+                    translationX = offset.x,
+                    translationY = offset.y,
+                    transformOrigin = TransformOrigin(0f, 0f),
+                )
+        ) {
+            // 클러스터 구름 그리기
+            uiState.clusters.forEach { cluster ->
+                if (cluster.colors.size <= 2) {
+                    drawGradientBlurCircle(
+                        center = cluster.position,
+                        radius = cluster.radius,
+                        colors = cluster.colors,
+                        blurRadius = blurRadius,
                     )
-            ) {
-                // 클러스터 구름 그리기
-                uiState.clusters.forEach { cluster ->
-                    if (cluster.colors.size <= 2) {
-                        drawGradientBlurCircle(
-                            center = cluster.position,
-                            radius = cluster.radius,
-                            colors = cluster.colors,
-                            blurRadius = blurRadius,
-                        )
-                    } else {
-                        drawOverlappingBlurCircles(
-                            center = cluster.position,
-                            bigRadius = cluster.radius,
-                            colors = cluster.colors,
-                            blurRadius = blurRadius,
-                        )
-                    }
+                } else {
+                    drawOverlappingBlurCircles(
+                        center = cluster.position,
+                        bigRadius = cluster.radius,
+                        colors = cluster.colors,
+                        blurRadius = blurRadius,
+                    )
                 }
+            }
 
-                // 연결선 그리기
-                uiState.edges.forEach { edge ->
-                    val start =
-                        uiState.bubbles.find { it.bubble.id == edge.startBubbleId }?.position
-                            ?: Offset.Zero
-                    val end = uiState.bubbles.find { it.bubble.id == edge.endBubbleId }?.position
+            // 연결선 그리기
+            uiState.edges.forEach { edge ->
+                val start =
+                    uiState.bubbles.find { it.bubble.id == edge.startBubbleId }?.position
                         ?: Offset.Zero
-                    drawLine(color = Gray500, start = start, end = end, strokeWidth = 1.dp.toPx())
-                }
-
-                // 버블 점 그리기
-                val radius = 12f
-                uiState.bubbles.forEach { positionedBubble ->
-                    val colors: List<Color> = positionedBubble.bubble.labels.map { it.color }
-                    if (colors.size <= 1) {
-                        drawCircle(
-                            color = colors.firstOrNull() ?: Gray500,
-                            radius = radius,
-                            center = positionedBubble.position
-                        )
-                    } else {
-                        drawCircle(
-                            brush = Brush.linearGradient(
-                                colors,
-                                start = positionedBubble.position - Offset(radius * 2, 0f),
-                                end = positionedBubble.position + Offset(radius * 2, 0f),
-                            ),
-                            radius = radius,
-                            center = positionedBubble.position
-                        )
-                    }
-                    drawContext.canvas.nativeCanvas.drawText(
-                        positionedBubble.bubble.getDisplayTitle(),
-                        positionedBubble.position.x,
-                        positionedBubble.position.y + radius.dp.toPx() + 10.dp.toPx(),
-                        Paint().apply {
-                            color = Gray800.toArgb()
-                            textSize = 35f
-                            textAlign = Paint.Align.CENTER
-                        }
-                    )
-                }
-            }
-        } else {
-            Canvas(
-                modifier = Modifier
-                    .fillMaxSize()
-            ) {
-                // 클러스터 구름 그리기
-                uiState.clusters.forEach { cluster ->
-                    if (cluster.colors.size <= 2) {
-                        drawGradientBlurCircle(
-                            center = cluster.position * scale + offset,
-                            radius = cluster.radius * scale,
-                            colors = cluster.colors,
-                            blurRadius = blurRadius,
-                        )
-                    } else {
-                        drawOverlappingBlurCircles(
-                            center = cluster.position * scale + offset,
-                            bigRadius = cluster.radius * scale,
-                            colors = cluster.colors,
-                            blurRadius = blurRadius,
-                        )
-                    }
-                }
-
-                uiState.edges.forEach { edge ->
-                    val startBubble = uiState.bubbles.find { it.bubble.id == edge.startBubbleId }
-                    val endBubble = uiState.bubbles.find { it.bubble.id == edge.endBubbleId }
-                    if (startBubble != null && endBubble != null) {
-                        val start = startBubble.position * scale + offset
-                        val end = endBubble.position * scale + offset
-                        drawLine(
-                            color = Gray500,
-                            start = start,
-                            end = end,
-                            strokeWidth = 1.dp.toPx()
-                        )
-                    }
-                }
+                val end = uiState.bubbles.find { it.bubble.id == edge.endBubbleId }?.position
+                    ?: Offset.Zero
+                drawLine(color = Gray500, start = start, end = end, strokeWidth = 1.dp.toPx())
             }
 
+            // 버블 점 그리기
+            val radius = BUBBLE_DOT_RADIUS
             uiState.bubbles.forEach { positionedBubble ->
-                val screenPosition = positionedBubble.position * scale + offset
-                val previewSize = calculateBubblePreviewSize(positionedBubble.bubble)
-                Box(
-                    modifier = Modifier
-                        .offset {
-                            IntOffset(
-                                x = screenPosition.x.roundToInt() - (previewSize.size.roundToPx() / 2),
-                                y = screenPosition.y.roundToInt() - (previewSize.size.roundToPx() / 2)
-                            )
-                        }
-                        .animateContentSize()
-                ) {
-                    BubblePreview(
-                        bubble = positionedBubble.bubble,
-                        size = previewSize,
-                        onClick = {
-                            showBubble(positionedBubble.bubble)
-                        },
+                val colors: List<Color> = positionedBubble.bubble.labels.map { it.color }
+                if (colors.size <= 1) {
+                    drawCircle(
+                        color = colors.firstOrNull() ?: Gray500,
+                        radius = radius,
+                        center = positionedBubble.position
+                    )
+                } else {
+                    drawCircle(
+                        brush = Brush.linearGradient(
+                            colors,
+                            start = positionedBubble.position - Offset(radius * 2, 0f),
+                            end = positionedBubble.position + Offset(radius * 2, 0f),
+                        ),
+                        radius = radius,
+                        center = positionedBubble.position
                     )
                 }
+                drawContext.canvas.nativeCanvas.drawText(
+                    positionedBubble.bubble.getDisplayTitle(),
+                    positionedBubble.position.x,
+                    positionedBubble.position.y + radius.dp.toPx() + 10.dp.toPx(),
+                    Paint().apply {
+                        color = Gray800.toArgb()
+                        textSize = 35f
+                        textAlign = Paint.Align.CENTER
+                    }
+                )
             }
-
         }
-
 
         FloatingActionButton(
             onClick = onShowKeywordMap,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)
-                .size(64.dp),
+                .size(64.dp)
+                .onGloballyPositioned { coordinates ->
+                    val position = coordinates.positionInWindow()
+                    val size = coordinates.size
+                    viewModel.setKeywordMapButtonBounds(
+                        offset = Offset(position.x, position.y),
+                        size = IntSize(size.width, size.height)
+                    )
+                },
             shape = CircleShape,
             containerColor = Gray100
         ) {
@@ -254,7 +221,6 @@ fun BubbleGraphScreen(
                 tint = Color.Unspecified
             )
         }
-
     }
 
 
@@ -327,4 +293,3 @@ private fun DrawScope.drawOverlappingBlurCircles(
         )
     }
 }
-

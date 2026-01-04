@@ -15,5 +15,7 @@ data class BubbleGraphState(
             bubbles = emptyList(),
             edges = emptyList(),
         )
+
+        const val BUBBLE_DOT_RADIUS = 12f
     }
 }
