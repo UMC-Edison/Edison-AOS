@@ -48,11 +48,14 @@ import com.umc.edison.ui.theme.Gray900
 import com.umc.edison.ui.theme.White000
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.umc.edison.R
 import com.umc.edison.ui.theme.EdisonTypography
+import com.umc.edison.ui.theme.EmptyViewCtaBg
+import com.umc.edison.ui.theme.GradientBlue
+import com.umc.edison.ui.theme.GradientPink
+import com.umc.edison.ui.theme.GradientYellow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -317,13 +320,6 @@ private fun BubbleStorageEmptyView(
     onCtaClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val ctaTextBrush = Brush.linearGradient(
-        colors = listOf(
-            Color(0xFFF2F227), // #F2F227
-            Color(0xFFFF87D5), // #FF87D5
-            Color(0xFF5BADFF), // #5BADFF
-        )
-    )
 
     Column(
         modifier = modifier.fillMaxSize(),
@@ -350,23 +346,21 @@ private fun BubbleStorageEmptyView(
 
         val ctaTextBrush = Brush.horizontalGradient(
             colors = listOf(
-                Color(0xFFF2F227),
-                Color(0xFFFF87D5),
-                Color(0xFF5BADFF),
+                GradientYellow,
+                GradientPink,
+                GradientBlue,
             )
         )
 
         Surface(
             onClick = onCtaClick,
             shape = RoundedCornerShape(100.dp),
-            color = Color(0xFFFFF7F7),
+            color = EmptyViewCtaBg,
         ) {
             Text(
                 text = stringResource(R.string.bubble_storage_empty_cta),
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 style = MaterialTheme.typography.displaySmall.copy(brush = ctaTextBrush),
-
-                
                 textAlign = TextAlign.Center,
             )
         }
