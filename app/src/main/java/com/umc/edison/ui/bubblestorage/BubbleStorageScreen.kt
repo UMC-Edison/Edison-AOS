@@ -114,7 +114,7 @@ fun BubbleStorageScreen(
         if (uiState.bubbles.isEmpty()) {
             BubbleStorageEmptyView(
                 onCtaClick = {
-                    navHostController.navigate(NavRoute.BubbleEdit.createRoute(""))
+                    navHostController.navigate(NavRoute.BubbleEdit.createRoute())
                 }
             )
             return@BaseContent
