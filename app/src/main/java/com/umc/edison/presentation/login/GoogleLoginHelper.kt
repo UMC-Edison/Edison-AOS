@@ -1,7 +1,6 @@
 package com.umc.edison.presentation.login
 
 import android.content.Context
-import android.util.Log
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
@@ -11,6 +10,8 @@ import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.umc.edison.BuildConfig
 import com.umc.edison.R
+import com.umc.edison.common.logging.AppLogger
+import com.umc.edison.common.logging.UserContext
 import com.umc.edison.domain.DataResource
 import com.umc.edison.domain.usecase.user.GoogleLoginUseCase
 import com.umc.edison.domain.usecase.sync.SyncServerDataToLocalUseCase
@@ -28,6 +29,7 @@ class GoogleLoginHelper @Inject constructor(
     private val googleLoginUseCase: GoogleLoginUseCase,
     private val syncLocalDataToServerUseCase: SyncLocalDataToServerUseCase,
     private val syncServerDataToLocalUseCase: SyncServerDataToLocalUseCase,
+    private val userContext: UserContext,
 ) {
     private val coroutineScope = MainScope()
 
@@ -75,7 +77,7 @@ class GoogleLoginHelper @Inject constructor(
             is GoogleIdTokenCredential -> {
                 val idToken = credential.idToken
                 if (BuildConfig.DEBUG){
-                    Log.d("Google SignIn", "ID Token: $idToken")
+                    AppLogger.d("Google SignIn", "ID Token: $idToken")
                 }
 
                 sendIdTokenToServer(idToken, onResult)
@@ -88,11 +90,11 @@ class GoogleLoginHelper @Inject constructor(
                             GoogleIdTokenCredential.createFrom(credential.data)
                         val idToken = googleIdTokenCredential.idToken
                         if (BuildConfig.DEBUG){
-                            Log.d("Google SignIn", "ID Token (CustomCredential): $idToken")
+                            AppLogger.d("Google SignIn", "ID Token (CustomCredential): $idToken")
                         }
                         sendIdTokenToServer(idToken, onResult)
                     } catch (e: Exception) {
-                        Log.e("Google SignIn", "Received an invalid Google ID token response", e)
+                        AppLogger.e("Google SignIn", "Received an invalid Google ID token response", e)
                         onResult(GoogleLoginState.Failure(GoogleLoginState.ERROR_MESSAGE_INVALID_TOKEN))
                     }
                 } else {
@@ -115,32 +117,34 @@ class GoogleLoginHelper @Inject constructor(
                 when (result) {
                     is DataResource.Success -> {
                         onResult(GoogleLoginState.Success(result.data.toPresentation()))
+                        // Crashlytics user 식별자 설정
+                        result.data.id?.let { userContext.setAccountId(it.toString()) }
 
                         try {
                             syncLocalDataToServerUseCase()
                         } catch (e: Throwable) {
-                            Log.e("Init sync local to server data", "Failed to sync data", e)
+                            AppLogger.e("Init sync local to server data", "Failed to sync data", e)
                         }
 
                         try {
                             syncServerDataToLocalUseCase()
                         } catch (e: Throwable) {
-                            Log.e("Init sync server to local data", "Failed to sync data", e)
+                            AppLogger.e("Init sync server to local data", "Failed to sync data", e)
                         }
                     }
 
                     is DataResource.Error -> {
                         val t = result.throwable
-                        Log.e("Google SignIn", "로그인 실패", t)
+                        AppLogger.e("Google SignIn", "로그인 실패", t)
                         val errorCode = (t as? HttpException)?.let { exception ->
                             exception.response()?.errorBody()?.string()?.also { errorBody ->
-                                Log.e("Google SignIn", "errorBody: $errorBody")
+                                AppLogger.e("Google SignIn", "errorBody: $errorBody")
                             }?.let { errorBody ->
                                 runCatching {
                                     JSONObject(errorBody).optString("code")
                                         .takeIf { it.isNotEmpty() }
                                 }
-                                    .onFailure { Log.e("Google SignIn", "에러 바디 파싱 실패", it) }
+                                    .onFailure { AppLogger.e("Google SignIn", "에러 바디 파싱 실패", it) }
                                     .getOrNull()
                             }
                         }

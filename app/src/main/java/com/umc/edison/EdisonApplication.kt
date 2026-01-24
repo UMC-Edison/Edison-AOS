@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.work.Configuration
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
+import com.umc.edison.common.logging.AppLogger
 import com.umc.edison.data.di.EntryPointModule
 import com.umc.edison.data.sync.SyncDataWorkerFactory
 import com.umc.edison.presentation.sync.SyncTrigger
@@ -69,6 +70,11 @@ class EdisonApplication : Application(), Configuration.Provider {
                 val activated = try {
                     remoteConfig.fetchAndActivate().await()
                 } catch (e: Exception) {
+                    AppLogger.w(
+                        "EdisonApplication",
+                        "Remote config fetch failed on attempt ${attempt + 1}",
+                        e
+                    )
                     false
                 }
 
