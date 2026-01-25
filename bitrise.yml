@@ -15,7 +15,7 @@ workflows:
           inputs:
             - gradlew_path: "$PROJECT_LOCATION/gradlew"
       
-      - restore-gradle-cache@1: {}
+      - restore-gradle-cache@2.2.4: {}
       
       - script@1:
           title: Setup google-services.json files
@@ -136,7 +136,7 @@ workflows:
             - gradle_task: $GRADLE_TASK
             - gradle_options: "--stacktrace"
       
-      - save-gradle-cache@1: {}
+      - save-gradle-cache@2.2.4: {}
       
       - deploy-to-bitrise-io@2:
           inputs:
@@ -226,7 +226,7 @@ workflows:
           inputs:
             - gradlew_path: "$PROJECT_LOCATION/gradlew"
       
-      - restore-gradle-cache@1: {}
+      - restore-gradle-cache@2.2.4: {}
       
       - script@1:
           title: Setup google-services.json files
@@ -322,7 +322,7 @@ workflows:
             - gradle_task: $GRADLE_TASK
             - gradle_options: "--stacktrace"
       
-      - save-gradle-cache@1: {}
+      - save-gradle-cache@2.2.4: {}
       
       - deploy-to-bitrise-io@2:
           inputs:
