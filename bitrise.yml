@@ -2,7 +2,7 @@ format_version: '11'
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 workflows:
-  primary:
+  build-qa:
     steps:
       - activate-ssh-key@4:
           run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
@@ -172,7 +172,7 @@ workflows:
                   -d @payload.json \
                   "$DISCORD_WEBHOOK_URL" || echo "Discord notification failed"
 
-  release:
+  build-release:
     steps:
       - activate-ssh-key@4:
           run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
