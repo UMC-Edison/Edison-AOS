@@ -15,7 +15,7 @@ workflows:
           inputs:
             - gradlew_path: "$PROJECT_LOCATION/gradlew"
       
-      - cache-pull@2: {}
+      - restore-gradle-cache@1: {}
       
       - script@1:
           title: Set environment variables
@@ -95,7 +95,7 @@ workflows:
             - gradle_task: $GRADLE_TASK
             - gradle_options: "--stacktrace"
       
-      - cache-push@2: {}
+      - save-gradle-cache@1: {}
       
       - deploy-to-bitrise-io@2:
           inputs:
@@ -185,7 +185,7 @@ workflows:
           inputs:
             - gradlew_path: "$PROJECT_LOCATION/gradlew"
       
-      - cache-pull@2: {}
+      - restore-gradle-cache@1: {}
       
       - script@1:
           title: Set production environment variables
@@ -248,7 +248,7 @@ workflows:
             - gradle_task: $GRADLE_TASK
             - gradle_options: "--stacktrace"
       
-      - cache-push@2: {}
+      - save-gradle-cache@1: {}
       
       - deploy-to-bitrise-io@2:
           inputs:
