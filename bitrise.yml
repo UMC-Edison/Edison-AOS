@@ -136,7 +136,7 @@ workflows:
             - gradle_task: $GRADLE_TASK
             - gradle_options: "--stacktrace"
       
-      - save-gradle-cache@2.2.4: {}
+      - save-gradle-cache@1: {}
       
       - deploy-to-bitrise-io@2:
           inputs:
@@ -322,7 +322,7 @@ workflows:
             - gradle_task: $GRADLE_TASK
             - gradle_options: "--stacktrace"
       
-      - save-gradle-cache@2.2.4: {}
+      - save-gradle-cache@1: {}
       
       - deploy-to-bitrise-io@2:
           inputs:
