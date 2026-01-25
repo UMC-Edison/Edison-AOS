@@ -48,7 +48,7 @@ workflows:
                   export BRANCH_KEY="$DEVELOPMENT_BRANCH_KEY"
                 fi
                 
-                echo "export BUILD_TYPE=$BUILD_TYPE" >> $BITRISE_ENV
+                envman add --key BUILD_TYPE --value "$BUILD_TYPE"
                 
                 echo "Environment: $ENVIRONMENT"
                 echo "Build Type: $BUILD_TYPE"
@@ -87,7 +87,7 @@ workflows:
                 esac
                 
                 echo "Gradle Task: $GRADLE_TASK"
-                echo "export GRADLE_TASK=$GRADLE_TASK" >> $BITRISE_ENV
+                envman add --key GRADLE_TASK --value "$GRADLE_TASK"
       
       - gradle-runner@4.0.2:
           inputs:
@@ -201,7 +201,7 @@ workflows:
                 export BRANCH_KEY="$PRODUCTION_BRANCH_KEY"
                 export ENVIRONMENT
                 
-                echo "export BUILD_TYPE=$BUILD_TYPE" >> $BITRISE_ENV
+                envman add --key BUILD_TYPE --value "$BUILD_TYPE"
                 
                 echo "Environment: Production"
                 echo "Build Type: $BUILD_TYPE"
@@ -240,7 +240,7 @@ workflows:
                 esac
                 
                 echo "Gradle Task: $GRADLE_TASK"
-                echo "export GRADLE_TASK=$GRADLE_TASK" >> $BITRISE_ENV
+                envman add --key GRADLE_TASK --value "$GRADLE_TASK"
       
       - gradle-runner@4.0.2:
           inputs:
