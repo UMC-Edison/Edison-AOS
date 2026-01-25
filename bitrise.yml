@@ -1,0 +1,329 @@
+format_version: '11'
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+
+workflows:
+  primary:
+    steps:
+      - activate-ssh-key@4:
+          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
+      
+      - git-clone@7:
+          inputs:
+            - clone_depth: 1
+      
+      - install-missing-android-tools@3:
+          inputs:
+            - gradlew_path: "$PROJECT_LOCATION/gradlew"
+      
+      - cache-pull@2: {}
+      
+      - script@1:
+          title: Set environment variables
+          inputs:
+            - content: |
+                #!/bin/bash
+                set -e
+                
+                if [ -z "$ENVIRONMENT" ] || [ "$ENVIRONMENT" = "auto" ]; then
+                  if [ "$BITRISE_GIT_BRANCH" = "main" ] || [ "$BITRISE_GIT_BRANCH" = "master" ]; then
+                    ENVIRONMENT="production"
+                  else
+                    ENVIRONMENT="development"
+                  fi
+                fi
+                
+                if [ -z "$BUILD_TYPE" ]; then
+                  if [ "$ENVIRONMENT" = "production" ]; then
+                    BUILD_TYPE="release"
+                  else
+                    BUILD_TYPE="qa"
+                  fi
+                fi
+                
+                if [ "$ENVIRONMENT" = "production" ]; then
+                  export BASE_URL="$PRODUCTION_BASE_URL"
+                  export BRANCH_KEY="$PRODUCTION_BRANCH_KEY"
+                else
+                  export BASE_URL="$DEVELOPMENT_BASE_URL"
+                  export BRANCH_KEY="$DEVELOPMENT_BRANCH_KEY"
+                fi
+                
+                echo "export BUILD_TYPE=$BUILD_TYPE" >> $BITRISE_ENV
+                
+                echo "Environment: $ENVIRONMENT"
+                echo "Build Type: $BUILD_TYPE"
+                if [ -n "$BASE_URL" ]; then
+                  MASKED_URL=$(echo "$BASE_URL" | sed 's/\(https\?:\/\/[^\/]*\).*/\1\/***/')
+                  echo "BASE_URL: $MASKED_URL (masked)"
+                else
+                  echo "BASE_URL: (not set)"
+                fi
+                
+                echo "sdk.dir=$ANDROID_HOME" > local.properties
+                echo "base_url=$BASE_URL" >> local.properties
+                echo "branch_key=$BRANCH_KEY" >> local.properties
+      
+      - script@1:
+          title: Build APK with correct build type
+          inputs:
+            - content: |
+                #!/bin/bash
+                set -e
+                
+                case "$BUILD_TYPE" in
+                  debug)
+                    GRADLE_TASK="assembleDebug"
+                    ;;
+                  qa)
+                    GRADLE_TASK="assembleQa"
+                    ;;
+                  release)
+                    GRADLE_TASK="assembleRelease"
+                    ;;
+                  *)
+                    echo "Unknown BUILD_TYPE: $BUILD_TYPE, defaulting to debug"
+                    GRADLE_TASK="assembleDebug"
+                    ;;
+                esac
+                
+                echo "Gradle Task: $GRADLE_TASK"
+                echo "export GRADLE_TASK=$GRADLE_TASK" >> $BITRISE_ENV
+      
+      - gradle-runner@1:
+          inputs:
+            - gradle_file: "$PROJECT_LOCATION/build.gradle.kts"
+            - gradle_task: $GRADLE_TASK
+            - gradle_options: "--stacktrace"
+      
+      - cache-push@2: {}
+      
+      - deploy-to-bitrise-io@2:
+          inputs:
+            - deploy_path: "$BITRISE_APK_PATH"
+            - notify_user_groups: none
+            - is_enable_public_page: "true"
+      
+      - script@1:
+          title: Send Discord notification
+          run_if: '{{getenv "DISCORD_WEBHOOK_URL" | ne ""}}'
+          inputs:
+            - content: |
+                #!/bin/bash
+                set -e
+                
+                if [ "$BITRISE_BUILD_STATUS" = "0" ]; then
+                  EMOJI="✅"
+                  STATUS="Build Success"
+                  COLOR=3066993
+                else
+                  EMOJI="❌"
+                  STATUS="Build Failed"
+                  COLOR=15158332
+                fi
+                
+                jq -n \
+                  --arg username "Android Build Bot" \
+                  --arg avatar_url "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" \
+                  --arg content "${EMOJI} **${STATUS}**" \
+                  --arg branch "$BITRISE_GIT_BRANCH" \
+                  --arg build_type "$BUILD_TYPE" \
+                  --arg version "$BITRISE_APP_VERSION" \
+                  --arg download_url "$BITRISE_APP_URL" \
+                  --argjson color "$COLOR" \
+                  '{
+                    username: $username,
+                    avatar_url: $avatar_url,
+                    content: $content,
+                    embeds: [{
+                      title: "📱 Edison Android Build Success",
+                      color: $color,
+                      fields: [
+                        {
+                          name: "🌿 Branch",
+                          value: $branch,
+                          inline: true
+                        },
+                        {
+                          name: "🔨 Build Type",
+                          value: $build_type,
+                          inline: true
+                        },
+                        {
+                          name: "📦 Version",
+                          value: $version,
+                          inline: true
+                        },
+                        {
+                          name: "📥 Download",
+                          value: $download_url,
+                          inline: false
+                        }
+                      ],
+                      url: $download_url,
+                      footer: {
+                        text: "Bitrise"
+                      },
+                      timestamp: (now | todateiso8601)
+                    }]
+                  }' > payload.json
+                
+                curl -H "Content-Type: application/json" \
+                  -X POST \
+                  -d @payload.json \
+                  "$DISCORD_WEBHOOK_URL" || echo "Discord notification failed"
+
+  release:
+    steps:
+      - activate-ssh-key@4:
+          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
+      
+      - git-clone@7:
+          inputs:
+            - clone_depth: 1
+      
+      - install-missing-android-tools@3:
+          inputs:
+            - gradlew_path: "$PROJECT_LOCATION/gradlew"
+      
+      - cache-pull@2: {}
+      
+      - script@1:
+          title: Set production environment variables
+          inputs:
+            - content: |
+                #!/bin/bash
+                set -e
+                
+                BUILD_TYPE="${BUILD_TYPE:-release}"
+                ENVIRONMENT="production"
+                
+                export BASE_URL="$PRODUCTION_BASE_URL"
+                export BRANCH_KEY="$PRODUCTION_BRANCH_KEY"
+                export ENVIRONMENT
+                
+                echo "export BUILD_TYPE=$BUILD_TYPE" >> $BITRISE_ENV
+                
+                echo "Environment: Production"
+                echo "Build Type: $BUILD_TYPE"
+                if [ -n "$BASE_URL" ]; then
+                  MASKED_URL=$(echo "$BASE_URL" | sed 's/\(https\?:\/\/[^\/]*\).*/\1\/***/')
+                  echo "BASE_URL: $MASKED_URL (masked)"
+                else
+                  echo "BASE_URL: (not set)"
+                fi
+                
+                echo "sdk.dir=$ANDROID_HOME" > local.properties
+                echo "base_url=$BASE_URL" >> local.properties
+                echo "branch_key=$BRANCH_KEY" >> local.properties
+      
+      - script@1:
+          title: Build APK with correct build type
+          inputs:
+            - content: |
+                #!/bin/bash
+                set -e
+                
+                case "$BUILD_TYPE" in
+                  debug)
+                    GRADLE_TASK="assembleDebug"
+                    ;;
+                  qa)
+                    GRADLE_TASK="assembleQa"
+                    ;;
+                  release)
+                    GRADLE_TASK="assembleRelease"
+                    ;;
+                  *)
+                    echo "Unknown BUILD_TYPE: $BUILD_TYPE, defaulting to release"
+                    GRADLE_TASK="assembleRelease"
+                    ;;
+                esac
+                
+                echo "Gradle Task: $GRADLE_TASK"
+                echo "export GRADLE_TASK=$GRADLE_TASK" >> $BITRISE_ENV
+      
+      - gradle-runner@1:
+          inputs:
+            - gradle_file: "$PROJECT_LOCATION/build.gradle.kts"
+            - gradle_task: $GRADLE_TASK
+            - gradle_options: "--stacktrace"
+      
+      - cache-push@2: {}
+      
+      - deploy-to-bitrise-io@2:
+          inputs:
+            - deploy_path: "$BITRISE_APK_PATH"
+            - notify_user_groups: none
+            - is_enable_public_page: "true"
+      
+      - script@1:
+          title: Send Discord notification
+          run_if: '{{getenv "DISCORD_WEBHOOK_URL" | ne ""}}'
+          inputs:
+            - content: |
+                #!/bin/bash
+                set -e
+                
+                if [ "$BITRISE_BUILD_STATUS" = "0" ]; then
+                  EMOJI="✅"
+                  STATUS="Build Success"
+                  COLOR=3066993
+                else
+                  EMOJI="❌"
+                  STATUS="Build Failed"
+                  COLOR=15158332
+                fi
+                
+                jq -n \
+                  --arg username "Android Build Bot" \
+                  --arg content "${EMOJI} **${STATUS}**" \
+                  --arg branch "$BITRISE_GIT_BRANCH" \
+                  --arg build_type "release" \
+                  --arg version "$BITRISE_APP_VERSION" \
+                  --arg download_url "$BITRISE_APP_URL" \
+                  --argjson color "$COLOR" \
+                  '{
+                    username: $username,
+                    content: $content,
+                    embeds: [{
+                      title: "📱 Edison Android Release Build Success",
+                      color: $color,
+                      fields: [
+                        {
+                          name: "🌿 Branch",
+                          value: $branch,
+                          inline: true
+                        },
+                        {
+                          name: "🔨 Build Type",
+                          value: $build_type,
+                          inline: true
+                        },
+                        {
+                          name: "📦 Version",
+                          value: $version,
+                          inline: true
+                        },
+                        {
+                          name: "📥 Download",
+                          value: $download_url,
+                          inline: false
+                        }
+                      ],
+                      url: $download_url,
+                      footer: {
+                        text: "Bitrise"
+                      },
+                      timestamp: (now | todateiso8601)
+                    }]
+                  }' > payload.json
+                
+                curl -H "Content-Type: application/json" \
+                  -X POST \
+                  -d @payload.json \
+                  "$DISCORD_WEBHOOK_URL" || echo "Discord notification failed"
+
+app:
+  envs:
+    - PROJECT_LOCATION: "."
+    - MODULE: "app"
