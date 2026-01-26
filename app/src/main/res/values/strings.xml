@@ -35,4 +35,7 @@
     <string name="delete_account_agree_3">3. 해당 계정으로 Edison에 재가입할 경우, 새로운 계정으로 간주됩니다.</string>
     <string name="delete_account_agree">안내 사항을 모두 확인하였으며, 이에 동의합니다.</string>
     <string name="login_question">로그인이 필요한 기능입니다</string>
+    <string name="bubble_storage_empty_title">지난 한 달간 새로 작성한\n버블이 없어요!</string>
+    <string name="bubble_storage_empty_subtitle">에디슨과 함께</string>
+    <string name="bubble_storage_empty_cta">찰나의 영감을 기록하기</string>
 </resources>
