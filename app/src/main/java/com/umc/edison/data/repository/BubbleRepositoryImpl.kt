@@ -44,7 +44,6 @@ class BubbleRepositoryImpl @Inject constructor(
     override fun addBubble(bubble: Bubble): Flow<DataResource<Bubble>> =
         resourceFactory.sync(
             localAction = {
-                val currentUserId = tokenManager.getUserId()
                 bubbleLocalDataSource.addBubble(bubble.toData())
             },
             remoteSync = {

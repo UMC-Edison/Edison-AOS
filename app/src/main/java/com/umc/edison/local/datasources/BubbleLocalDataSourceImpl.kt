@@ -30,8 +30,9 @@ class BubbleLocalDataSourceImpl @Inject constructor(
 
     // --- CREATE ---
     override suspend fun addBubbles(bubbles: List<BubbleEntity>) {
+        val userId = tokenManager.getUserId()
         bubbles.forEach { bubble ->
-            addBubble(bubble, null)
+            addBubble(bubble, userId)
         }
     }
 
@@ -55,7 +56,6 @@ class BubbleLocalDataSourceImpl @Inject constructor(
 
         val insertedBubble = bubble.copy(id = id)
         addBubbleLabel(insertedBubble)
-        addLinkedBubble(insertedBubble)
         return getActiveBubble(insertedBubble.id)
     }
 
@@ -277,7 +277,7 @@ class BubbleLocalDataSourceImpl @Inject constructor(
             if (id == null) linkedBubbleDao.insert(bubble.id, linkedBubble.id, false)
         }
 
-        // 버블-라벨 관계 확인 및 삽입
+        // BackLinks 처리
         if (bubble.backLinks.isNotEmpty()) {
             val backLinkIds = bubble.backLinks.map { it.id }
             val userId = tokenManager.getUserId()
