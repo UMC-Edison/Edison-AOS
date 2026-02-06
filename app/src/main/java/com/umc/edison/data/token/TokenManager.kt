@@ -17,11 +17,13 @@ class TokenManager @Inject constructor(
         applicationScope.launch {
             loadAccessToken()
             loadRefreshToken()
+            loadUserId()
         }
     }
 
     private var cachedAccessToken: String? = null
     private var cachedRefreshToken: String? = null
+    private var cachedUserId: String? = null
 
     override fun getAccessToken(): String? {
         if (cachedAccessToken == null) {
@@ -37,9 +39,12 @@ class TokenManager @Inject constructor(
         return cachedRefreshToken
     }
 
+    fun getUserId(): String? = cachedUserId
+
     override fun clearCachedTokens() {
         cachedAccessToken = null
         cachedRefreshToken = null
+        cachedUserId = null
     }
 
     override fun setCachedTokens(accessToken: String, refreshToken: String?) {
@@ -61,6 +66,17 @@ class TokenManager @Inject constructor(
         return token
     }
 
+    suspend fun loadUserId(): String? {
+        val id = prefDataSource.get(USER_ID_KEY, "")
+        cachedUserId = id.ifEmpty { null }
+        return cachedUserId
+    }
+
+    suspend fun saveUserId(userId: String) {
+        cachedUserId = userId
+        prefDataSource.set(USER_ID_KEY, userId)
+    }
+
     suspend fun setToken(accessToken: String, refreshToken: String? = null) {
         cachedAccessToken = accessToken
         prefDataSource.set(ACCESS_TOKEN_KEY, accessToken)
@@ -73,12 +89,16 @@ class TokenManager @Inject constructor(
     suspend fun deleteToken() {
         cachedAccessToken = null
         cachedRefreshToken = null
+        cachedUserId = null
+
         prefDataSource.remove(ACCESS_TOKEN_KEY)
         prefDataSource.remove(REFRESH_TOKEN_KEY)
+        prefDataSource.remove(USER_ID_KEY)
     }
 
     companion object {
         private const val ACCESS_TOKEN_KEY = "access_token"
         private const val REFRESH_TOKEN_KEY = "refresh_token"
+        private const val USER_ID_KEY = "user_id"
     }
 }

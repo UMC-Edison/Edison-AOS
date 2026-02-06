@@ -7,6 +7,7 @@ import com.umc.edison.data.datasources.BubbleRemoteDataSource
 import com.umc.edison.data.model.bubble.ClusteredBubbleEntity
 import com.umc.edison.data.model.bubble.KeywordBubbleEntity
 import com.umc.edison.data.model.bubble.toData
+import com.umc.edison.data.token.TokenManager
 import com.umc.edison.domain.DataResource
 import com.umc.edison.domain.model.bubble.Bubble
 import com.umc.edison.domain.model.bubble.ClusteredBubble
@@ -19,7 +20,8 @@ import javax.inject.Inject
 class BubbleRepositoryImpl @Inject constructor(
     private val bubbleLocalDataSource: BubbleLocalDataSource,
     private val bubbleRemoteDataSource: BubbleRemoteDataSource,
-    private val resourceFactory: FlowBoundResourceFactory
+    private val resourceFactory: FlowBoundResourceFactory,
+    private val tokenManager: TokenManager
 ) : BubbleRepository {
     // CREATE
     override fun addBubbles(bubbles: List<Bubble>): Flow<DataResource<Unit>> =
@@ -41,7 +43,10 @@ class BubbleRepositoryImpl @Inject constructor(
 
     override fun addBubble(bubble: Bubble): Flow<DataResource<Bubble>> =
         resourceFactory.sync(
-            localAction = { bubbleLocalDataSource.addBubble(bubble.toData()) },
+            localAction = {
+                val currentUserId = tokenManager.getUserId()
+                bubbleLocalDataSource.addBubble(bubble.toData())
+            },
             remoteSync = {
                 val newBubble = bubbleLocalDataSource.getActiveBubble(bubble.id)
                 bubbleRemoteDataSource.syncBubble(newBubble)
@@ -193,6 +198,10 @@ class BubbleRepositoryImpl @Inject constructor(
             }
         )
 
+    override suspend fun linkGuestBubblesToUser(userId: String) {
+        bubbleLocalDataSource.linkGuestBubblesToUser(userId)
+    }
+
     // DELETE
     override fun deleteBubbles(bubbles: List<Bubble>): Flow<DataResource<Unit>> =
         resourceFactory.sync(
@@ -212,7 +221,8 @@ class BubbleRepositoryImpl @Inject constructor(
                 }
             },
             onRemoteSuccess = { deletedBubbles ->
-               val localBubbles = deletedBubbles.map { remote -> bubbleLocalDataSource.getRawBubble(remote.id) }
+                val localBubbles =
+                    deletedBubbles.map { remote -> bubbleLocalDataSource.getRawBubble(remote.id) }
                 bubbleLocalDataSource.deleteBubbles(localBubbles)
             }
         )

@@ -11,6 +11,7 @@ import java.util.UUID
 data class BubbleLocal(
     @PrimaryKey
     @ColumnInfo(name = "id") override val uuid: String = UUID.randomUUID().toString(),
+    @ColumnInfo(name = "user_id") val userId: String? = null,
     val title: String?,
     val content: String?,
     @ColumnInfo(name = "main_image") val mainImage: String?,

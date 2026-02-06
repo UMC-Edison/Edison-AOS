@@ -9,6 +9,7 @@ import com.umc.edison.data.token.TokenManager
 import com.umc.edison.domain.DataResource
 import com.umc.edison.domain.model.identity.Identity
 import com.umc.edison.domain.model.user.User
+import com.umc.edison.domain.repository.BubbleRepository
 import com.umc.edison.domain.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -17,12 +18,16 @@ class UserRepositoryImpl @Inject constructor(
     private val userRemoteDataSource: UserRemoteDataSource,
     private val resourceFactory: FlowBoundResourceFactory,
     private val tokenManager: TokenManager,
+    private val bubbleRepository: BubbleRepository
 ) : UserRepository {
-    // CREATE
+
     override fun googleLogin(idToken: String): Flow<DataResource<User>> = resourceFactory.remote(
         dataAction = {
             val userWithToken: UserWithTokenEntity = userRemoteDataSource.googleLogin(idToken)
+            val userEmail = userWithToken.user.email
             tokenManager.setToken(userWithToken.accessToken, userWithToken.refreshToken)
+            tokenManager.saveUserId(userEmail)
+            bubbleRepository.linkGuestBubblesToUser(userEmail)
             userWithToken
         }
     )
@@ -39,17 +44,19 @@ class UserRepositoryImpl @Inject constructor(
                     nickname = nickname,
                     identity = identity.map { it.toData() }
                 )
+            val userEmail = userWithToken.user.email
             tokenManager.setToken(userWithToken.accessToken, userWithToken.refreshToken)
+            tokenManager.saveUserId(userEmail)
+            bubbleRepository.linkGuestBubblesToUser(userEmail)
+
             userWithToken
         }
     )
 
-
-
     // READ
     override fun getLogInState(): Flow<DataResource<Boolean>> = resourceFactory.local(
         dataAction = {
-            tokenManager.loadAccessToken()?.isNotEmpty()
+            tokenManager.loadAccessToken()?.isNotEmpty() == true
         }
     )
 
