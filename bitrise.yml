@@ -130,13 +130,13 @@ workflows:
                 echo "Gradle Task: $GRADLE_TASK"
                 envman add --key GRADLE_TASK --value "$GRADLE_TASK"
       
-      - gradle-runner@4.0.2:
+      - gradle-runner@5.0.0:
           inputs:
             - gradle_file: "$PROJECT_LOCATION/build.gradle.kts"
             - gradle_task: $GRADLE_TASK
             - gradle_options: "--stacktrace"
 
-      - sign-apk@1:
+      - sign-apk@2.0.1:
           run_if: '{{getenv "BITRISEIO_ANDROID_KEYSTORE_URL" | ne ""}}'
           inputs:
             - use_apk_signer: "true"
@@ -321,13 +321,13 @@ workflows:
                 echo "Gradle Task: $GRADLE_TASK"
                 envman add --key GRADLE_TASK --value "$GRADLE_TASK"
       
-      - gradle-runner@4.0.2:
+      - gradle-runner@5.0.0:
           inputs:
             - gradle_file: "$PROJECT_LOCATION/build.gradle.kts"
             - gradle_task: $GRADLE_TASK
             - gradle_options: "--stacktrace"
 
-      - sign-apk@1:
+      - sign-apk@2.0.1:
           run_if: '{{getenv "BITRISEIO_ANDROID_KEYSTORE_URL" | ne ""}}'
           inputs:
             - use_apk_signer: "true"
