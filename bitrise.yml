@@ -138,6 +138,8 @@ workflows:
 
       - sign-apk@1:
           run_if: '{{getenv "BITRISEIO_ANDROID_KEYSTORE_URL" | ne ""}}'
+          inputs:
+            - use_apk_signer: "true"
       
       - save-gradle-cache@1: {}
       
@@ -327,6 +329,8 @@ workflows:
 
       - sign-apk@1:
           run_if: '{{getenv "BITRISEIO_ANDROID_KEYSTORE_URL" | ne ""}}'
+          inputs:
+            - use_apk_signer: "true"
       
       - save-gradle-cache@1: {}
       
