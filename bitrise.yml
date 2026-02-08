@@ -136,7 +136,7 @@ workflows:
             - gradle_task: $GRADLE_TASK
             - gradle_options: "--stacktrace"
 
-      - android-sign@1:
+      - sign-apk@1:
           run_if: '{{getenv "BITRISEIO_ANDROID_KEYSTORE_URL" | ne ""}}'
       
       - save-gradle-cache@1: {}
@@ -325,7 +325,7 @@ workflows:
             - gradle_task: $GRADLE_TASK
             - gradle_options: "--stacktrace"
 
-      - android-sign@1:
+      - sign-apk@1:
           run_if: '{{getenv "BITRISEIO_ANDROID_KEYSTORE_URL" | ne ""}}'
       
       - save-gradle-cache@1: {}
