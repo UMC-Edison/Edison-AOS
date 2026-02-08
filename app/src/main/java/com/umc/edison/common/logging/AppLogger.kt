@@ -23,13 +23,13 @@ object AppLogger {
     }
 
     fun w(tag: String, message: String, throwable: Throwable? = null) {
-        if (isDebug) Log.w(tag, message, throwable)
+        Log.w(tag, message, throwable)
         Firebase.crashlytics.log("$PREFIX_WARN$tag: $message")
         throwable?.let { Firebase.crashlytics.recordException(it) }
     }
 
     fun e(tag: String, message: String, throwable: Throwable? = null) {
-        if (isDebug) Log.e(tag, message, throwable)
+        Log.e(tag, message, throwable)
         Firebase.crashlytics.log("$PREFIX_ERROR$tag: $message")
         throwable?.let { Firebase.crashlytics.recordException(it) }
     }
