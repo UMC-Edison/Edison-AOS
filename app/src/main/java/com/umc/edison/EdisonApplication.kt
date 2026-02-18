@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import com.umc.edison.common.logging.UserContext
+import com.umc.edison.remote.config.RemoteConfigKeys
 
 @HiltAndroidApp
 class EdisonApplication : Application(), Configuration.Provider {
@@ -60,7 +61,17 @@ class EdisonApplication : Application(), Configuration.Provider {
     }
 
     private fun initRemoteConfig() {
-        remoteConfig.getString("base_url")
+
+        val settings = com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings.Builder()
+            .setMinimumFetchIntervalInSeconds(if (BuildConfig.DEBUG) 0 else 60 * 60 * 12)
+            .build()
+        remoteConfig.setConfigSettingsAsync(settings)
+
+        remoteConfig.setDefaultsAsync(
+            mapOf(RemoteConfigKeys.BASE_URL to BuildConfig.BASE_URL)
+        )
+
+        remoteConfig.getString(RemoteConfigKeys.BASE_URL)
             .takeIf { it.isNotBlank() }
             ?.let(domainProvider::setDomain)
 
@@ -79,7 +90,7 @@ class EdisonApplication : Application(), Configuration.Provider {
                 }
 
                 if (activated) {
-                    remoteConfig.getString("base_url")
+                    remoteConfig.getString(RemoteConfigKeys.BASE_URL)
                         .takeIf { it.isNotBlank() }
                         ?.let(domainProvider::setDomain)
                     return@launch
