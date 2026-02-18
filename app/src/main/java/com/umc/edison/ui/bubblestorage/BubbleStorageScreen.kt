@@ -41,9 +41,21 @@ import com.umc.edison.ui.components.calculateBubbleSize
 import com.umc.edison.ui.navigation.NavRoute
 import com.umc.edison.ui.onboarding.BubbleSpaceOnboarding
 import com.umc.edison.ui.theme.Gray300
+import com.umc.edison.ui.theme.Gray500
+import com.umc.edison.ui.theme.Gray700
 import com.umc.edison.ui.theme.Gray800
 import com.umc.edison.ui.theme.Gray900
 import com.umc.edison.ui.theme.White000
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import com.umc.edison.R
+import com.umc.edison.ui.theme.EdisonTypography
+import com.umc.edison.ui.theme.EmptyViewCtaBg
+import com.umc.edison.ui.theme.GradientBlue
+import com.umc.edison.ui.theme.GradientPink
+import com.umc.edison.ui.theme.GradientYellow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -99,6 +111,15 @@ fun BubbleStorageScreen(
             }
         },
     ) {
+        if (uiState.bubbles.isEmpty()) {
+            BubbleStorageEmptyView(
+                onCtaClick = {
+                    navHostController.navigate(NavRoute.BubbleEdit.createRoute())
+                }
+            )
+            return@BaseContent
+        }
+
         var onBubbleClick: (BubbleModel) -> Unit = {}
         var onBubbleLongClick: (BubbleModel) -> Unit = {}
 
@@ -289,6 +310,58 @@ fun BubbleStorageScreen(
                 onDismiss = {
                     viewModel.setHasSeenOnboarding()
                 }
+            )
+        }
+    }
+}
+
+@Composable
+private fun BubbleStorageEmptyView(
+    onCtaClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+
+    Column(
+        modifier = modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = stringResource(R.string.bubble_storage_empty_title),
+            style = EdisonTypography.displayLarge,
+            color = Gray700,
+            textAlign = TextAlign.Center,
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = stringResource(R.string.bubble_storage_empty_subtitle),
+            style = EdisonTypography.bodyMedium,
+            color = Gray500,
+            textAlign = TextAlign.Center,
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        val ctaTextBrush = Brush.horizontalGradient(
+            colors = listOf(
+                GradientYellow,
+                GradientPink,
+                GradientBlue,
+            )
+        )
+
+        Surface(
+            onClick = onCtaClick,
+            shape = RoundedCornerShape(100.dp),
+            color = EmptyViewCtaBg,
+        ) {
+            Text(
+                text = stringResource(R.string.bubble_storage_empty_cta),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                style = MaterialTheme.typography.displaySmall.copy(brush = ctaTextBrush),
+                textAlign = TextAlign.Center,
             )
         }
     }

@@ -97,7 +97,7 @@ fun BubbleGraphScreen(
                     val transformedOffset = (tapOffset - offset) / scale
                     val radius = BUBBLE_DOT_RADIUS
                     val touchRadius = radius * 1.5f
-                    
+
                     uiState.bubbles.forEach { positionedBubble ->
                         val dx = transformedOffset.x - positionedBubble.position.x
                         val dy = transformedOffset.y - positionedBubble.position.y
