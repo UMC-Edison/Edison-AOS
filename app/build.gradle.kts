@@ -54,7 +54,6 @@ android {
             applicationIdSuffix = ".qa"
             versionNameSuffix = "-qa"
             matchingFallbacks += listOf("debug")
-            buildConfigField("String", "BASE_URL", "\"${localProperties["base_url"] ?: ""}\"")
         }
         release {
             buildConfigField("String", "BASE_URL", "\"${localProperties["base_url"] ?: ""}\"")
@@ -146,8 +145,4 @@ dependencies {
     implementation("io.branch.sdk.android:library:5.+")
 
     implementation(libs.multiplatform.settings)
-
-    // Import the Firebase BoM
-    implementation(platform("com.google.firebase:firebase-bom:34.9.0"))
-    implementation("com.google.firebase:firebase-analytics")
 }

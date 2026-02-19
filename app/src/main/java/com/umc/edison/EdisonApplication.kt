@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.Log
 import androidx.work.Configuration
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.umc.edison.common.logging.AppLogger
 import com.umc.edison.data.di.EntryPointModule
@@ -62,7 +63,7 @@ class EdisonApplication : Application(), Configuration.Provider {
 
     private fun initRemoteConfig() {
 
-        val settings = com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings.Builder()
+        val settings = FirebaseRemoteConfigSettings.Builder()
             .setMinimumFetchIntervalInSeconds(if (BuildConfig.DEBUG) 0 else 60 * 60 * 12)
             .build()
         remoteConfig.setConfigSettingsAsync(settings)

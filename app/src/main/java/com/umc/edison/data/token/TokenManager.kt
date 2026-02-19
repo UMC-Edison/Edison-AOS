@@ -33,21 +33,17 @@ class TokenManager @Inject constructor(
         return cachedRefreshToken
     }
 
-    override fun clearCachedTokens() {
-        runBlocking {
-            mutex.withLock {
-                cachedAccessToken = null
-                cachedRefreshToken = null
-            }
+    override suspend fun clearCachedTokens() {
+        mutex.withLock {
+            cachedAccessToken = null
+            cachedRefreshToken = null
         }
     }
 
-    override fun setCachedTokens(accessToken: String, refreshToken: String?) {
-        runBlocking {
-            mutex.withLock {
-                cachedAccessToken = accessToken
-                cachedRefreshToken = refreshToken
-            }
+    override suspend fun setCachedTokens(accessToken: String, refreshToken: String?) {
+        mutex.withLock {
+            cachedAccessToken = accessToken
+            cachedRefreshToken = refreshToken
         }
     }
 
