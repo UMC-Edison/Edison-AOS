@@ -1,13 +1,11 @@
 package com.umc.edison.data.token
 
-import com.umc.edison.common.logging.AppLogger
 import com.umc.edison.data.datasources.PrefDataSource
 import com.umc.edison.data.di.ApplicationScope
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
