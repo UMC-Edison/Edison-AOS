@@ -68,7 +68,7 @@ sealed class NavRoute(val route: String) {
     }
 
     data object BubbleEdit : NavRoute("$MY_EDISON_ROUTE/edit") {
-        fun createRoute(bubbleId: String?): String {
+        fun createRoute(bubbleId: String? = null): String {
             return if (!bubbleId.isNullOrEmpty()) {
                 "$route?bubbleId=$bubbleId"
             } else {

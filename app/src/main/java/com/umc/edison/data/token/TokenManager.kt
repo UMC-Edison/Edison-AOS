@@ -18,18 +18,21 @@ class TokenManager @Inject constructor(
 ) : AccessTokenProvider {
 
     private val mutex = Mutex()
-    private val loadJob = applicationScope.launch { preloadTokens() }
 
     private var cachedAccessToken: String? = null
     private var cachedRefreshToken: String? = null
 
+    init {
+        applicationScope.launch {
+            preloadTokens()
+        }
+    }
+
     override fun getAccessToken(): String? {
-        ensureLoaded()
         return cachedAccessToken
     }
 
     override fun getRefreshToken(): String? {
-        ensureLoaded()
         return cachedRefreshToken
     }
 
@@ -83,13 +86,6 @@ class TokenManager @Inject constructor(
         }
     }
 
-    companion object {
-        private const val ACCESS_TOKEN_KEY = "access_token"
-        private const val REFRESH_TOKEN_KEY = "refresh_token"
-
-        private const val TAG = "TokenManager"
-    }
-
     private suspend fun preloadTokens() {
         mutex.withLock {
             cachedAccessToken = prefDataSource.get(ACCESS_TOKEN_KEY, "").ifEmpty { null }
@@ -97,16 +93,8 @@ class TokenManager @Inject constructor(
         }
     }
 
-    private fun ensureLoaded() {
-        if (cachedAccessToken != null || cachedRefreshToken != null) return
-        if (!loadJob.isCompleted) {
-            runBlocking {
-                try {
-                    loadJob.join()
-                } catch (e: Exception) {
-                    AppLogger.w(TAG, "Failed to preload tokens: ${e.message}", e)
-                }
-            }
-        }
+    companion object {
+        private const val ACCESS_TOKEN_KEY = "access_token"
+        private const val REFRESH_TOKEN_KEY = "refresh_token"
     }
 }
