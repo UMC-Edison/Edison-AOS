@@ -1,6 +1,6 @@
 package com.umc.edison.data.repository
 
-import android.util.Log
+import com.umc.edison.common.logging.AppLogger
 import com.umc.edison.data.datasources.BubbleLocalDataSource
 import com.umc.edison.data.datasources.BubbleRemoteDataSource
 import com.umc.edison.data.datasources.LabelLocalDataSource
@@ -15,7 +15,7 @@ class SyncRepositoryImpl @Inject constructor(
      private val labelLocalDataSource: LabelLocalDataSource,
 ) : SyncRepository {
     override suspend fun syncLocalDataToServer() {
-        Log.i("syncLocalDataToServer", "syncLocalDataToServer is started")
+        AppLogger.i("syncLocalDataToServer", "syncLocalDataToServer is started")
 
         val unSyncedLabels = labelLocalDataSource.getUnSyncedLabels()
         unSyncedLabels.forEach { label ->
@@ -23,7 +23,7 @@ class SyncRepositoryImpl @Inject constructor(
             if (syncedLabel.same(label)) {
                 labelLocalDataSource.markAsSynced(syncedLabel)
             } else {
-                Log.e("syncLocalDataToServer", "Failed to sync label: ${label.id}")
+                AppLogger.e("syncLocalDataToServer", "Failed to sync label: ${label.id}")
             }
         }
 
@@ -33,13 +33,13 @@ class SyncRepositoryImpl @Inject constructor(
             if (syncedBubble.same(bubble)) {
                 bubbleLocalDataSource.markAsSynced(bubble)
             } else {
-                Log.e("syncLocalDataToServer", "Failed to sync bubble: ${bubble.id}")
+                AppLogger.e("syncLocalDataToServer", "Failed to sync bubble: ${bubble.id}")
             }
         }
     }
 
     override suspend fun syncServerDataToLocal() {
-        Log.i("syncServerDataToLocal", "syncServerDataToLocal is started")
+        AppLogger.i("syncServerDataToLocal", "syncServerDataToLocal is started")
         val remoteLabels = labelRemoteDataSource.getAllLabels()
         labelLocalDataSource.syncLabels(remoteLabels)
 

@@ -7,5 +7,5 @@ import retrofit2.http.POST
 
 interface RefreshTokenApiService {
     @POST("members/refresh")
-    fun refreshToken(@Header("Refresh-Token") refreshToken: String): ResponseWithData<RefreshTokenResponse>
+    suspend fun refreshToken(@Header("Refresh-Token") refreshToken: String): ResponseWithData<RefreshTokenResponse>
 }

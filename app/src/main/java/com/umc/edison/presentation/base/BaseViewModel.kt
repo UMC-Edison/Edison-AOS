@@ -1,8 +1,8 @@
 package com.umc.edison.presentation.base
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.umc.edison.common.logging.AppLogger
 import com.umc.edison.domain.DataResource
 import com.umc.edison.presentation.ToastManager
 import kotlinx.coroutines.flow.Flow
@@ -31,7 +31,7 @@ open class BaseViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             flow.onCompletion {
-                Log.d("collectDataResource", "onComplete")
+                AppLogger.d("collectDataResource", "onComplete")
                 _baseState.update {
                     it.copy(isLoading = false)
                 }
@@ -39,12 +39,12 @@ open class BaseViewModel @Inject constructor(
             }.collect { dataResource ->
                 when (dataResource) {
                     is DataResource.Success -> {
-                        Log.d("collectDataResource", "onSuccess: ${dataResource.data}")
+                        AppLogger.d("collectDataResource", "onSuccess: ${dataResource.data}")
                         onSuccess(dataResource.data)
                     }
 
                     is DataResource.Error -> {
-                        Log.e("collectDataResource", "onError: ${dataResource.throwable}")
+                        AppLogger.e("collectDataResource", "onError: ${dataResource.throwable}", dataResource.throwable)
                         _baseState.update {
                             it.copy(error = dataResource.throwable)
                         }
@@ -52,7 +52,7 @@ open class BaseViewModel @Inject constructor(
                     }
 
                     is DataResource.Loading -> {
-                        Log.d("collectDataResource", "onLoading")
+                        AppLogger.d("collectDataResource", "onLoading")
                         _baseState.update {
                             it.copy(isLoading = true)
                         }

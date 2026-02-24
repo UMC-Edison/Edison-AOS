@@ -14,6 +14,7 @@ import com.umc.edison.remote.model.login.toSetIdentityKeywordRequest
 import com.umc.edison.remote.model.mypage.toUpdateTestRequest
 import com.umc.edison.remote.model.mypage.toUpdateProfileRequest
 import com.umc.edison.remote.api.RefreshTokenApiService
+import com.umc.edison.data.token.RefreshFailedException
 import com.umc.edison.remote.model.login.SignUpRequest
 import javax.inject.Inject
 
@@ -59,7 +60,11 @@ class UserRemoteDataSourceImpl @Inject constructor(
     }
 
     override suspend fun refreshAccessToken(refreshToken: String): String {
-        return refreshTokenApiService.refreshToken(refreshToken).data.accessToken
+        val response = refreshTokenApiService.refreshToken(refreshToken)
+        if (!response.isSuccess) {
+            throw RefreshFailedException("Refresh token failed: ${response.code}")
+        }
+        return response.data.accessToken
     }
 
     // READ

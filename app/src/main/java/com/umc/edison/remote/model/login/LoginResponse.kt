@@ -26,6 +26,7 @@ data class LoginResponse(
 
     fun toUserEntity(): UserEntity =
         UserEntity(
+            id = memberId,
             nickname = nickname,
             profileImage = null,
             email = email

@@ -1,11 +1,13 @@
 package com.umc.edison.data.token
 
-import javax.inject.Inject
-import javax.inject.Singleton
 import com.umc.edison.data.datasources.PrefDataSource
 import com.umc.edison.data.di.ApplicationScope
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 @Singleton
 class TokenManager @Inject constructor(
@@ -13,68 +15,76 @@ class TokenManager @Inject constructor(
     @ApplicationScope private val applicationScope: CoroutineScope
 ) : AccessTokenProvider {
 
-    init {
-        applicationScope.launch {
-            loadAccessToken()
-            loadRefreshToken()
-        }
-    }
+    private val mutex = Mutex()
 
     private var cachedAccessToken: String? = null
     private var cachedRefreshToken: String? = null
 
-    override fun getAccessToken(): String? {
-        if (cachedAccessToken == null) {
-            println("⚠️ Warning: access token not cached. Consider calling loadAccessToken() at app startup.")
+    init {
+        applicationScope.launch {
+            preloadTokens()
         }
-        return cachedAccessToken
     }
 
-    override fun getRefreshToken(): String? {
-        if (cachedRefreshToken == null) {
-            println("⚠️ Warning: refresh token not cached. Consider calling loadRefreshToken() at app startup.")
+    override fun getAccessToken(): String? = cachedAccessToken
+
+    override fun getRefreshToken(): String? = cachedRefreshToken
+
+    override suspend fun clearCachedTokens() {
+        mutex.withLock {
+            cachedAccessToken = null
+            cachedRefreshToken = null
         }
-        return cachedRefreshToken
     }
 
-    override fun clearCachedTokens() {
-        cachedAccessToken = null
-        cachedRefreshToken = null
-    }
-
-    override fun setCachedTokens(accessToken: String, refreshToken: String?) {
-        cachedAccessToken = accessToken
-        cachedRefreshToken = refreshToken
+    override suspend fun setCachedTokens(accessToken: String, refreshToken: String?) {
+        mutex.withLock {
+            cachedAccessToken = accessToken
+            cachedRefreshToken = refreshToken
+        }
     }
 
     suspend fun loadAccessToken(): String? {
-        val token = prefDataSource.get(ACCESS_TOKEN_KEY, "")
-        cachedAccessToken = token.ifEmpty { null }
-
-        return token
+        return mutex.withLock {
+            val token = prefDataSource.get(ACCESS_TOKEN_KEY, "")
+            cachedAccessToken = token.ifEmpty { null }
+            token
+        }
     }
 
     suspend fun loadRefreshToken(): String? {
-        val token = prefDataSource.get(REFRESH_TOKEN_KEY, "")
-        cachedRefreshToken = token.ifEmpty { null }
-
-        return token
+        return mutex.withLock {
+            val token = prefDataSource.get(REFRESH_TOKEN_KEY, "")
+            cachedRefreshToken = token.ifEmpty { null }
+            token
+        }
     }
 
     suspend fun setToken(accessToken: String, refreshToken: String? = null) {
-        cachedAccessToken = accessToken
-        prefDataSource.set(ACCESS_TOKEN_KEY, accessToken)
-        refreshToken?.let {
-            prefDataSource.set(REFRESH_TOKEN_KEY, it)
-            cachedRefreshToken = it
+        mutex.withLock {
+            cachedAccessToken = accessToken
+            prefDataSource.set(ACCESS_TOKEN_KEY, accessToken)
+            refreshToken?.let {
+                prefDataSource.set(REFRESH_TOKEN_KEY, it)
+                cachedRefreshToken = it
+            }
         }
     }
 
     suspend fun deleteToken() {
-        cachedAccessToken = null
-        cachedRefreshToken = null
-        prefDataSource.remove(ACCESS_TOKEN_KEY)
-        prefDataSource.remove(REFRESH_TOKEN_KEY)
+        mutex.withLock {
+            cachedAccessToken = null
+            cachedRefreshToken = null
+            prefDataSource.remove(ACCESS_TOKEN_KEY)
+            prefDataSource.remove(REFRESH_TOKEN_KEY)
+        }
+    }
+
+    private suspend fun preloadTokens() {
+        mutex.withLock {
+            cachedAccessToken = prefDataSource.get(ACCESS_TOKEN_KEY, "").ifEmpty { null }
+            cachedRefreshToken = prefDataSource.get(REFRESH_TOKEN_KEY, "").ifEmpty { null }
+        }
     }
 
     companion object {
