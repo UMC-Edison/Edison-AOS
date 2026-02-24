@@ -26,13 +26,9 @@ class TokenManager @Inject constructor(
         }
     }
 
-    override fun getAccessToken(): String? {
-        return cachedAccessToken
-    }
+    override fun getAccessToken(): String? = cachedAccessToken
 
-    override fun getRefreshToken(): String? {
-        return cachedRefreshToken
-    }
+    override fun getRefreshToken(): String? = cachedRefreshToken
 
     override suspend fun clearCachedTokens() {
         mutex.withLock {
