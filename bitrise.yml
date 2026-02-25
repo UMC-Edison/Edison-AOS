@@ -32,29 +32,19 @@ workflows:
                   fi
                 fi
                 
-                if [ -n "$GOOGLE_SERVICES_JSON_DEBUG" ]; then
-                  mkdir -p app/src/debug
-                  echo "$GOOGLE_SERVICES_JSON_DEBUG" | base64 -d > app/src/debug/google-services.json
-                  echo "✓ Created app/src/debug/google-services.json"
-                else
-                  echo "⚠ Warning: GOOGLE_SERVICES_JSON_DEBUG not set"
-                fi
-                
-                if [ -n "$GOOGLE_SERVICES_JSON_QA" ]; then
-                  mkdir -p app/src/qa
-                  echo "$GOOGLE_SERVICES_JSON_QA" | base64 -d > app/src/qa/google-services.json
-                  echo "✓ Created app/src/qa/google-services.json"
-                else
-                  echo "⚠ Warning: GOOGLE_SERVICES_JSON_QA not set"
-                fi
-                
-                if [ -n "$GOOGLE_SERVICES_JSON_RELEASE" ]; then
-                  mkdir -p app/src/release
-                  echo "$GOOGLE_SERVICES_JSON_RELEASE" | base64 -d > app/src/release/google-services.json
-                  echo "✓ Created app/src/release/google-services.json"
-                else
-                  echo "⚠ Warning: GOOGLE_SERVICES_JSON_RELEASE not set"
-                fi
+                for type in DEBUG QA RELEASE; do
+                  env_var_name="GOOGLE_SERVICES_JSON_${type}"
+                  lowercase_type=$(echo "$type" | tr '[:upper:]' '[:lower:]')
+                  file_path="app/src/${lowercase_type}/google-services.json"
+                  
+                  if [ -n "${!env_var_name}" ]; then
+                    mkdir -p "app/src/${lowercase_type}"
+                    echo "${!env_var_name}" | base64 -d > "$file_path"
+                    echo "✓ Created $file_path"
+                  else
+                    echo "⚠ Warning: ${env_var_name} not set"
+                  fi
+                done
                 
                 echo "Google Services JSON files setup completed for build type: $BUILD_TYPE"
       
@@ -122,8 +112,8 @@ workflows:
                     GRADLE_TASK="assembleRelease"
                     ;;
                   *)
-                    echo "Unknown BUILD_TYPE: $BUILD_TYPE, defaulting to debug"
-                    GRADLE_TASK="assembleDebug"
+                    echo "Unknown BUILD_TYPE: $BUILD_TYPE, defaulting to qa"
+                    GRADLE_TASK="assembleQa"
                     ;;
                 esac
                 
@@ -161,10 +151,12 @@ workflows:
                   EMOJI="✅"
                   STATUS="Build Success"
                   COLOR=3066993
+                  TITLE="📱 Edison Android Build Success"
                 else
                   EMOJI="❌"
                   STATUS="Build Failed"
                   COLOR=15158332
+                  TITLE="📱 Edison Android Build Failed"
                 fi
                 
                 jq -n \
@@ -176,12 +168,13 @@ workflows:
                   --arg version "$BITRISE_APP_VERSION" \
                   --arg download_url "$BITRISE_APP_URL" \
                   --argjson color "$COLOR" \
+                  --arg title "$TITLE" \
                   '{
                     username: $username,
                     avatar_url: $avatar_url,
                     content: $content,
                     embeds: [{
-                      title: "📱 Edison Android Build Success",
+                      title: $title,
                       color: $color,
                       fields: [
                         {
@@ -240,29 +233,19 @@ workflows:
                 #!/bin/bash
                 set -e
                 
-                if [ -n "$GOOGLE_SERVICES_JSON_DEBUG" ]; then
-                  mkdir -p app/src/debug
-                  echo "$GOOGLE_SERVICES_JSON_DEBUG" | base64 -d > app/src/debug/google-services.json
-                  echo "✓ Created app/src/debug/google-services.json"
-                else
-                  echo "⚠ Warning: GOOGLE_SERVICES_JSON_DEBUG not set"
-                fi
-                
-                if [ -n "$GOOGLE_SERVICES_JSON_QA" ]; then
-                  mkdir -p app/src/qa
-                  echo "$GOOGLE_SERVICES_JSON_QA" | base64 -d > app/src/qa/google-services.json
-                  echo "✓ Created app/src/qa/google-services.json"
-                else
-                  echo "⚠ Warning: GOOGLE_SERVICES_JSON_QA not set"
-                fi
-                
-                if [ -n "$GOOGLE_SERVICES_JSON_RELEASE" ]; then
-                  mkdir -p app/src/release
-                  echo "$GOOGLE_SERVICES_JSON_RELEASE" | base64 -d > app/src/release/google-services.json
-                  echo "✓ Created app/src/release/google-services.json"
-                else
-                  echo "⚠ Warning: GOOGLE_SERVICES_JSON_RELEASE not set"
-                fi
+                for type in DEBUG QA RELEASE; do
+                  env_var_name="GOOGLE_SERVICES_JSON_${type}"
+                  lowercase_type=$(echo "$type" | tr '[:upper:]' '[:lower:]')
+                  file_path="app/src/${lowercase_type}/google-services.json"
+                  
+                  if [ -n "${!env_var_name}" ]; then
+                    mkdir -p "app/src/${lowercase_type}"
+                    echo "${!env_var_name}" | base64 -d > "$file_path"
+                    echo "✓ Created $file_path"
+                  else
+                    echo "⚠ Warning: ${env_var_name} not set"
+                  fi
+                done
                 
                 echo "Google Services JSON files setup completed"
       
@@ -352,25 +335,30 @@ workflows:
                   EMOJI="✅"
                   STATUS="Build Success"
                   COLOR=3066993
+                  TITLE="📱 Edison Android Release Build Success"
                 else
                   EMOJI="❌"
                   STATUS="Build Failed"
                   COLOR=15158332
+                  TITLE="📱 Edison Android Release Build Failed"
                 fi
                 
                 jq -n \
                   --arg username "Android Build Bot" \
+                  --arg avatar_url "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" \
                   --arg content "${EMOJI} **${STATUS}**" \
                   --arg branch "$BITRISE_GIT_BRANCH" \
                   --arg build_type "release" \
                   --arg version "$BITRISE_APP_VERSION" \
                   --arg download_url "$BITRISE_APP_URL" \
                   --argjson color "$COLOR" \
+                  --arg title "$TITLE" \
                   '{
                     username: $username,
+                    avatar_url: $avatar_url,
                     content: $content,
                     embeds: [{
-                      title: "📱 Edison Android Release Build Success",
+                      title: $title,
                       color: $color,
                       fields: [
                         {
