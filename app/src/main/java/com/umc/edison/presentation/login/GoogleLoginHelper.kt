@@ -69,7 +69,7 @@ class GoogleLoginHelper @Inject constructor(
                         )
                         Firebase.crashlytics.setCustomKey("google_signin_phase", "get_credential")
                         Firebase.crashlytics.setCustomKey("google_signin_error_type", e.javaClass.simpleName)
-                        Firebase.crashlytics.setCustomKey("google_signin_error_message", e.message ?: "")
+                        Firebase.crashlytics.setCustomKey("google_signin_error_message", "A credential error occurred.")
                         GoogleLoginState.ERROR_MESSAGE_UNKNOWN
                     }
                 }
