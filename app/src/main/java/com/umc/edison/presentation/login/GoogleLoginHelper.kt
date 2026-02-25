@@ -8,8 +8,10 @@ import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.firebase.crashlytics.ktx.crashlytics
 import com.umc.edison.BuildConfig
 import com.umc.edison.R
+import com.google.firebase.ktx.Firebase
 import com.umc.edison.common.logging.AppLogger
 import com.umc.edison.common.logging.UserContext
 import com.umc.edison.domain.DataResource
@@ -59,8 +61,17 @@ class GoogleLoginHelper @Inject constructor(
                     is androidx.credentials.exceptions.GetCredentialCancellationException ->
                         GoogleLoginState.ERROR_MESSAGE_CANCELLED
 
-                    else ->
+                    else -> {
+                        AppLogger.e(
+                            "Google SignIn",
+                            "GetCredentialException: ${e.javaClass.simpleName} - ${e.message}",
+                            e
+                        )
+                        Firebase.crashlytics.setCustomKey("google_signin_phase", "get_credential")
+                        Firebase.crashlytics.setCustomKey("google_signin_error_type", e.javaClass.simpleName)
+                        Firebase.crashlytics.setCustomKey("google_signin_error_message", "A credential error occurred.")
                         GoogleLoginState.ERROR_MESSAGE_UNKNOWN
+                    }
                 }
                 onResult(GoogleLoginState.Failure(errorMessage))
             }
@@ -98,11 +109,13 @@ class GoogleLoginHelper @Inject constructor(
                         onResult(GoogleLoginState.Failure(GoogleLoginState.ERROR_MESSAGE_INVALID_TOKEN))
                     }
                 } else {
+                    AppLogger.w("Google SignIn", "CustomCredential type mismatch: ${credential.type}")
                     onResult(GoogleLoginState.Failure())
                 }
             }
 
             else -> {
+                AppLogger.w("Google SignIn", "Unknown credential type: ${credential.javaClass.simpleName}")
                 onResult(GoogleLoginState.Failure())
             }
         }
