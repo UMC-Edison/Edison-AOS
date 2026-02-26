@@ -24,23 +24,23 @@ class BubbleLocalDataSourceImpl @Inject constructor(
 
     private val tableName = RoomConstant.getTableNameByClass(BubbleLocal::class.java)
 
-    override suspend fun linkGuestBubblesToUser(userId: String) {
-        bubbleDao.linkGuestBubblesToUser(userId)
+    override suspend fun linkGuestBubblesToUser(userEmail: String) {
+        bubbleDao.linkGuestBubblesToUser(userEmail)
     }
 
     // --- CREATE ---
     override suspend fun addBubbles(bubbles: List<BubbleEntity>) {
-        val userId = tokenManager.getUserId()
+        val userEmail = tokenManager.getUserEmail()
         bubbles.forEach { bubble ->
-            addBubble(bubble, userId)
+            addBubble(bubble, userEmail)
         }
     }
 
-    override suspend fun addBubble(bubble: BubbleEntity, userId: String?): BubbleEntity {
-        val targetUserId = userId ?: tokenManager.getUserId()
+    override suspend fun addBubble(bubble: BubbleEntity, userEmail: String?): BubbleEntity {
+        val targetUserEmail = userEmail ?: tokenManager.getUserEmail()
         val localBubble = BubbleLocal(
             uuid = bubble.id,
-            userId = targetUserId,
+            userEmail = targetUserEmail,
             title = bubble.title,
             content = bubble.content,
             mainImage = bubble.mainImage,
@@ -61,31 +61,31 @@ class BubbleLocalDataSourceImpl @Inject constructor(
 
     // --- READ ---
     override suspend fun getAllActiveBubbles(): List<BubbleEntity> {
-        val userId = tokenManager.getUserId()
-        val localBubbles: List<BubbleLocal> = bubbleDao.getAllActiveBubbles(userId)
+        val userEmail = tokenManager.getUserEmail()
+        val localBubbles: List<BubbleLocal> = bubbleDao.getAllActiveBubbles(userEmail)
         return convertLocalBubblesToBubbleEntities(localBubbles)
     }
 
     override suspend fun getAllRecentBubbles(dayBefore: Int): List<BubbleEntity> {
-        val userId = tokenManager.getUserId()
+        val userEmail = tokenManager.getUserEmail()
         val timestampLimit = Calendar.getInstance().apply {
             add(Calendar.DAY_OF_YEAR, -dayBefore)
         }.time.time
-        val localBubbles: List<BubbleLocal> = bubbleDao.getAllRecentBubbles(timestampLimit, userId)
+        val localBubbles: List<BubbleLocal> = bubbleDao.getAllRecentBubbles(timestampLimit, userEmail)
 
         return convertLocalBubblesToBubbleEntities(localBubbles)
     }
 
     override suspend fun getAllTrashedBubbles(): List<BubbleEntity> {
-        val userId = tokenManager.getUserId()
-        val deletedBubbles: List<BubbleLocal> = bubbleDao.getAllTrashedBubbles(userId)
+        val userEmail = tokenManager.getUserEmail()
+        val deletedBubbles: List<BubbleLocal> = bubbleDao.getAllTrashedBubbles(userEmail)
 
         return convertLocalBubblesToBubbleEntities(deletedBubbles)
     }
 
     override suspend fun getActiveBubble(id: String): BubbleEntity {
-        val userId = tokenManager.getUserId()
-        val bubble = bubbleDao.getActiveBubbleById(id, userId)?.toData()
+        val userEmail = tokenManager.getUserEmail()
+        val bubble = bubbleDao.getActiveBubbleById(id, userEmail)?.toData()
             ?: throw IllegalArgumentException("Bubble with id $id not found for current user")
 
         val result = bubble.copy(
@@ -98,8 +98,8 @@ class BubbleLocalDataSourceImpl @Inject constructor(
     }
 
     override suspend fun getRawBubble(id: String): BubbleEntity {
-        val userId = tokenManager.getUserId()
-        val bubble = bubbleDao.getRawBubbleById(id, userId)?.toData()
+        val userEmail = tokenManager.getUserEmail()
+        val bubble = bubbleDao.getRawBubbleById(id, userEmail)?.toData()
             ?: throw IllegalArgumentException("Bubble with id $id not found")
 
         val result = bubble.copy(
@@ -112,20 +112,20 @@ class BubbleLocalDataSourceImpl @Inject constructor(
     }
 
     override suspend fun getBubblesByLabelId(labelId: String): List<BubbleEntity> {
-        val userId = tokenManager.getUserId()
-        val localBubbles: List<BubbleLocal> = bubbleDao.getBubblesByLabelId(labelId, userId)
+        val userEmail = tokenManager.getUserEmail()
+        val localBubbles: List<BubbleLocal> = bubbleDao.getBubblesByLabelId(labelId, userEmail)
         return convertLocalBubblesToBubbleEntities(localBubbles)
     }
 
     override suspend fun getBubblesWithoutLabel(): List<BubbleEntity> {
-        val userId = tokenManager.getUserId()
-        val localBubbles: List<BubbleLocal> = bubbleDao.getBubblesWithoutLabel(userId)
+        val userEmail = tokenManager.getUserEmail()
+        val localBubbles: List<BubbleLocal> = bubbleDao.getBubblesWithoutLabel(userEmail)
         return convertLocalBubblesToBubbleEntities(localBubbles)
     }
 
     override suspend fun getSearchBubbleResults(query: String): List<BubbleEntity> {
-        val userId = tokenManager.getUserId()
-        val localBubbles: List<BubbleLocal> = bubbleDao.getSearchBubbles(query, userId)
+        val userEmail = tokenManager.getUserEmail()
+        val localBubbles: List<BubbleLocal> = bubbleDao.getSearchBubbles(query, userEmail)
         return convertLocalBubblesToBubbleEntities(localBubbles)
     }
 
@@ -178,7 +178,6 @@ class BubbleLocalDataSourceImpl @Inject constructor(
     override suspend fun syncBubbles(bubbles: List<BubbleEntity>) {
         if (bubbles.isEmpty()) return
 
-        // 배치로 처리하기 위해 모든 관련 버블 ID 수집
         val allBubbleIds = mutableSetOf<String>()
         bubbles.forEach { bubble ->
             allBubbleIds.add(bubble.id)
@@ -186,13 +185,11 @@ class BubbleLocalDataSourceImpl @Inject constructor(
             bubble.linkedBubble?.let { allBubbleIds.add(it.id) }
         }
 
-        // 기존 버블들을 배치로 조회
-        val userId = tokenManager.getUserId()
+        val userEmail = tokenManager.getUserEmail()
         val existingBubbles = convertLocalBubblesToBubbleEntities(
-            bubbleDao.getActiveBubblesByIds(allBubbleIds.toList(), userId)
+            bubbleDao.getActiveBubblesByIds(allBubbleIds.toList(), userEmail)
         ).associateBy { it.id }
 
-        // 각 버블 동기화
         bubbles.forEach { bubble ->
             syncBubbleWithExistingData(bubble, existingBubbles)
         }
@@ -202,7 +199,6 @@ class BubbleLocalDataSourceImpl @Inject constructor(
         bubble: BubbleEntity,
         existingBubbles: Map<String, BubbleEntity>
     ) {
-        // backLinks 처리
         for(backLink in bubble.backLinks) {
             val existingBackLink = existingBubbles[backLink.id]
             if (existingBackLink != null) {
@@ -214,7 +210,6 @@ class BubbleLocalDataSourceImpl @Inject constructor(
             markAsSynced(backLink)
         }
 
-        // linkedBubble 처리
         bubble.linkedBubble?.let { linkedBubble ->
             val existingLinkedBubble = existingBubbles[linkedBubble.id]
             if (existingLinkedBubble != null) {
@@ -227,7 +222,6 @@ class BubbleLocalDataSourceImpl @Inject constructor(
             markAsSynced(linkedBubble)
         }
 
-        // 현재 버블 처리
         val existingBubble = existingBubbles[bubble.id]
         if (existingBubble != null) {
             if (!existingBubble.same(bubble)) {
@@ -252,13 +246,11 @@ class BubbleLocalDataSourceImpl @Inject constructor(
         val existingLabels = labelDao.getLabelsByIds(labelIds)
         val existingLabelIds = existingLabels.map { it.uuid }.toSet()
 
-        // 존재하지 않는 라벨들을 배치로 삽입
         val newLabels = bubble.labels.filter { it.id !in existingLabelIds }
         newLabels.forEach { label ->
             labelDao.insert(label.toLocal())
         }
 
-        // 버블-라벨 관계 확인 및 삽입
         val existingRelations = bubbleLabelDao.getBubbleLabelsByIds(listOf(bubble.id), labelIds)
         val existingRelationPairs = existingRelations.map { "${it.bubbleId}-${it.labelId}" }.toSet()
 
@@ -271,17 +263,15 @@ class BubbleLocalDataSourceImpl @Inject constructor(
     }
 
     private suspend fun addLinkedBubble(bubble: BubbleEntity) {
-        // LinkedBubble 처리
         bubble.linkedBubble?.let { linkedBubble ->
             val id = linkedBubbleDao.getLinkedBubbleId(bubble.id, linkedBubble.id, false)
             if (id == null) linkedBubbleDao.insert(bubble.id, linkedBubble.id, false)
         }
 
-        // BackLinks 처리
         if (bubble.backLinks.isNotEmpty()) {
             val backLinkIds = bubble.backLinks.map { it.id }
-            val userId = tokenManager.getUserId()
-            val existingBubbles = bubbleDao.getActiveBubblesByIds(backLinkIds, userId)
+            val userEmail = tokenManager.getUserEmail()
+            val existingBubbles = bubbleDao.getActiveBubblesByIds(backLinkIds, userEmail)
             val existingBubbleIds = existingBubbles.map { it.uuid }.toSet()
 
             bubble.backLinks.forEach { backLink ->
@@ -298,17 +288,14 @@ class BubbleLocalDataSourceImpl @Inject constructor(
 
         val bubbleIds = localBubbles.map { it.uuid }
 
-        // 배치로 모든 관련 데이터를 한 번에 조회
         val labelsWithBubbleId = labelDao.getAllActiveLabelsByBubbleIds(bubbleIds)
         val linkedBubblesWithParentId = linkedBubbleDao.getActiveLinkedBubblesByBubbleIds(bubbleIds)
         val backLinksWithParentId = linkedBubbleDao.getActiveBackLinksByBubbleIds(bubbleIds)
 
-        // 버블 ID별로 그룹화
         val labelsByBubbleId = labelsWithBubbleId.groupBy { it.bubbleId }
         val linkedBubblesByBubbleId = linkedBubblesWithParentId.groupBy { it.parentBubbleId }
         val backLinksByBubbleId = backLinksWithParentId.groupBy { it.parentBubbleId }
 
-        // 각 버블에 대해 관련 데이터를 조합하여 BubbleEntity 생성
         return localBubbles.map { localBubble ->
             val bubbleId = localBubble.uuid
             val baseEntity = localBubble.toData()

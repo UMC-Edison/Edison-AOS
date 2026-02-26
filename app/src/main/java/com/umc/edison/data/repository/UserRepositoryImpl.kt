@@ -18,16 +18,13 @@ class UserRepositoryImpl @Inject constructor(
     private val userRemoteDataSource: UserRemoteDataSource,
     private val resourceFactory: FlowBoundResourceFactory,
     private val tokenManager: TokenManager,
-    private val bubbleRepository: BubbleRepository
 ) : UserRepository {
 
     override fun googleLogin(idToken: String): Flow<DataResource<User>> = resourceFactory.remote(
         dataAction = {
             val userWithToken: UserWithTokenEntity = userRemoteDataSource.googleLogin(idToken)
-            val userEmail = userWithToken.user.email
             tokenManager.setToken(userWithToken.accessToken, userWithToken.refreshToken)
-            tokenManager.saveUserId(userEmail)
-            bubbleRepository.linkGuestBubblesToUser(userEmail)
+            tokenManager.saveUserEmail(userWithToken.user.email)
             userWithToken
         }
     )
@@ -38,17 +35,13 @@ class UserRepositoryImpl @Inject constructor(
         identity: List<Identity>
     ): Flow<DataResource<User>> = resourceFactory.remote(
         dataAction = {
-            val userWithToken: UserWithTokenEntity =
-                userRemoteDataSource.googleSignup(
-                    idToken = idToken,
-                    nickname = nickname,
-                    identity = identity.map { it.toData() }
-                )
-            val userEmail = userWithToken.user.email
+            val userWithToken: UserWithTokenEntity = userRemoteDataSource.googleSignup(
+                idToken = idToken,
+                nickname = nickname,
+                identity = identity.map { it.toData() }
+            )
             tokenManager.setToken(userWithToken.accessToken, userWithToken.refreshToken)
-            tokenManager.saveUserId(userEmail)
-            bubbleRepository.linkGuestBubblesToUser(userEmail)
-
+            tokenManager.saveUserEmail(userWithToken.user.email)
             userWithToken
         }
     )
