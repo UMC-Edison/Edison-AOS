@@ -17,6 +17,7 @@ data class UserModel(
 
     fun toDomain(): User {
         return User(
+            id = null,
             nickname = nickname,
             profileImage = profileImage,
             email = email,

@@ -1,7 +1,6 @@
 package com.umc.edison.ui.artboard
 
 import android.content.Intent
-import android.util.Log
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -68,6 +67,7 @@ import com.umc.edison.ui.theme.Gray300
 import com.umc.edison.ui.theme.Gray500
 import com.umc.edison.ui.theme.Gray600
 import com.umc.edison.ui.theme.Gray800
+import com.umc.edison.common.logging.AppLogger
 import io.branch.indexing.BranchUniversalObject
 import io.branch.referral.util.ContentMetadata
 import io.branch.referral.util.LinkProperties
@@ -247,7 +247,7 @@ fun ArtLetterDetailScreen(
                                             val shareIntent = Intent.createChooser(sendIntent, null)
                                             context.startActivity(shareIntent)
                                         } else {
-                                            Log.e("BranchShare", "Branch error: ${error.message}")
+                                            AppLogger.e("BranchShare", "Branch error: ${error.message}")
                                         }
                                     }
                                 },

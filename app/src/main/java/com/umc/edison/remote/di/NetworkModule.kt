@@ -3,6 +3,7 @@ package com.umc.edison.remote.di
 import com.umc.edison.BuildConfig
 import com.umc.edison.remote.token.AccessTokenInterceptor
 import com.umc.edison.data.token.TokenManager
+import com.umc.edison.remote.interceptor.HostSelectionInterceptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -50,10 +51,12 @@ object NetworkModule {
     fun provideOkHttpClient(
         httpLoggingInterceptor: HttpLoggingInterceptor,
         accessTokenInterceptor: AccessTokenInterceptor,
+        hostSelectionInterceptor: HostSelectionInterceptor,
     ) : OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(TIME_OUT.toLong(), TimeUnit.SECONDS)
         .readTimeout(TIME_OUT.toLong(), TimeUnit.SECONDS)
         .writeTimeout(TIME_OUT.toLong(), TimeUnit.SECONDS)
+        .addInterceptor(hostSelectionInterceptor)
         .addInterceptor(httpLoggingInterceptor)
         .addInterceptor(accessTokenInterceptor)
         .build()

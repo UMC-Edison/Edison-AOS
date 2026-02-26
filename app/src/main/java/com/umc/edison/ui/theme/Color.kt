@@ -49,6 +49,11 @@ val Orange100 = Color(0xFFFFE2CD)
 val LightGreen100 = Color(0XFFD5FFAB)
 val LightBlue100 = Color(0XFFA8F4F7)
 
+val EmptyViewCtaBg = Color(0xFFFFF7F7)
+val GradientYellow = Color(0xFFF2F227)
+val GradientPink = Color(0xFFFF87D5)
+val GradientBlue = Color(0xFF5BADFF)
+
 val ColorPickerList = listOf(
     Red100,
     Yellow100,

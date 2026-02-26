@@ -7,6 +7,7 @@ import com.umc.edison.data.datasources.BubbleRemoteDataSource
 import com.umc.edison.data.model.bubble.ClusteredBubbleEntity
 import com.umc.edison.data.model.bubble.KeywordBubbleEntity
 import com.umc.edison.data.model.bubble.toData
+import com.umc.edison.common.logging.AppLogger
 import com.umc.edison.data.token.TokenManager
 import com.umc.edison.domain.DataResource
 import com.umc.edison.domain.model.bubble.Bubble
@@ -81,7 +82,7 @@ class BubbleRepositoryImpl @Inject constructor(
                         )
                     } catch (e: Exception) {
                         // 로컬에 없는 버블은 무시
-                        Log.d("BubbleRepositoryImpl", "getAllClusteredBubbles: ${e.message}")
+                        AppLogger.d("BubbleRepositoryImpl", "getAllClusteredBubbles: ${e.message}")
                     }
                 }
 
@@ -103,7 +104,7 @@ class BubbleRepositoryImpl @Inject constructor(
                         )
                     } catch (e: Exception) {
                         // 로컬에 없는 버블은 무시
-                        Log.d("BubbleRepositoryImpl", "getKeywordBubbles: ${e.message}")
+                        AppLogger.d("BubbleRepositoryImpl", "getKeywordBubbles: ${e.message}")
                         null
                     }
                 }

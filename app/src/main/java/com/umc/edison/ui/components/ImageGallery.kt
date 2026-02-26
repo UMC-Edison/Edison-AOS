@@ -5,7 +5,7 @@ import android.content.Context
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
-import android.util.Log
+import com.umc.edison.common.logging.AppLogger
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -249,7 +249,7 @@ fun loadGalleryImages(context: Context, folder: String): List<Uri> {
             val name = it.getString(nameColumn)
             val contentUri = ContentUris.withAppendedId(uriExternal, id)
 
-            Log.d("GalleryImage", "Image: $name, URI: $contentUri")
+            AppLogger.d("GalleryImage", "Image: $name, URI: $contentUri")
             images.add(contentUri)
         }
     }
