@@ -9,6 +9,7 @@ import com.umc.edison.data.token.TokenManager
 import com.umc.edison.domain.DataResource
 import com.umc.edison.domain.model.identity.Identity
 import com.umc.edison.domain.model.user.User
+import com.umc.edison.domain.repository.BubbleRepository
 import com.umc.edison.domain.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -18,11 +19,12 @@ class UserRepositoryImpl @Inject constructor(
     private val resourceFactory: FlowBoundResourceFactory,
     private val tokenManager: TokenManager,
 ) : UserRepository {
-    // CREATE
+
     override fun googleLogin(idToken: String): Flow<DataResource<User>> = resourceFactory.remote(
         dataAction = {
             val userWithToken: UserWithTokenEntity = userRemoteDataSource.googleLogin(idToken)
             tokenManager.setToken(userWithToken.accessToken, userWithToken.refreshToken)
+            tokenManager.saveUserEmail(userWithToken.user.email)
             userWithToken
         }
     )
@@ -33,23 +35,21 @@ class UserRepositoryImpl @Inject constructor(
         identity: List<Identity>
     ): Flow<DataResource<User>> = resourceFactory.remote(
         dataAction = {
-            val userWithToken: UserWithTokenEntity =
-                userRemoteDataSource.googleSignup(
-                    idToken = idToken,
-                    nickname = nickname,
-                    identity = identity.map { it.toData() }
-                )
+            val userWithToken: UserWithTokenEntity = userRemoteDataSource.googleSignup(
+                idToken = idToken,
+                nickname = nickname,
+                identity = identity.map { it.toData() }
+            )
             tokenManager.setToken(userWithToken.accessToken, userWithToken.refreshToken)
+            tokenManager.saveUserEmail(userWithToken.user.email)
             userWithToken
         }
     )
 
-
-
     // READ
     override fun getLogInState(): Flow<DataResource<Boolean>> = resourceFactory.local(
         dataAction = {
-            tokenManager.loadAccessToken()?.isNotEmpty()
+            tokenManager.loadAccessToken()?.isNotEmpty() == true
         }
     )
 

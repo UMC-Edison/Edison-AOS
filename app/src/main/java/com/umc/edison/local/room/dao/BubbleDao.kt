@@ -7,27 +7,55 @@ import com.umc.edison.local.room.RoomConstant
 
 @Dao
 interface BubbleDao : BaseSyncDao<BubbleLocal> {
-    // READ
-    @Query("SELECT * FROM ${RoomConstant.Table.BUBBLE} WHERE is_deleted = 0 AND is_trashed = 0")
-    suspend fun getAllActiveBubbles(): List<BubbleLocal>
 
-    @Query("SELECT * FROM ${RoomConstant.Table.BUBBLE} WHERE is_deleted = 0 AND is_trashed = 0 AND created_at >= :dayBefore")
-    suspend fun getAllRecentBubbles(dayBefore: Long): List<BubbleLocal>
+    @Query("UPDATE ${RoomConstant.Table.BUBBLE} SET user_email = :newUserEmail WHERE user_email IS NULL")
+    suspend fun linkGuestBubblesToUser(newUserEmail: String)
 
-    @Query("SELECT * FROM ${RoomConstant.Table.BUBBLE} WHERE is_trashed = 1 AND is_deleted = 0")
-    suspend fun getAllTrashedBubbles(): List<BubbleLocal>
+    @Query("""
+        SELECT * FROM ${RoomConstant.Table.BUBBLE} 
+        WHERE is_deleted = 0 AND is_trashed = 0
+        AND ((:userEmail IS NULL AND user_email IS NULL) OR (user_email = :userEmail))
+    """)
+    suspend fun getAllActiveBubbles(userEmail: String?): List<BubbleLocal>
 
-    @Query("SELECT * FROM ${RoomConstant.Table.BUBBLE} WHERE id = :bubbleId AND is_deleted = 0 AND is_trashed = 0")
-    suspend fun getActiveBubbleById(bubbleId: String): BubbleLocal?
+    @Query("""
+        SELECT * FROM ${RoomConstant.Table.BUBBLE} 
+        WHERE is_deleted = 0 AND is_trashed = 0 
+        AND created_at >= :dayBefore
+        AND ((:userEmail IS NULL AND user_email IS NULL) OR (user_email = :userEmail))
+    """)
+    suspend fun getAllRecentBubbles(dayBefore: Long, userEmail: String?): List<BubbleLocal>
 
-    @Query("SELECT * FROM ${RoomConstant.Table.BUBBLE} WHERE id = :bubbleId")
-    suspend fun getRawBubbleById(bubbleId: String): BubbleLocal?
+    @Query("""
+        SELECT * FROM ${RoomConstant.Table.BUBBLE} 
+        WHERE is_trashed = 1 AND is_deleted = 0
+        AND ((:userEmail IS NULL AND user_email IS NULL) OR (user_email = :userEmail))
+    """)
+    suspend fun getAllTrashedBubbles(userEmail: String?): List<BubbleLocal>
 
-    @Query("SELECT * FROM ${RoomConstant.Table.BUBBLE} WHERE id IN (SELECT bubble_id FROM ${RoomConstant.Table.BUBBLE_LABEL} WHERE label_id = :labelId) AND is_deleted = 0 AND is_trashed = 0")
-    suspend fun getBubblesByLabelId(labelId: String): List<BubbleLocal>
+    @Query("""
+        SELECT * FROM ${RoomConstant.Table.BUBBLE} 
+        WHERE id = :bubbleId AND is_deleted = 0 AND is_trashed = 0
+        AND ((:userEmail IS NULL AND user_email IS NULL) OR (user_email = :userEmail))
+    """)
+    suspend fun getActiveBubbleById(bubbleId: String, userEmail: String?): BubbleLocal?
 
-    @Query(
-        """
+    @Query("""
+        SELECT * FROM ${RoomConstant.Table.BUBBLE} 
+        WHERE id = :bubbleId
+        AND ((:userEmail IS NULL AND user_email IS NULL) OR (user_email = :userEmail))
+    """)
+    suspend fun getRawBubbleById(bubbleId: String, userEmail: String?): BubbleLocal?
+
+    @Query("""
+        SELECT * FROM ${RoomConstant.Table.BUBBLE} 
+        WHERE id IN (SELECT bubble_id FROM ${RoomConstant.Table.BUBBLE_LABEL} WHERE label_id = :labelId) 
+        AND is_deleted = 0 AND is_trashed = 0
+        AND ((:userEmail IS NULL AND user_email IS NULL) OR (user_email = :userEmail))
+    """)
+    suspend fun getBubblesByLabelId(labelId: String, userEmail: String?): List<BubbleLocal>
+
+    @Query("""
         SELECT DISTINCT b.* FROM ${RoomConstant.Table.BUBBLE} b
         LEFT JOIN ${RoomConstant.Table.BUBBLE_LABEL} bl ON b.id = bl.bubble_id
         LEFT JOIN ${RoomConstant.Table.LABEL} l ON bl.label_id = l.id
@@ -37,17 +65,25 @@ interface BubbleDao : BaseSyncDao<BubbleLocal> {
             OR l.name LIKE '%' || :query || '%')
             AND b.is_deleted = 0 
             AND b.is_trashed = 0
-        """
-    )
-    suspend fun getSearchBubbles(query: String): List<BubbleLocal>
+            AND ((:userEmail IS NULL AND b.user_email IS NULL) OR (b.user_email = :userEmail))
+    """)
+    suspend fun getSearchBubbles(query: String, userEmail: String?): List<BubbleLocal>
 
-    @Query("SELECT * FROM ${RoomConstant.Table.BUBBLE} WHERE id NOT IN (SELECT bubble_id FROM ${RoomConstant.Table.BUBBLE_LABEL}) AND is_deleted = 0 AND is_trashed = 0")
-    suspend fun getBubblesWithoutLabel(): List<BubbleLocal>
+    @Query("""
+        SELECT * FROM ${RoomConstant.Table.BUBBLE} 
+        WHERE id NOT IN (SELECT bubble_id FROM ${RoomConstant.Table.BUBBLE_LABEL}) 
+        AND is_deleted = 0 AND is_trashed = 0
+        AND ((:userEmail IS NULL AND user_email IS NULL) OR (user_email = :userEmail))
+    """)
+    suspend fun getBubblesWithoutLabel(userEmail: String?): List<BubbleLocal>
 
-    @Query("SELECT * FROM ${RoomConstant.Table.BUBBLE} WHERE id IN (:bubbleIds) AND is_deleted = 0 AND is_trashed = 0")
-    suspend fun getActiveBubblesByIds(bubbleIds: List<String>): List<BubbleLocal>
+    @Query("""
+        SELECT * FROM ${RoomConstant.Table.BUBBLE} 
+        WHERE id IN (:bubbleIds) AND is_deleted = 0 AND is_trashed = 0
+        AND ((:userEmail IS NULL AND user_email IS NULL) OR (user_email = :userEmail))
+    """)
+    suspend fun getActiveBubblesByIds(bubbleIds: List<String>, userEmail: String?): List<BubbleLocal>
 
-    // DELETE
     @Query("DELETE FROM ${RoomConstant.Table.BUBBLE} WHERE id IN (:ids)")
     suspend fun deleteBubbles(ids: List<String>)
 

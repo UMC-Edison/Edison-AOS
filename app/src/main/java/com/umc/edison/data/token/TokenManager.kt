@@ -1,9 +1,9 @@
 package com.umc.edison.data.token
 
-import com.umc.edison.data.datasources.PrefDataSource
-import com.umc.edison.data.di.ApplicationScope
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.umc.edison.data.datasources.PrefDataSource
+import com.umc.edison.data.di.ApplicationScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -17,18 +17,26 @@ class TokenManager @Inject constructor(
 
     private val mutex = Mutex()
 
-    private var cachedAccessToken: String? = null
-    private var cachedRefreshToken: String? = null
-
     init {
         applicationScope.launch {
             preloadTokens()
+            loadUserEmail()
         }
     }
+
+    private var cachedAccessToken: String? = null
+    private var cachedRefreshToken: String? = null
+    private var cachedUserEmail: String? = null
+
 
     override fun getAccessToken(): String? = cachedAccessToken
 
     override fun getRefreshToken(): String? = cachedRefreshToken
+
+    suspend fun getUserEmail(): String? {
+        if (cachedUserEmail != null) return cachedUserEmail
+        return loadUserEmail()
+    }
 
     override suspend fun clearCachedTokens() {
         mutex.withLock {
@@ -60,6 +68,17 @@ class TokenManager @Inject constructor(
         }
     }
 
+    suspend fun loadUserEmail(): String? {
+        val email = prefDataSource.get(USER_EMAIL_KEY, "")
+        cachedUserEmail = email.ifEmpty { null }
+        return cachedUserEmail
+    }
+
+    suspend fun saveUserEmail(userEmail: String) {
+        cachedUserEmail = userEmail
+        prefDataSource.set(USER_EMAIL_KEY, userEmail)
+    }
+
     suspend fun setToken(accessToken: String, refreshToken: String? = null) {
         mutex.withLock {
             cachedAccessToken = accessToken
@@ -75,8 +94,10 @@ class TokenManager @Inject constructor(
         mutex.withLock {
             cachedAccessToken = null
             cachedRefreshToken = null
+            cachedUserEmail = null
             prefDataSource.remove(ACCESS_TOKEN_KEY)
             prefDataSource.remove(REFRESH_TOKEN_KEY)
+            prefDataSource.remove(USER_EMAIL_KEY)
         }
     }
 
@@ -90,5 +111,6 @@ class TokenManager @Inject constructor(
     companion object {
         private const val ACCESS_TOKEN_KEY = "access_token"
         private const val REFRESH_TOKEN_KEY = "refresh_token"
+        private const val USER_EMAIL_KEY = "user_email"
     }
 }
