@@ -22,7 +22,6 @@ class BubbleRepositoryImpl @Inject constructor(
     private val bubbleLocalDataSource: BubbleLocalDataSource,
     private val bubbleRemoteDataSource: BubbleRemoteDataSource,
     private val resourceFactory: FlowBoundResourceFactory,
-    private val tokenManager: TokenManager
 ) : BubbleRepository {
     // CREATE
     override fun addBubbles(bubbles: List<Bubble>): Flow<DataResource<Unit>> =
@@ -198,8 +197,8 @@ class BubbleRepositoryImpl @Inject constructor(
             }
         )
 
-    override suspend fun linkGuestBubblesToUser(userId: String) {
-        bubbleLocalDataSource.linkGuestBubblesToUser(userId)
+    override suspend fun linkGuestBubblesToUser(userEmail: String) {
+        bubbleLocalDataSource.linkGuestBubblesToUser(userEmail)
     }
 
     // DELETE

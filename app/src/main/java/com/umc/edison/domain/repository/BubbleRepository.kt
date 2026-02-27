@@ -26,7 +26,7 @@ interface BubbleRepository {
     fun recoverBubbles(bubbles: List<Bubble>): Flow<DataResource<Unit>>
     fun updateBubbles(bubbles: List<Bubble>): Flow<DataResource<Unit>>
     fun updateBubble(bubble: Bubble): Flow<DataResource<Bubble>>
-    suspend fun linkGuestBubblesToUser(userId: String)
+    suspend fun linkGuestBubblesToUser(userEmail: String)
 
     // DELETE
     fun deleteBubbles(bubbles: List<Bubble>): Flow<DataResource<Unit>>
