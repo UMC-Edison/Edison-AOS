@@ -78,12 +78,14 @@ object NetworkModule {
     @Singleton
     fun provideRefreshRetrofit(
         httpLoggingInterceptor: HttpLoggingInterceptor,
+        hostSelectionInterceptor: HostSelectionInterceptor,
         gsonConverterFactory: GsonConverterFactory
     ): Retrofit {
         val okHttpClient = OkHttpClient.Builder()
             .connectTimeout(TIME_OUT.toLong(), TimeUnit.SECONDS)
             .readTimeout(TIME_OUT.toLong(), TimeUnit.SECONDS)
             .writeTimeout(TIME_OUT.toLong(), TimeUnit.SECONDS)
+            .addInterceptor(hostSelectionInterceptor)
             .addInterceptor(httpLoggingInterceptor)
             .build()
 
