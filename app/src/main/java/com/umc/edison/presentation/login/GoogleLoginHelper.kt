@@ -41,7 +41,7 @@ class GoogleLoginHelper @Inject constructor(
     ) {
         val signInWithGoogleOption = GetGoogleIdOption.Builder()
             .setFilterByAuthorizedAccounts(false)
-            .setServerClientId(context.getString(R.string.google_cloud_server_client_id))
+            .setServerClientId(context.getString(R.string.firebase_config_client_id))
             .setAutoSelectEnabled(true)
             .build()
 
