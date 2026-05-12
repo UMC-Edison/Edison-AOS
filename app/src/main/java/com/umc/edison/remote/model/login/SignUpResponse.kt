@@ -16,7 +16,7 @@ data class SignUpResponse(
     @SerializedName("refreshToken")
     val refreshToken: String,
     @SerializedName("identities")
-    val identity: List<IdentityResponse>
+    val identities: List<IdentityResponse>
 ): RemoteMapper<UserWithTokenEntity> {
     override fun toData(): UserWithTokenEntity =
         UserWithTokenEntity(
